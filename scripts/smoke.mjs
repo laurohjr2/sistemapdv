@@ -1,0 +1,51 @@
+import assert from 'node:assert/strict';
+const base = process.env.PDV_API_URL || 'http://127.0.0.1:5173/api';
+const suffix = Date.now();
+let token;
+let checks = 0;
+async function request(path, method = 'GET', data, status = 200) {
+  const response = await fetch(base + path, { method,
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: data === undefined ? undefined : JSON.stringify(data) });
+  const body = await response.json();
+  assert.equal(response.status, status, `${method} ${path}: ${JSON.stringify(body)}`);
+  checks++;
+  return body;
+}
+await request('/health');
+await request('/products', 'GET', undefined, 401);
+const login = await request('/auth/login', 'POST', {username:'admin.dev',password:process.env.DEV_ADMIN_PASSWORD});
+token = login.token;
+await request('/auth/validate');
+const {product} = await request('/products', 'POST', {name:`Teste PDV ${suffix}`,category:'bebidas_nao_alcoolicas',unitOfMeasure:'unidade',costPrice:3,salePrice:10},201);
+await request('/stock/add', 'POST', {productId:product.id,quantity:10},201);
+assert.equal(Number((await request(`/products/${product.id}`)).currentStock),10);
+await request('/stock/adjust', 'POST', {productId:product.id,newQuantity:12,notes:'Contagem de desenvolvimento'});
+const {table} = await request('/tables', 'POST', {tableNumber:Math.floor(suffix/1000),capacity:4},201);
+const {comanda} = await request('/comandas', 'POST', {tableId:table.id},201);
+await request(`/comandas/${comanda.id}/items`,'POST',{productId:product.id,quantity:2},201);
+assert.equal(Number((await request(`/products/${product.id}`)).currentStock),10);
+const closed = await request(`/comandas/${comanda.id}/close`,'PUT',{paymentMethod:'pix'});
+assert.equal(closed.comanda.status,'fechada');
+assert.equal(Number(closed.comanda.finalValue),20);
+assert.equal((await request(`/tables/${table.id}`)).status,'disponivel');
+const pdf = await fetch(base+`/print/comanda/${comanda.id}`,{headers:{Authorization:`Bearer ${token}`}});
+assert.equal(pdf.status,200);
+assert.ok(Buffer.from(await pdf.arrayBuffer()).subarray(0,4).equals(Buffer.from('%PDF')));
+checks++;
+let cash = await request('/cash-register/status');
+if (!cash.is_open) cash = await request('/cash-register/open','POST',{opened_by:'Teste local',opening_amount:100},201);
+const sale = await request('/sales','POST',{items:[{product_id:product.id,quantity:1,unit_price:0.01}],payment_method:'pix',total_amount:0.01,cash_register_id:cash.id},201);
+assert.equal(Number(sale.total_amount),10,'Preço deve ser calculado pelo servidor');
+assert.equal(Number((await request(`/products/${product.id}`)).currentStock),9);
+await request('/sales','POST',{items:[{product_id:product.id,quantity:99}],payment_method:'pix',cash_register_id:cash.id},400);
+assert.equal(Number((await request(`/products/${product.id}`)).currentStock),9,'Falha deve preservar estoque');
+await request(`/sales/${sale.id}/cancel`,'PUT');
+await request(`/sales/${sale.id}/cancel`,'PUT',{},400);
+assert.equal(Number((await request(`/products/${product.id}`)).currentStock),10,'Cancelamento deve repor uma única vez');
+await request('/reports/dashboard');
+await request('/reports/sales');
+const {queueEntry} = await request('/waiting-queue','POST',{clientName:`Cliente teste ${suffix}`,numberOfPeople:2},201);
+assert.ok((await request('/waiting-queue')).some(entry=>entry.id===queueEntry.id));
+await request(`/waiting-queue/${queueEntry.id}/cancel`,'PUT');
+console.log(`${checks} verificações HTTP aprovadas: autenticação, estoque, comanda, mesa, PDF, venda, estorno, relatórios e fila. Dados fictícios mantidos no banco de desenvolvimento.`);
