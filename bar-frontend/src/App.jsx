@@ -16,10 +16,13 @@ import { Toaster } from 'sonner';
 import Reports from './pages/Reports';
 import Print from './pages/Print';
 import './App.css';
+import Settings from './pages/Settings';
+import { BusinessProvider } from './hooks/useBusiness';
 
 function App() {
   return (
     <AuthProvider>
+    <BusinessProvider>
       <Toaster richColors />
       <Router>
         <Routes>
@@ -112,10 +115,12 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route path="settings" element={<ProtectedRoute requiredRoles={['admin', 'gerente']}><Settings /></ProtectedRoute>} />
             <Route path="kitchen" element={<ProtectedRoute requiredRoles={['garcom', 'gerente', 'admin']}><KitchenQueue /></ProtectedRoute>} />
           </Route>
         </Routes>
       </Router>
+    </BusinessProvider>
     </AuthProvider>
   );
 }

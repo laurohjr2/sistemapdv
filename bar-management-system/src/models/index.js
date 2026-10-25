@@ -11,6 +11,7 @@ const CashRegister = require('./CashRegister');
 const Sale = require('./Sale');
 const SaleItem = require('./SaleItem');
 const Ticket = require('./Ticket');
+const BusinessSettings = require('./BusinessSettings');
 
 // Define associations
 User.hasMany(StockMovement, { foreignKey: 'userId', as: 'stockMovements' });
@@ -73,6 +74,7 @@ module.exports = {
   CashRegister,
   Sale,
   SaleItem,
-  Ticket
+  Ticket,
+  BusinessSettings
 };
 

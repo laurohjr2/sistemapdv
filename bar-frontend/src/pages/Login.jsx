@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import '../App.css';
+import BusinessBrand from '../components/BusinessBrand';
 
 const Login = () => {
   const { login, isAuthenticated } = useAuth();
@@ -47,7 +48,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Mineiro's Bar</CardTitle>
+          <CardTitle className="text-2xl font-bold"><BusinessBrand /></CardTitle>
           <CardDescription>
             Faça login para acessar o sistema de gerenciamento
           </CardDescription>

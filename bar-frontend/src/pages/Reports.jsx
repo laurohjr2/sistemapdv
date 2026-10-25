@@ -1,3 +1,5 @@
+import { useBusiness } from '../hooks/useBusiness';
+import { receiptHeader } from '../lib/receipt';
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -18,6 +20,7 @@ import { toast } from 'sonner';
 import api from '../lib/api';
 
 const Reports = () => {
+  const {business} = useBusiness();
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState({
     from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 dias atrás
@@ -175,7 +178,7 @@ const Reports = () => {
         </head>
         <body>
           <div class="header">
-            <h1>Mineiro's Bar - Relatório de Vendas</h1>
+            ${receiptHeader(business)}<h1>Relatório de Vendas</h1>
             <p>Período: ${dateRange.from?.toLocaleDateString('pt-BR')} a ${dateRange.to?.toLocaleDateString('pt-BR')}</p>
           </div>
           
@@ -225,7 +228,7 @@ const Reports = () => {
         </head>
         <body>
           <div class="header">
-            <h1>Mineiro's Bar - Relatório Financeiro</h1>
+            ${receiptHeader(business)}<h1>Relatório Financeiro</h1>
             <p>Período: ${dateRange.from?.toLocaleDateString('pt-BR')} a ${dateRange.to?.toLocaleDateString('pt-BR')}</p>
           </div>
           
@@ -256,7 +259,7 @@ const Reports = () => {
         </head>
         <body>
           <div class="header">
-            <h1>Mineiro's Bar - Relatório de Estoque</h1>
+            ${receiptHeader(business)}<h1>Relatório de Estoque</h1>
             <p>Data: ${new Date().toLocaleDateString('pt-BR')}</p>
           </div>
           
@@ -299,7 +302,7 @@ const Reports = () => {
         </head>
         <body>
           <div class="header">
-            <h1>Mineiro's Bar - Relatório Geral</h1>
+            ${receiptHeader(business)}<h1>Relatório Geral</h1>
             <p>Período: ${dateRange.from?.toLocaleDateString('pt-BR')} a ${dateRange.to?.toLocaleDateString('pt-BR')}</p>
           </div>
           

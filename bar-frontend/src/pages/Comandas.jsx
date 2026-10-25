@@ -1,3 +1,5 @@
+import { useBusiness } from '../hooks/useBusiness';
+import { receiptHeader, escapeHtml } from '../lib/receipt';
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -15,6 +17,7 @@ import api from '../lib/api';
 import { useSearchParams } from 'react-router-dom';
 
 const Comandas = () => {
+  const {business} = useBusiness();
   const [searchParams] = useSearchParams();
   const requestedComanda = searchParams.get('comanda');
   const [comandas, setComandas] = useState([]);
@@ -234,7 +237,7 @@ const Comandas = () => {
         </head>
         <body>
           <div class="header">
-            <h1>Mineiro's Bar</h1>
+            ${receiptHeader(business)}
             <h2>Comanda #${receiptData.id}</h2>
             <p>Data: ${new Date(receiptData.closedAt).toLocaleString('pt-BR')}</p>
             ${receiptData.customerName ? `<p>Cliente: ${receiptData.customerName}</p>` : ''}
@@ -270,7 +273,7 @@ const Comandas = () => {
           <p>Forma de Pagamento: ${receiptData.paymentMethod}</p>
           
           <div class="footer">
-            <p>Obrigado pela preferência!</p>
+            <p>${escapeHtml(business.receiptMessage)}</p>
           </div>
         </body>
       </html>

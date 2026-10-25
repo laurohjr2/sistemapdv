@@ -45,7 +45,7 @@ A cópia local é uma facilidade de desenvolvimento, não uma política de backu
 
 ## Próximas etapas
 
-Conferir caixa e relatórios com todas as formas de pagamento e comandas; fortalecer as transações de estoque/comandas; completar configurações e logo; integrar impressão por setor. A saída PDF tem dados fixos herdados do projeto antigo. O serviço de impressão física antigo simula sucesso e não deve ser tratado como impressão real.
+Conferir caixa e relatórios com todas as formas de pagamento e comandas; fortalecer as transações de estoque/comandas; integrar impressão por setor. O serviço de impressão física antigo simula sucesso e não deve ser tratado como impressão real.
 
 O sistema ainda não está pronto para comercialização. O código antigo possui fluxos adicionais que não foram abrangidos por esta validação inicial, como tickets e todos os filtros de relatórios.
 
@@ -75,3 +75,21 @@ NODE_PATH=/tmp/pdv-browser/node_modules PDV_WEB_URL=http://127.0.0.1:5175 node s
 ```
 
 Esse teste requer `/usr/bin/chromium`. As capturas locais ficam em `.pdv-local/comanda-browser.png` e `.pdv-local/fila-mobile.png` e contêm apenas os dados fictícios usados na validação. Esta validação não abrange o funcionamento completo da cozinha, alteração de quantidades de itens existentes, impressão física ou todos os relatórios financeiros.
+
+## Configurações do estabelecimento
+
+O menu Configurações permite cadastrar nome da empresa, razão social, CNPJ numérico ou alfanumérico com verificação de dígitos, telefone, e-mail, endereço, cidade, UF, CEP, mensagem de agradecimento e logo PNG/JPEG de até 256 KB e 2048 × 2048 pixels. Apenas admin pode editar; gerente pode acessar a tela para consulta. A API autenticada fornece os dados para comprovantes dos funcionários; a rota pública `/api/settings/branding` retorna somente nome e logo para o login.
+
+Os dados ficam na tabela `business_settings`, criada de forma aditiva pelo sync normal, sem force/reset. O cadastro pertence ao estabelecimento desta instalação. Ainda não existe isolamento SaaS entre diferentes empresas no mesmo banco; isso permanece necessário antes de hospedar vários clientes juntos.
+
+O nome/logo são usados no login e na navegação. Dados de identificação são aplicados nos comprovantes HTML e PDFs, incluindo cabeçalhos de relatórios. O cadastro não configura emissão fiscal. A tela e a API não incluem credenciais, assinatura ou permissões de suporte.
+
+Validação: compilação do frontend, 27 verificações HTTP específicas (cadastro, persistência, CNPJ, logo, edição parcial, remoção, permissões e conteúdo do PDF), 28 verificações HTTP gerais e teste no Chromium com gravação, reload, upload, remoção de logo e layout móvel. Os testes específicos restauram o cadastro anterior ao finalizar. A imagem `docs/images/configuracoes.png` usa dados fictícios.
+
+```bash
+PDV_API_PORT=3500 PDV_WEB_PORT=5178 bash scripts/start.sh
+PDV_API_URL=http://127.0.0.1:5178/api node --env-file=.pdv-local/development.env scripts/settings-smoke.mjs
+NODE_PATH=/tmp/pdv-browser/node_modules PDV_WEB_URL=http://127.0.0.1:5178 node scripts/settings-browser.cjs
+```
+
+O teste HTTP de PDF requer `pdftotext`, disponível nesta máquina. O teste de navegador requer a instalação temporária de Playwright descrita acima e utiliza `scripts/fixtures/logo.png`, uma imagem sintética de teste. Impressoras físicas continuam fora da validação.

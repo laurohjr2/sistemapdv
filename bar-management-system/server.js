@@ -28,6 +28,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(morgan('combined'));
+app.use('/api/settings', require('./src/routes/settings'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -54,6 +55,7 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  if (err.type === 'entity.too.large') return res.status(413).json({error:'A imagem é muito grande. Use uma logo de até 256 KB.'});
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });

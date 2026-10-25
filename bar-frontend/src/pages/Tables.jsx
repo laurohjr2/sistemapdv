@@ -1,3 +1,5 @@
+import { useBusiness } from '../hooks/useBusiness';
+import { receiptHeader, escapeHtml } from '../lib/receipt';
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -12,6 +14,7 @@ import { toast } from 'sonner';
 import api from '../lib/api';
 
 const Tables = () => {
+  const {business} = useBusiness();
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -199,7 +202,7 @@ const Tables = () => {
         </head>
         <body>
           <div class="header">
-            <h1>Mineiro's Bar</h1>
+            ${receiptHeader(business)}
             <h2>Comprovante - Mesa ${receiptData.tableNumber}</h2>
             <p>Data: ${new Date(receiptData.closedAt || receiptData.openedAt).toLocaleString('pt-BR')}</p>
           </div>
@@ -232,7 +235,7 @@ const Tables = () => {
           ${receiptData.paymentMethod ? `<p>Forma de Pagamento: ${receiptData.paymentMethod}</p>` : ''}
           
           <div class="footer">
-            <p>Obrigado pela preferência!</p>
+            <p>${escapeHtml(business.receiptMessage)}</p>
           </div>
         </body>
       </html>

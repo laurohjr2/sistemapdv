@@ -1,3 +1,4 @@
+const { printHeader } = require('../services/businessSettingsService');
 const { Comanda, ComandaItem, Product, User, Table } = require('../models');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
@@ -56,9 +57,7 @@ const generateComandaReceipt = async (req, res) => {
     doc.pipe(res);
 
     // Cabeçalho
-    doc.fontSize(20).text('MINEIRO\'S BAR', { align: 'center' });
-    doc.fontSize(12).text('Rua Exemplo, 123 - Centro', { align: 'center' });
-    doc.text('Tel: (11) 99999-9999', { align: 'center' });
+    const business = await printHeader(doc);
     doc.moveDown();
 
     if (copy) {
@@ -178,7 +177,7 @@ const generateComandaReceipt = async (req, res) => {
 
     // Rodapé
     doc.fontSize(10);
-    doc.text('Obrigado pela preferência!', { align: 'center' });
+    doc.text(business.receiptMessage, { align: 'center' });
     doc.text('Volte sempre!', { align: 'center' });
     doc.moveDown();
     doc.text(`Emitido em: ${new Date().toLocaleString('pt-BR')}`, { align: 'center' });
@@ -236,7 +235,7 @@ const generateSalesReport = async (req, res) => {
 
       // Cabeçalho
       doc.fontSize(18).text('RELATÓRIO DE VENDAS', { align: 'center' });
-      doc.fontSize(12).text('MINEIRO\'S BAR', { align: 'center' });
+      await printHeader(doc);
       doc.moveDown();
 
       // Período
@@ -372,7 +371,7 @@ const generateProductReport = async (req, res) => {
 
       // Cabeçalho
       doc.fontSize(18).text('RELATÓRIO DE PRODUTOS', { align: 'center' });
-      doc.fontSize(12).text('MINEIRO\'S BAR', { align: 'center' });
+      await printHeader(doc);
       doc.moveDown();
 
       // Período

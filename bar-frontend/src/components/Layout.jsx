@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import BusinessBrand from './BusinessBrand';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { hasRole } from '../lib/auth';
 import { Button } from './ui/button';
 import { 
   Home,
+  Settings,
   ChefHat, 
   Users, 
   Package, 
@@ -41,6 +43,7 @@ const Layout = () => {
     { name: 'Cozinha', href: '/kitchen', icon: ChefHat, roles: ['garcom', 'gerente', 'admin'] },
     { name: 'Fila de Espera', href: '/queue', icon: Clock, roles: ['garcom', 'gerente', 'admin'] },
     { name: 'Relatórios', href: '/reports', icon: BarChart3, roles: ['gerente', 'admin'] },
+    { name: 'Configurações', href: '/settings', icon: Settings, roles: ['gerente', 'admin'] },
     { name: 'Usuários', href: '/users', icon: Users, roles: ['admin'] },
   ];
 
@@ -56,11 +59,7 @@ const Layout = () => {
         <div className="fixed left-0 top-0 h-full w-64 bg-card border-r border-border">
           <div className="flex items-center justify-between p-4 border-b border-border">
             <div className="flex items-center space-x-3">
-              {/* Espaço para logo personalizada */}
-              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">M</span>
-              </div>
-              <h1 className="text-lg font-semibold">Mineiro's Bar</h1>
+              <BusinessBrand />
             </div>
             <Button
               variant="ghost"
@@ -97,11 +96,7 @@ const Layout = () => {
       <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:w-64 lg:bg-card lg:border-r lg:border-border">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center space-x-3">
-            {/* Espaço para logo personalizada */}
-            <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">M</span>
-            </div>
-            <h1 className="text-lg font-semibold">Mineiro's Bar</h1>
+            <BusinessBrand />
           </div>
         </div>
         <nav className="p-4 space-y-2">

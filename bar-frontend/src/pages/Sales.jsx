@@ -1,3 +1,5 @@
+import { useBusiness } from '../hooks/useBusiness';
+import { receiptHeader, escapeHtml } from '../lib/receipt';
 import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -12,6 +14,7 @@ import { ShoppingCart, Plus, Minus, Trash2, Receipt, X, Search, Scan, DollarSign
 import api from "../lib/api";
 
 const Sales = () => {
+  const {business} = useBusiness();
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [sales, setSales] = useState([]);
@@ -357,7 +360,7 @@ const Sales = () => {
         </head>
         <body>
           <div class="header">
-            <h1>Mineiro's Bar</h1>
+            ${receiptHeader(business)}
             <h2>NOTA NÃO FISCAL</h2>
             <p>Venda #${receiptData.id}</p>
             <p>Data: ${receiptData.date}</p>
@@ -392,7 +395,7 @@ const Sales = () => {
           
           <div class="footer">
             <p>Esta não é uma nota fiscal</p>
-            <p>Obrigado pela preferência!</p>
+            <p>${escapeHtml(business.receiptMessage)}</p>
           </div>
         </body>
       </html>
