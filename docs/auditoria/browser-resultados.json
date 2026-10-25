@@ -1,0 +1,210 @@
+[
+  {
+    "route": "/",
+    "name": "Dashboard",
+    "rendered": true,
+    "headings": [
+      "Dashboard"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/sales",
+    "name": "Vendas",
+    "rendered": false,
+    "headings": [],
+    "errors": [
+      "cashRegister.opening_amount?.toFixed is not a function"
+    ],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/tables",
+    "name": "Mesas",
+    "rendered": true,
+    "headings": [
+      "Mesas",
+      "Mesas"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/stock",
+    "name": "Estoque",
+    "rendered": true,
+    "headings": [
+      "Estoque",
+      "Estoque"
+    ],
+    "errors": [],
+    "failedRequests": [
+      {
+        "path": "/api/stock/summary",
+        "status": 500
+      },
+      {
+        "path": "/api/stock/summary",
+        "status": 500
+      }
+    ],
+    "visibleMessages": [
+      "Erro ao carregar dados do estoque",
+      "Erro ao carregar dados do estoque"
+    ]
+  },
+  {
+    "route": "/comandas",
+    "name": "Comandas",
+    "rendered": true,
+    "headings": [
+      "Comandas",
+      "Comandas"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/kitchen",
+    "name": "Cozinha",
+    "rendered": true,
+    "headings": [
+      "Cozinha",
+      "Pedidos da cozinha"
+    ],
+    "errors": [],
+    "failedRequests": [
+      {
+        "path": "/api/queue",
+        "status": 500
+      },
+      {
+        "path": "/api/queue",
+        "status": 500
+      },
+      {
+        "path": "/api/queue/summary",
+        "status": 500
+      },
+      {
+        "path": "/api/queue/summary",
+        "status": 500
+      }
+    ],
+    "visibleMessages": [
+      "Erro ao carregar fila de preparo",
+      "Erro ao carregar fila de preparo"
+    ]
+  },
+  {
+    "route": "/queue",
+    "name": "Fila",
+    "rendered": true,
+    "headings": [
+      "Fila de Espera",
+      "Fila de espera"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/reports",
+    "name": "Relatorios",
+    "rendered": true,
+    "headings": [
+      "Relatórios",
+      "Relatórios"
+    ],
+    "errors": [],
+    "failedRequests": [
+      {
+        "path": "/api/reports/categories",
+        "status": 404
+      },
+      {
+        "path": "/api/reports/payments",
+        "status": 404
+      },
+      {
+        "path": "/api/reports/hourly",
+        "status": 404
+      },
+      {
+        "path": "/api/reports/categories",
+        "status": 404
+      },
+      {
+        "path": "/api/reports/payments",
+        "status": 404
+      },
+      {
+        "path": "/api/reports/hourly",
+        "status": 404
+      }
+    ],
+    "visibleMessages": [
+      "Erro ao carregar relatórios",
+      "Erro ao carregar relatórios"
+    ]
+  },
+  {
+    "route": "/settings",
+    "name": "Configuracoes",
+    "rendered": true,
+    "headings": [
+      "Configurações",
+      "Configurações"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/users",
+    "name": "Usuarios",
+    "rendered": false,
+    "headings": [],
+    "errors": [
+      "React is not defined"
+    ],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/products",
+    "name": "Produtos",
+    "rendered": true,
+    "headings": [
+      "Dashboard",
+      "Produtos"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": [
+      "Produtos Inativos",
+      "Inativos (0)"
+    ]
+  },
+  {
+    "route": "/print",
+    "name": "Impressao",
+    "rendered": false,
+    "headings": [],
+    "errors": [
+      "A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder."
+    ],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "name": "Usuarios: formulário de criação",
+    "status": "BLOCKED",
+    "detail": "Página de usuários não renderiza: React is not defined. Rotas do formulário verificadas separadamente pela API."
+  }
+]

@@ -1,0 +1,228 @@
+{
+  "base": "http://127.0.0.1:5179/api",
+  "commit": "a2025f4",
+  "passed": 30,
+  "failed": 20,
+  "results": [
+    {
+      "name": "Produto: consultar/editar cadastro",
+      "status": "PASS"
+    },
+    {
+      "name": "Produto: preço de custo zero permitido",
+      "status": "FAIL",
+      "detail": "HTTP esperado 201; recebido 400: {\"error\":\"Name, category, unit of measure, cost price, and sale price are required\"}\n\n400 !== 201\n"
+    },
+    {
+      "name": "Estoque: entrada e saldo",
+      "status": "PASS"
+    },
+    {
+      "name": "Estoque: saída e acerto",
+      "status": "PASS"
+    },
+    {
+      "name": "GET /stock/report",
+      "status": "PASS"
+    },
+    {
+      "name": "GET /stock/summary",
+      "status": "FAIL",
+      "detail": "HTTP esperado 200; recebido 500: {\"error\":\"Internal server error\"}\n\n500 !== 200\n"
+    },
+    {
+      "name": "GET /stock/movements",
+      "status": "PASS"
+    },
+    {
+      "name": "GET /stock/low-stock",
+      "status": "PASS"
+    },
+    {
+      "name": "GET /stock/history/:product",
+      "status": "PASS"
+    },
+    {
+      "name": "Caixa: abertura",
+      "status": "PASS"
+    },
+    {
+      "name": "Comanda: abrir e lançar produto",
+      "status": "PASS"
+    },
+    {
+      "name": "Comanda: alterar quantidade pelo endpoint usado na tela",
+      "status": "FAIL",
+      "detail": "HTTP esperado 200; recebido 404: {\"error\":\"Route not found\"}\n\n404 !== 200\n"
+    },
+    {
+      "name": "Cozinha GET /queue",
+      "status": "FAIL",
+      "detail": "HTTP esperado 200; recebido 500: {\"error\":\"Internal server error\"}\n\n500 !== 200\n"
+    },
+    {
+      "name": "Cozinha GET /queue/summary",
+      "status": "FAIL",
+      "detail": "HTTP esperado 200; recebido 500: {\"error\":\"Internal server error\"}\n\n500 !== 200\n"
+    },
+    {
+      "name": "Cozinha GET /queue/report",
+      "status": "PASS"
+    },
+    {
+      "name": "Cozinha GET /queue/table/:table",
+      "status": "PASS"
+    },
+    {
+      "name": "Cozinha: iniciar preparo de item",
+      "status": "PASS"
+    },
+    {
+      "name": "Comanda: fechar com PIX",
+      "status": "PASS"
+    },
+    {
+      "name": "Usuário: criar pela rota usada no menu",
+      "status": "FAIL",
+      "detail": "HTTP esperado 201; recebido 404: {\"error\":\"Route not found\"}\n\n404 !== 201\n"
+    },
+    {
+      "name": "Usuário: criar pela API de autenticação e fazer login",
+      "status": "PASS"
+    },
+    {
+      "name": "Usuário: atualizar perfil",
+      "status": "PASS"
+    },
+    {
+      "name": "Usuário: alterar senha pela rota usada no menu",
+      "status": "FAIL",
+      "detail": "HTTP esperado 200; recebido 404: {\"error\":\"Route not found\"}\n\n404 !== 200\n"
+    },
+    {
+      "name": "Permissão: garçom não cadastra produto",
+      "status": "PASS"
+    },
+    {
+      "name": "Permissão: garçom não altera configurações",
+      "status": "PASS"
+    },
+    {
+      "name": "Permissão: garçom não consulta usuários",
+      "status": "PASS"
+    },
+    {
+      "name": "Ticket: emissão com token válido do login",
+      "status": "FAIL",
+      "detail": "HTTP esperado 201; recebido 403: \"Forbidden\"\n\n403 !== 201\n"
+    },
+    {
+      "name": "Venda balcão: preço do servidor e baixa de estoque",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/dashboard",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/sales",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/products",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/waiters",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório comparativo com todos os períodos informados",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/sales-by-category",
+      "status": "FAIL",
+      "detail": "HTTP esperado 200; recebido 500: {\"error\":\"Internal server error\"}\n\n500 !== 200\n"
+    },
+    {
+      "name": "Relatório GET /reports/sales-by-payment",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/sales-by-hour",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/stock",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/financial",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/categories",
+      "status": "FAIL",
+      "detail": "HTTP esperado 200; recebido 404: {\"error\":\"Route not found\"}\n\n404 !== 200\n"
+    },
+    {
+      "name": "Relatório GET /reports/payments",
+      "status": "FAIL",
+      "detail": "HTTP esperado 200; recebido 404: {\"error\":\"Route not found\"}\n\n404 !== 200\n"
+    },
+    {
+      "name": "Relatório GET /reports/hourly",
+      "status": "FAIL",
+      "detail": "HTTP esperado 200; recebido 404: {\"error\":\"Route not found\"}\n\n404 !== 200\n"
+    },
+    {
+      "name": "Relatório GET /reports/export/pdf?type=sales",
+      "status": "FAIL",
+      "detail": "HTTP esperado 200; recebido 404: {\"error\":\"Route not found\"}\n\n404 !== 200\n"
+    },
+    {
+      "name": "Relatório GET /reports/export/csv?type=sales",
+      "status": "FAIL",
+      "detail": "HTTP esperado 200; recebido 404: {\"error\":\"Route not found\"}\n\n404 !== 200\n"
+    },
+    {
+      "name": "Caixa: fechamento inclui vendas de balcão e comandas",
+      "status": "FAIL",
+      "detail": "Total esperado R$30 (balcão10 + comanda20); recebido 10\n\n10 !== 30\n"
+    },
+    {
+      "name": "Estorno: venda retorna estoque uma única vez",
+      "status": "PASS"
+    },
+    {
+      "name": "Mesa: fechar pelo menu mesas marca pagamento como pago",
+      "status": "FAIL",
+      "detail": "Expected values to be strictly equal:\n\n'pendente' !== 'pago'\n"
+    },
+    {
+      "name": "Impressão: rota do serviço de impressora acessível",
+      "status": "FAIL",
+      "detail": "HTTP esperado 200; recebido 404: {\"error\":\"Route not found\"}\n\n404 !== 200\n"
+    },
+    {
+      "name": "Usuário: excluir funcionário com login prévio",
+      "status": "PASS"
+    },
+    {
+      "name": "Estoque: cadastrar produto com os campos enviados pelo formulário",
+      "status": "FAIL",
+      "detail": "Formulário recebeu HTTP 400\n\n400 !== 201\n"
+    },
+    {
+      "name": "Usuário: desativação impede novo login",
+      "status": "FAIL",
+      "detail": "Usuário desativado ainda faz login: HTTP 200\n\n200 !== 401\n"
+    },
+    {
+      "name": "Produtos: API mantém saldo positivo para exibição no cadastro",
+      "status": "FAIL",
+      "detail": "Tela usa stock_quantity inexistente e exibe zero, apesar de currentStock positivo."
+    }
+  ]
+}

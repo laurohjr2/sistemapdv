@@ -32,3 +32,7 @@ Foram executadas 28 verificações HTTP do fluxo geral, 36 da integração fila�
 Esta é uma base de desenvolvimento. Impressão física, isolamento entre empresas, assinaturas e acesso master de suporte ainda precisam ser concluídos. A validação não cobre todos os fluxos herdados da aplicação. Os Dockerfiles e o seed antigo são legados e não fazem parte da instalação validada; não execute o seed em um banco com dados que precisa preservar.
 
 Credenciais, banco local e dependências são excluídos do Git.
+
+## Auditoria funcional
+
+A revisão ampliada encontrou falhas que impedem uso real. Consulte o [relatório por menu, testes e capturas](docs/auditoria/README.md) antes de iniciar um piloto.
