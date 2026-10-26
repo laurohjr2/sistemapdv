@@ -17,6 +17,8 @@ await request('/products', 'GET', undefined, 401);
 const login = await request('/auth/login', 'POST', {username:'admin.dev',password:process.env.DEV_ADMIN_PASSWORD});
 token = login.token;
 await request('/auth/validate');
+if (!(await request('/cash-register/status')).is_open) await request('/cash-register/open','POST',{opening_amount:0},201);
+
 const {product} = await request('/products', 'POST', {name:`Teste PDV ${suffix}`,category:'bebidas_nao_alcoolicas',unitOfMeasure:'unidade',costPrice:3,salePrice:10},201);
 await request('/stock/add', 'POST', {productId:product.id,quantity:10},201);
 assert.equal(Number((await request(`/products/${product.id}`)).currentStock),10);

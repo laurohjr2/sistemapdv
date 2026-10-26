@@ -67,7 +67,7 @@ const Dashboard = () => {
               {formatCurrency(todaySales.totalSales || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {todaySales.totalComandas || 0} comandas fechadas
+              {todaySales.totalComandas || 0} vendas concluídas
             </p>
           </CardContent>
         </Card>
@@ -82,7 +82,7 @@ const Dashboard = () => {
               {formatCurrency(todaySales.averageTicket || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Média por comanda hoje
+              Média por venda hoje
             </p>
           </CardContent>
         </Card>

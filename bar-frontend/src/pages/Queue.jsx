@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -27,10 +27,35 @@ const Queue = () => {
   // Auto-refresh interval
   const [autoRefresh, setAutoRefresh] = useState(true);
 
+  const fetchQueueData = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filterStatus && filterStatus !== 'all') params.append('status', filterStatus);
+      if (filterPriority && filterPriority !== 'all') params.append('priority', filterPriority);
+      
+      const response = await api.get(`/queue?${params.toString()}`);
+      setQueueData(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar fila:', error);
+      toast.error('Erro ao carregar fila de preparo');
+    } finally {
+      setLoading(false);
+    }
+  }, [filterStatus, filterPriority]);
+
+  const fetchQueueSummary = useCallback(async () => {
+    try {
+      const response = await api.get('/queue/summary');
+      setQueueSummary(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar resumo da fila:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchQueueData();
     fetchQueueSummary();
-  }, []);
+  }, [fetchQueueData,fetchQueueSummary]);
 
   useEffect(() => {
     let interval;
@@ -43,32 +68,7 @@ const Queue = () => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [autoRefresh]);
-
-  const fetchQueueData = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (filterStatus) params.append('status', filterStatus);
-      if (filterPriority) params.append('priority', filterPriority);
-      
-      const response = await api.get(`/queue?${params.toString()}`);
-      setQueueData(response.data);
-    } catch (error) {
-      console.error('Erro ao carregar fila:', error);
-      toast.error('Erro ao carregar fila de preparo');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchQueueSummary = async () => {
-    try {
-      const response = await api.get('/queue/summary');
-      setQueueSummary(response.data);
-    } catch (error) {
-      console.error('Erro ao carregar resumo da fila:', error);
-    }
-  };
+  }, [autoRefresh,fetchQueueData,fetchQueueSummary]);
 
   const handleStatusUpdate = async (itemId, newStatus) => {
     try {

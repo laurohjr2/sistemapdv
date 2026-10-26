@@ -107,8 +107,7 @@ export default function WaitingQueue() {
       {notice.comandaId && <Button onClick={() => navigate(`/comandas?comanda=${notice.comandaId}`)}>Abrir comanda</Button>}
     </div>}
     <div className="grid gap-4 sm:grid-cols-3">
-      {[['Grupos aguardando',stats.totalWaiting,Users],['Mesas livres',availableTables.length,Users],['Espera média concluída',`${stats.averageWaitTimeMinutes} min`,Clock]].map(([title,value,Icon]) =>
-        <Card key={title}><CardHeader className="flex flex-row items-center justify-between"><CardTitle className="text-sm">{title}</CardTitle><Icon className="h-4 w-4"/></CardHeader><CardContent className="text-2xl font-bold">{value}</CardContent></Card>)}
+      {[['Grupos aguardando',stats.totalWaiting,Users],['Mesas livres',availableTables.length,Users],['Espera média concluída',`${stats.averageWaitTimeMinutes} min`,Clock]].map(([title,value,icon]) => { const Icon=icon; return <Card key={title}><CardHeader className="flex flex-row items-center justify-between"><CardTitle className="text-sm">{title}</CardTitle><Icon className="h-4 w-4"/></CardHeader><CardContent className="text-2xl font-bold">{value}</CardContent></Card>})}
     </div>
     <div className="flex flex-wrap gap-2" aria-label="Situação dos clientes">
       {[['aguardando','Aguardando'],['sentado','Acomodados'],['cancelado','Cancelados']].map(([value,label]) =>

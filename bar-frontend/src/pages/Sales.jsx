@@ -142,7 +142,7 @@ const Sales = () => {
       setError('');
       
       const response = await api.post('/tickets', {
-        productId: parseInt(ticketForm.productId),
+        productId: ticketForm.productId,
         quantity: parseFloat(ticketForm.quantity),
         customerName: ticketForm.customerName,
         notes: ticketForm.notes
@@ -197,7 +197,7 @@ const Sales = () => {
           <div class="content">
             <p><strong>Produto:</strong> ${ticket.product.name}</p>
             <p><strong>Quantidade:</strong> ${ticket.quantity} ${ticket.product.unitOfMeasure}</p>
-            <p><strong>Valor:</strong> R$ ${ticket.total_amount.toFixed(2)}</p>
+            <p><strong>Valor:</strong> R$ ${Number(ticket.total_amount).toFixed(2)}</p>
             ${ticket.customer_name ? `<p><strong>Cliente:</strong> ${ticket.customer_name}</p>` : ''}
             ${ticket.notes ? `<p><strong>Obs:</strong> ${ticket.notes}</p>` : ''}
             <p><strong>Emitido em:</strong> ${new Date(ticket.issued_at).toLocaleString('pt-BR')}</p>
@@ -618,7 +618,7 @@ const Sales = () => {
                   </div>
                   {cashRegister && (
                     <div className="text-sm text-muted-foreground">
-                      <p>Valor inicial: R$ {cashRegister.opening_amount?.toFixed(2)}</p>
+                      <p>Valor inicial: R$ {Number(cashRegister.opening_amount || 0).toFixed(2)}</p>
                       <p>Aberto por: {cashRegister.opened_by}</p>
                     </div>
                   )}
@@ -919,7 +919,7 @@ const Sales = () => {
                     <TableCell>
                       {new Date(sale.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
-                    <TableCell>R$ {sale.total_amount.toFixed(2)}</TableCell>
+                    <TableCell>R$ {Number(sale.total_amount).toFixed(2)}</TableCell>
                     <TableCell>{sale.payment_method}</TableCell>
                     <TableCell>
                       <Badge variant={sale.status === 'completed' ? 'default' : 'destructive'}>

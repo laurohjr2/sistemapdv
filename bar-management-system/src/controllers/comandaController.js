@@ -1,3 +1,4 @@
+const operations = require('../services/comandaOperations');
 const { openTable } = require('../services/tableSeatingService');
 const { Comanda, ComandaItem, Table, Product, User, StockMovement, sequelize } = require('../models');
 const { logAction } = require('../utils/auditLogger');
@@ -45,94 +46,11 @@ const openComanda = async (req, res) => {
   }
 };
 
-const addItemToComanda = async (req, res) => {
-  try {
-    const { comandaId } = req.params;
-    const { productId, quantity, notes } = req.body;
-
-    if (!productId || !quantity || quantity <= 0) {
-      return res.status(400).json({ 
-        error: 'Product ID and positive quantity are required' 
-      });
-    }
-
-    const comanda = await Comanda.findByPk(comandaId);
-    if (!comanda) {
-      return res.status(404).json({ error: 'Comanda not found' });
-    }
-
-    if (comanda.status !== 'aberta') {
-      return res.status(400).json({ error: 'Comanda is not open' });
-    }
-
-    const product = await Product.findByPk(productId);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    if (!product.active) {
-      return res.status(400).json({ error: 'Product is not active' });
-    }
-
-    // Check stock availability
-    if (product.currentStock < quantity) {
-      return res.status(400).json({ 
-        error: `Insufficient stock. Available: ${product.currentStock}` 
-      });
-    }
-
-    const totalItemValue = parseFloat(product.salePrice) * parseFloat(quantity);
-
-    // Add item to comanda
-    const comandaItem = await ComandaItem.create({
-      comandaId,
-      productId,
-      quantity,
-      priceAtSale: product.salePrice,
-      totalItemValue,
-      notes
-    });
-
-    // Update product stock
-    await product.update({
-      currentStock: parseFloat(product.currentStock) - parseFloat(quantity)
-    });
-
-    // Create stock movement
-    await StockMovement.create({
-      productId,
-      type: 'saida',
-      quantity,
-      userId: req.user.id,
-      sourceComandaId: comandaId,
-      reason: 'sale',
-      notes: `Venda - Comanda ${comandaId}`
-    });
-
-    // Update comanda total
-    const newTotal = parseFloat(comanda.totalValue) + totalItemValue;
-    await comanda.update({
-      totalValue: newTotal
-    });
-
-    const itemWithProduct = await ComandaItem.findByPk(comandaItem.id, {
-      include: [
-        {
-          model: Product,
-          as: 'product',
-          attributes: ['id', 'name', 'unitOfMeasure', 'category']
-        }
-      ]
-    });
-
-    res.status(201).json({
-      message: 'Item added to comanda successfully',
-      item: itemWithProduct
-    });
-  } catch (error) {
-    console.error('Add item to comanda error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+const addItemToComanda = async(req,res,next)=>{
+ try {const item=await operations.changeItem({comandaId:req.params.comandaId,productId:req.body.productId,amount:req.body.quantity,notes:req.body.notes,userId:req.user.id});res.status(201).json({item});}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
+};
+const updateItemQuantity = async(req,res,next)=>{
+ try {const item=await operations.changeItem({comandaId:req.params.comandaId,itemId:req.params.itemId,amount:req.body.quantity,userId:req.user.id});res.json({item});}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 };
 
 const getComandaById = async (req, res) => {
@@ -183,125 +101,11 @@ const getComandaById = async (req, res) => {
   }
 };
 
-const closeComanda = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { paymentMethod, paymentStatus = 'pago', discountValue = 0, discountPercentage = 0, notes } = req.body;
-
-    if (!paymentMethod) {
-      return res.status(400).json({ error: 'Payment method is required' });
-    }
-
-    const comanda = await Comanda.findByPk(id, {
-      include: [
-        {
-          model: Table,
-          as: 'table',
-          required: false
-        }
-      ]
-    });
-
-    if (!comanda) {
-      return res.status(404).json({ error: 'Comanda not found' });
-    }
-
-    if (comanda.status !== 'aberta') {
-      return res.status(400).json({ error: 'Comanda is not open' });
-    }
-
-    await comanda.update({
-      status: 'fechada',
-      closedAt: new Date(),
-      closedByUserId: req.user.id,
-      paymentMethod,
-      paymentStatus,
-      discountValue: parseFloat(discountValue),
-      discountPercentage: parseFloat(discountPercentage),
-      notes
-    });
-
-    // Update table status if it's a table comanda
-    if (comanda.table) {
-      await comanda.table.update({ status: 'disponivel' });
-    }
-
-    await logAction(req.user.id, 'comanda_closed', {
-      comandaId: comanda.id,
-      type: comanda.type,
-      tableNumber: comanda.table?.tableNumber,
-      customerName: comanda.customerName,
-      totalValue: comanda.totalValue,
-      finalValue: comanda.finalValue,
-      paymentMethod,
-      paymentStatus
-    });
-
-    res.json({
-      message: 'Comanda closed successfully',
-      comanda
-    });
-  } catch (error) {
-    console.error('Close comanda error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+const closeComanda = async(req,res,next)=>{
+ try{const comanda=await operations.close({...req.body,id:req.params.id,userId:req.user.id});await logAction(req.user.id,'comanda_closed',{comandaId:comanda.id});res.json({comanda});}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 };
-
-const removeItemFromComanda = async (req, res) => {
-  try {
-    const { comandaId, itemId } = req.params;
-
-    const comanda = await Comanda.findByPk(comandaId);
-    if (!comanda) {
-      return res.status(404).json({ error: 'Comanda not found' });
-    }
-
-    if (comanda.status !== 'aberta') {
-      return res.status(400).json({ error: 'Comanda is not open' });
-    }
-
-    const item = await ComandaItem.findOne({
-      where: { id: itemId, comandaId },
-      include: [
-        {
-          model: Product,
-          as: 'product'
-        }
-      ]
-    });
-
-    if (!item) {
-      return res.status(404).json({ error: 'Item not found in comanda' });
-    }
-
-    // Return stock
-    await item.product.update({
-      currentStock: parseFloat(item.product.currentStock) + parseFloat(item.quantity)
-    });
-
-    // Create stock movement for return
-    await StockMovement.create({
-      productId: item.productId,
-      type: 'entrada',
-      quantity: item.quantity,
-      userId: req.user.id,
-      reason: 'return',
-      notes: `Devolução - Remoção de item da comanda ${comandaId}`
-    });
-
-    // Update comanda total
-    const newTotal = parseFloat(comanda.totalValue) - parseFloat(item.totalItemValue);
-    await comanda.update({
-      totalValue: Math.max(0, newTotal)
-    });
-
-    await item.destroy();
-
-    res.json({ message: 'Item removed from comanda successfully' });
-  } catch (error) {
-    console.error('Remove item from comanda error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+const removeItemFromComanda = async(req,res,next)=>{
+ try{await operations.changeItem({comandaId:req.params.comandaId,itemId:req.params.itemId,userId:req.user.id,remove:true});res.json({message:'Item removido'});}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 };
 
 const getAllComandas = async (req, res) => {
@@ -420,122 +224,41 @@ const getOpenComandas = async (req, res) => {
   }
 };
 
-const updateComandaPaymentStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { paymentStatus, notes } = req.body;
-
-    if (!['pendente', 'pago', 'nao_pago'].includes(paymentStatus)) {
-      return res.status(400).json({ error: 'Invalid payment status' });
-    }
-
-    const comanda = await Comanda.findByPk(id);
-    if (!comanda) {
-      return res.status(404).json({ error: 'Comanda not found' });
-    }
-
-    await comanda.update({
-      paymentStatus,
-      notes: notes || comanda.notes
-    });
-
-    await logAction(req.user.id, 'comanda_payment_updated', {
-      comandaId: comanda.id,
-      oldPaymentStatus: comanda.paymentStatus,
-      newPaymentStatus: paymentStatus
-    });
-
-    res.json({
-      message: 'Payment status updated successfully',
-      comanda
-    });
-  } catch (error) {
-    console.error('Update payment status error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+const updateComandaPaymentStatus = async(req,res,next)=>{
+ try{
+  const {paymentStatus,notes}=req.body;if(!['pago','pendente','nao_pago'].includes(paymentStatus))throw operations.fail('Estado inválido');
+  const comanda=await sequelize.transaction(async transaction=>{
+   const cash=await require('../models').CashRegister.findOne({where:{is_open:true},transaction,lock:transaction.LOCK.UPDATE});
+   const c=await Comanda.findByPk(req.params.id,{transaction,lock:transaction.LOCK.UPDATE});
+   if(!c||c.status!=='fechada')throw operations.fail('A comanda deve estar fechada');
+   if(c.paymentStatus==='pago'&&paymentStatus!=='pago')throw operations.fail('Pagamento já registrado; não é possível removê-lo por esta opção');
+   if(paymentStatus==='pago'&&c.paymentStatus!=='pago'){
+    if(!cash)throw operations.fail('Abra o caixa antes de receber');
+    await c.update({paymentStatus,cashRegisterId:cash.id,closedAt:new Date(),notes:notes??c.notes},{transaction});
+   }else await c.update({paymentStatus,notes:notes??c.notes},{transaction});
+   return c;
+  });res.json({comanda});
+ }catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 };
 
-const cancelComanda = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { reason } = req.body;
-
-    const comanda = await Comanda.findByPk(id, {
-      include: [
-        {
-          model: ComandaItem,
-          as: 'items',
-          include: [
-            {
-              model: Product,
-              as: 'product'
-            }
-          ]
-        },
-        {
-          model: Table,
-          as: 'table',
-          required: false
-        }
-      ]
-    });
-
-    if (!comanda) {
-      return res.status(404).json({ error: 'Comanda not found' });
-    }
-
-    if (comanda.status !== 'aberta') {
-      return res.status(400).json({ error: 'Only open comandas can be cancelled' });
-    }
-
-    // Return stock for all items
-    for (const item of comanda.items) {
-      await item.product.update({
-        currentStock: parseFloat(item.product.currentStock) + parseFloat(item.quantity)
-      });
-
-      // Create stock movement for return
-      await StockMovement.create({
-        productId: item.productId,
-        type: 'entrada',
-        quantity: item.quantity,
-        userId: req.user.id,
-        reason: 'return',
-        notes: `Cancelamento da comanda ${id} - ${reason || 'Sem motivo especificado'}`
-      });
-    }
-
-    await comanda.update({
-      status: 'cancelada',
-      closedAt: new Date(),
-      closedByUserId: req.user.id,
-      notes: reason || 'Comanda cancelada'
-    });
-
-    // Update table status if it's a table comanda
-    if (comanda.table) {
-      await comanda.table.update({ status: 'disponivel' });
-    }
-
-    await logAction(req.user.id, 'comanda_cancelled', {
-      comandaId: comanda.id,
-      reason,
-      totalValue: comanda.totalValue
-    });
-
-    res.json({
-      message: 'Comanda cancelled successfully',
-      comanda
-    });
-  } catch (error) {
-    console.error('Cancel comanda error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+const cancelComanda = async(req,res,next)=>{
+ try{
+  const comanda=await sequelize.transaction(async transaction=>{
+   const c=await Comanda.findByPk(req.params.id,{transaction,lock:transaction.LOCK.UPDATE});
+   if(!c||c.status!=='aberta')throw operations.fail('Apenas comandas abertas podem ser canceladas');
+   const items=await ComandaItem.findAll({where:{comandaId:c.id},order:[['productId','ASC']],transaction});
+   for(const item of items){const p=await Product.findByPk(item.productId,{transaction,lock:transaction.LOCK.UPDATE});await p.update({currentStock:Number(p.currentStock)+Number(item.quantity)},{transaction});await StockMovement.create({productId:p.id,userId:req.user.id,sourceComandaId:c.id,type:'entrada',quantity:item.quantity,reason:'return',notes:`Cancelamento da comanda ${c.id}`},{transaction});}
+   await c.update({status:'cancelada',closedAt:new Date(),closedByUserId:req.user.id,notes:req.body.reason||'Comanda cancelada'},{transaction});
+   if(c.tableId)await Table.update({status:'disponivel'},{where:{id:c.tableId},transaction});return c;
+  });
+  await logAction(req.user.id,'comanda_cancelled',{comandaId:comanda.id});res.json({comanda});
+ }catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 };
 
 module.exports = {
   openComanda,
   addItemToComanda,
+  updateItemQuantity,
   getComandaById,
   closeComanda,
   removeItemFromComanda,

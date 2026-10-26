@@ -18,7 +18,7 @@ const Print = () => {
   const [loading, setLoading] = useState(false);
   const [comandas, setComandas] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState({
     from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 dias atrás
     to: new Date()
@@ -30,11 +30,20 @@ const Print = () => {
     fetchComandas();
   }, [statusFilter, dateRange]);
 
+  const printTest = async () => {
+    try {
+      const response=await api.post('/printer/test',{}, {responseType:'blob'});
+      const url=URL.createObjectURL(new Blob([response.data],{type:'application/pdf'}));
+      const link=document.createElement('a');link.href=url;link.download='teste-impressao.pdf';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      toast.success('PDF de teste gerado. Abra-o e selecione sua impressora.');
+    }catch {toast.error('Não foi possível gerar o teste de impressão');}
+  };
+
   const fetchComandas = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (statusFilter) params.append('status', statusFilter);
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
       if (dateRange.from) params.append('startDate', dateRange.from.toISOString());
       if (dateRange.to) params.append('endDate', dateRange.to.toISOString());
       params.append('limit', '100');
@@ -190,7 +199,7 @@ const Print = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Impressão</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Impressão</h1><Button variant="outline" onClick={printTest}>Gerar PDF de teste</Button>
           <p className="text-muted-foreground">
             Impressão de cupons e relatórios
           </p>
@@ -249,7 +258,7 @@ const Print = () => {
                       <SelectValue placeholder="Todos os status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos os status</SelectItem>
+                      <SelectItem value="all">Todos os status</SelectItem>
                       <SelectItem value="fechada">Fechada</SelectItem>
                       <SelectItem value="cancelada">Cancelada</SelectItem>
                     </SelectContent>

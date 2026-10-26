@@ -17,7 +17,7 @@ const login = async (req, res) => {
     }
 
     const user = await User.findOne({ where: { username } });
-    if (!user) {
+    if (!user || !user.active) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -47,7 +47,7 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
   try {
-    const { username, password, role } = req.body;
+    const { username, password, role, email, active } = req.body;
 
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password are required' });
@@ -65,6 +65,8 @@ const register = async (req, res) => {
     const user = await User.create({
       username,
       passwordHash: password,
+      email: email || '',
+      active: active !== false,
       role: role || 'garcom'
     });
 

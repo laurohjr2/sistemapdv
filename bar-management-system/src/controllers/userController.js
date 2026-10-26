@@ -33,7 +33,7 @@ const getUserById = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, role, password } = req.body;
+    const { username, role, password, email, active } = req.body;
 
     const user = await User.findByPk(id);
     if (!user) {
@@ -50,11 +50,18 @@ const updateUser = async (req, res) => {
       updateData.passwordHash = password;
     }
 
+    if (email !== undefined) updateData.email = email;
+    if (active !== undefined) {
+      if (typeof active !== 'boolean') return res.status(400).json({error:'Status inválido'});
+      if (id === req.user.id && !active) return res.status(400).json({error:'Não é possível desativar a própria conta'});
+      updateData.active = active;
+    }
+    if (id === req.user.id && role && role !== 'admin') return res.status(400).json({error:'Não é possível remover seu próprio acesso de administrador'});
     await user.update(updateData);
 
     await logAction(req.user.id, 'user_updated', {
       updatedUserId: user.id,
-      changes: updateData
+      changes: Object.keys(updateData).filter(key=>key!=='passwordHash')
     });
 
     res.json({

@@ -35,4 +35,4 @@ Credenciais, banco local e dependências são excluídos do Git.
 
 ## Auditoria funcional
 
-A revisão ampliada encontrou falhas que impedem uso real. Consulte o [relatório por menu, testes e capturas](docs/auditoria/README.md) antes de iniciar um piloto.
+As falhas da auditoria anterior foram corrigidas nos cenários executados. Consulte a [validação atual, resultados por fluxo e telas](docs/validacao-20261026/README.md). A [auditoria anterior](docs/auditoria/README.md) é mantida como histórico. Impressão física/Windows e implantação ainda precisam de validação antes de uso real.

@@ -33,7 +33,7 @@ const Reports = () => {
   const [paymentData, setPaymentData] = useState([]);
   const [hourlyData, setHourlyData] = useState([]);
   const [productData, setProductData] = useState([]);
-  const [waiterData, setWaiterData] = useState([]);
+  const [, setWaiterData] = useState([]);
   const [financialSummary, setFinancialSummary] = useState({});
   const [stockReport, setStockReport] = useState([]);
   
@@ -48,7 +48,7 @@ const Reports = () => {
     setLoading(true);
     try {
       const startDate = dateRange.from?.toISOString();
-      const endDate = dateRange.to?.toISOString();
+      const endDate = dateRange.to && new Date(new Date(dateRange.to).setHours(23,59,59,999)).toISOString();
       
       const [
         salesResponse,
@@ -90,7 +90,7 @@ const Reports = () => {
   const exportToPDF = async (reportType) => {
     try {
       const startDate = dateRange.from?.toISOString();
-      const endDate = dateRange.to?.toISOString();
+      const endDate = dateRange.to && new Date(new Date(dateRange.to).setHours(23,59,59,999)).toISOString();
       
       const response = await api.get(`/reports/export/pdf?type=${reportType}&startDate=${startDate}&endDate=${endDate}`, {
         responseType: 'blob'
@@ -116,7 +116,7 @@ const Reports = () => {
   const exportToCSV = async (reportType) => {
     try {
       const startDate = dateRange.from?.toISOString();
-      const endDate = dateRange.to?.toISOString();
+      const endDate = dateRange.to && new Date(new Date(dateRange.to).setHours(23,59,59,999)).toISOString();
       
       const response = await api.get(`/reports/export/csv?type=${reportType}&startDate=${startDate}&endDate=${endDate}`, {
         responseType: 'blob'
@@ -379,7 +379,7 @@ const Reports = () => {
                 />
                 <Input
                   type="date"
-                  value={dateRange.to?.toISOString().split('T')[0]}
+                  value={dateRange.to && new Date(new Date(dateRange.to).setHours(23,59,59,999)).toISOString().split('T')[0]}
                   onChange={(e) => setDateRange({...dateRange, to: new Date(e.target.value)})}
                 />
               </div>
@@ -429,7 +429,7 @@ const Reports = () => {
                   R$ {parseFloat(financialSummary.totalRevenue || 0).toFixed(2)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {financialSummary.revenueGrowth > 0 ? '+' : ''}{parseFloat(financialSummary.revenueGrowth || 0).toFixed(1)}% vs período anterior
+                  {typeof financialSummary.revenueGrowth === 'number' ? `${financialSummary.revenueGrowth.toFixed(1)}% vs período anterior` : 'Comparação com período anterior indisponível'}
                 </p>
               </CardContent>
             </Card>
@@ -442,7 +442,7 @@ const Reports = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{financialSummary.totalSales || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {financialSummary.salesGrowth > 0 ? '+' : ''}{parseFloat(financialSummary.salesGrowth || 0).toFixed(1)}% vs período anterior
+                  {typeof financialSummary.salesGrowth === 'number' ? `${financialSummary.salesGrowth.toFixed(1)}% vs período anterior` : 'Comparação com período anterior indisponível'}
                 </p>
               </CardContent>
             </Card>
@@ -457,7 +457,7 @@ const Reports = () => {
                   R$ {parseFloat(financialSummary.averageTicket || 0).toFixed(2)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {financialSummary.ticketGrowth > 0 ? '+' : ''}{parseFloat(financialSummary.ticketGrowth || 0).toFixed(1)}% vs período anterior
+                  {typeof financialSummary.ticketGrowth === 'number' ? `${financialSummary.ticketGrowth.toFixed(1)}% vs período anterior` : 'Comparação com período anterior indisponível'}
                 </p>
               </CardContent>
             </Card>
@@ -630,7 +630,7 @@ const Reports = () => {
                       <div className="text-right">
                         <p className="font-bold">R$ {parseFloat(payment.total).toFixed(2)}</p>
                         <p className="text-sm text-muted-foreground">
-                          {((payment.total / financialSummary.totalRevenue) * 100).toFixed(1)}%
+                          {((Number(financialSummary.totalRevenue) ? payment.total / financialSummary.totalRevenue : 0) * 100).toFixed(1)}%
                         </p>
                       </div>
                     </div>

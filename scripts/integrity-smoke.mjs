@@ -1,0 +1,44 @@
+import assert from 'node:assert/strict';
+import {randomBytes} from 'node:crypto';
+const base=process.env.PDV_API_URL||'http://127.0.0.1:5183/api';
+let token,checks=0;
+async function req(path,method='GET',data,expected=200,auth=token){
+ const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(auth?{Authorization:`Bearer ${auth}`}:{})},body:data===undefined?undefined:JSON.stringify(data),signal:AbortSignal.timeout(15000)});
+ const text=await r.text();let body;try{body=JSON.parse(text)}catch{body=text.slice(0,20)}
+ if(expected!==null)assert.equal(r.status,expected,`${method} ${path}: ${JSON.stringify(body)}`);checks++;return {status:r.status,body};
+}
+token=(await req('/auth/login','POST',{username:'admin.dev',password:process.env.DEV_ADMIN_PASSWORD})).body.token;
+if((await req('/cash-register/status')).body.is_open)await req('/cash-register/close','POST',{closing_amount:0});
+const opened=await Promise.all([1,2].map(()=>req('/cash-register/open','POST',{opening_amount:0},null)));assert.deepEqual(opened.map(r=>r.status).sort(),[201,400]);const cash=opened.find(r=>r.status===201).body;
+const stamp=Date.now();const product=(await req('/products','POST',{name:`Integridade ${stamp}`,category:'outros',unitOfMeasure:'unidade',costPrice:2,salePrice:10},201)).body.product;
+await req('/stock/add','POST',{productId:product.id,quantity:1},201);
+const removals=await Promise.all([1,2].map(()=>req('/stock/remove','POST',{productId:product.id,quantity:1,reason:'loss'},null)));assert.deepEqual(removals.map(r=>r.status).sort(),[201,400]);assert.equal(Number((await req(`/products/${product.id}`)).body.currentStock),0);
+await req('/stock/add','POST',{productId:product.id,quantity:20},201);
+const canceled=(await req('/comandas','POST',{type:'balcao',customerName:'Teste cancelamento'},201)).body.comanda;
+await req(`/comandas/${canceled.id}/items`,'POST',{productId:product.id,quantity:2},201);
+const cancellations=await Promise.all([1,2].map(()=>req(`/comandas/${canceled.id}/cancel`,'PUT',{},null)));assert.deepEqual(cancellations.map(r=>r.status).sort(),[200,400]);assert.equal(Number((await req(`/products/${product.id}`)).body.currentStock),20);
+await req('/sales','POST',{items:[{product_id:product.id,quantity:1}],payment_method:'pix',cash_register_id:cash.id},201);
+const comanda=(await req('/comandas','POST',{type:'balcao',customerName:'Pagamento dinheiro'},201)).body.comanda;
+await req(`/comandas/${comanda.id}/items`,'POST',{productId:product.id,quantity:2},201);
+await req(`/comandas/${comanda.id}/close`,'PUT',{paymentMethod:'dinheiro',discountValue:5});
+const ticket=(await req('/tickets','POST',{productId:product.id,quantity:1,paymentMethod:'cartao_debito'},201)).body;
+await req(`/tickets/${ticket.ticket_number}/redeem`,'POST');await req(`/tickets/${ticket.ticket_number}/redeem`,'POST',{},400);await req(`/tickets/${ticket.ticket_number}/cancel`,'POST',{},400);
+const later=(await req('/comandas','POST',{type:'balcao',customerName:'Pagamento posterior'},201)).body.comanda;
+await req(`/comandas/${later.id}/items`,'POST',{productId:product.id,quantity:1},201);
+await req(`/comandas/${later.id}/close`,'PUT',{paymentMethod:'pix',paymentStatus:'pendente'});
+const closing=(await req('/cash-register/close','POST',{closing_amount:15})).body;
+assert.equal(closing.total_sales,35);assert.equal(closing.expected_amount,15);assert.equal(closing.difference,0);assert.deepEqual(closing.by_payment,{pix:10,cartao_debito:10,dinheiro:15});
+await req('/cash-register/close','POST',{closing_amount:15},400);
+const newCash=(await req('/cash-register/open','POST',{opening_amount:0},201)).body;
+await req(`/comandas/${later.id}/payment-status`,'PUT',{paymentStatus:'pago'});
+assert.equal((await req(`/cash-register/report/${newCash.id}`)).body.totalRevenue,10);
+await req(`/comandas/${later.id}/payment-status`,'PUT',{paymentStatus:'pendente'},400);
+const username=`deactivated${stamp}`,password=randomBytes(12).toString('hex');const user=(await req('/users','POST',{username,password,role:'garcom'},201)).body.user;
+const employee=(await req('/auth/login','POST',{username,password})).body.token;
+await req(`/users/${user.id}`,'PUT',{active:false});await req('/auth/login','POST',{username,password},401);await req('/auth/validate','GET',undefined,401,employee);
+const table=(await req('/tables','POST',{tableNumber:Math.floor(Math.random()*1000000000)+1,capacity:4},201)).body.table;
+const tableComanda=(await req(`/tables/${table.id}/open-comanda`,'POST',{},201)).body.comanda;
+await req(`/comandas/${tableComanda.id}/items`,'POST',{productId:product.id,quantity:1},201);
+const receipt=(await req(`/tables/${table.id}/close-comanda`,'POST',{paymentMethod:'pix'})).body.receipt;
+assert.equal(Number(receipt.totalValue),10);assert.equal(receipt.items[0].productName,product.name);assert.equal(receipt.items.length,1);
+console.log(`${checks} verificações HTTP aprovadas: concorrência de estoque/caixa/cancelamento, tickets, desconto, separação de pagamentos, recebimento posterior e revogação de acesso.`);

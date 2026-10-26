@@ -46,7 +46,7 @@ app.use('/api/cash-register', cashRegisterRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/tickets', require('./src/routes/tickets'));
 app.use('/api/print', require('./src/routes/print'));
-// app.use('/api/printer', printerRoutes);
+app.use('/api/printer', require('./src/routes/printer'));
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -75,6 +75,7 @@ async function startServer() {
     // Sync database models
     await sequelize.sync({ force: false });
     await require('./src/migrations/queueSeating')(sequelize);
+    await require('./src/migrations/auditFixes')(sequelize);
     console.log('Database models synchronized.');
     
     app.listen(PORT, '0.0.0.0', () => {

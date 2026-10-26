@@ -15,6 +15,7 @@ process.loadEnvFile('/workspace/sistemapdv/.pdv-local/development.env');
  await page.waitForURL(base+'/');
  const token=await page.evaluate(()=>localStorage.getItem('token'));
  const headers={Authorization:`Bearer ${token}`};
+ if(!(await (await page.request.get(base+'/api/cash-register/status',{headers})).json()).is_open) await page.request.post(base+'/api/cash-register/open',{headers,data:{opening_amount:0}});
  const stamp=Date.now();
  const tableResponse=await page.request.post(base+'/api/tables',{headers,data:{tableNumber:Math.floor(Math.random()*1000000)+1000,capacity:4}});
  assert.equal(tableResponse.status(),201);

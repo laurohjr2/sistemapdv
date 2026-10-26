@@ -2,6 +2,13 @@ const { Product } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 const { Op } = require('sequelize');
 
+function validateFields(body) {
+ if(body.unitOfMeasure!==undefined&&!Product.rawAttributes.unitOfMeasure.values.includes(body.unitOfMeasure))return 'Unidade de medida inválida';
+ if(body.category!==undefined&&!Product.rawAttributes.category.values.includes(body.category))return 'Categoria inválida';
+ for(const key of ['costPrice','salePrice','minStockAlert'])if(body[key]!==undefined&&(!Number.isFinite(Number(body[key]))||Number(body[key])<0))return 'Preço ou estoque mínimo inválido';
+ return null;
+}
+
 const getAllProducts = async (req, res) => {
   try {
     const { category, lowStock, active, search } = req.query;
@@ -58,6 +65,7 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
+    const validationError=validateFields(req.body);if(validationError)return res.status(400).json({error:validationError});
     const { 
       name, 
       description,
@@ -75,7 +83,7 @@ const createProduct = async (req, res) => {
       nutritionalInfo
     } = req.body;
 
-    if (!name || !category || !unitOfMeasure || !costPrice || !salePrice) {
+    if (!name || !category || !unitOfMeasure || costPrice === undefined || salePrice === undefined) {
       return res.status(400).json({ 
         error: 'Name, category, unit of measure, cost price, and sale price are required' 
       });
@@ -104,7 +112,7 @@ const createProduct = async (req, res) => {
       costPrice,
       salePrice,
       minStockAlert: minStockAlert || 0,
-      barcode,
+      barcode: barcode?.trim() || null,
       active: active !== undefined ? active : true,
       preparationTime,
       ingredients,
@@ -130,6 +138,7 @@ const createProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
   try {
+    const validationError=validateFields(req.body);if(validationError)return res.status(400).json({error:validationError});
     const { id } = req.params;
     const { 
       name, 
@@ -190,7 +199,7 @@ const updateProduct = async (req, res) => {
     if (costPrice !== undefined) updateData.costPrice = costPrice;
     if (salePrice !== undefined) updateData.salePrice = salePrice;
     if (minStockAlert !== undefined) updateData.minStockAlert = minStockAlert;
-    if (barcode !== undefined) updateData.barcode = barcode;
+    if (barcode !== undefined) updateData.barcode = barcode?.trim() || null;
     if (active !== undefined) updateData.active = active;
     if (preparationTime !== undefined) updateData.preparationTime = preparationTime;
     if (ingredients !== undefined) updateData.ingredients = ingredients;

@@ -12,6 +12,8 @@ async function request(path, method='GET', data, expected=200) {
 }
 token=(await request('/auth/login','POST',{username:'admin.dev',password:process.env.DEV_ADMIN_PASSWORD})).body.token;
 const stamp=Date.now();
+if (!(await request('/cash-register/status')).body.is_open) await request('/cash-register/open','POST',{opening_amount:0},201);
+
 let tableNumber=100000000+Math.floor(Math.random()*1000000000);
 const newTable=async (capacity=4) => (await request('/tables','POST',{tableNumber:tableNumber++,capacity},201)).body.table;
 const newClient=async (people=2) => (await request('/waiting-queue','POST',{clientName:`Fila ${stamp} ${randomUUID().slice(0,8)}`,clientPhone:'11999990000',numberOfPeople:people},201)).body.queueEntry;

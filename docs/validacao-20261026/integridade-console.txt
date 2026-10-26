@@ -1,0 +1,1 @@
+42 verificações HTTP aprovadas: concorrência de estoque/caixa/cancelamento, tickets, desconto, separação de pagamentos, recebimento posterior e revogação de acesso.

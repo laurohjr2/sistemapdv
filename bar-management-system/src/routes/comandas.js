@@ -2,6 +2,7 @@ const express = require('express');
 const { 
   openComanda,
   addItemToComanda,
+  updateItemQuantity,
   getComandaById,
   closeComanda,
   removeItemFromComanda,
@@ -25,6 +26,7 @@ router.get('/:id', getComandaById);
 // Routes for garcom, gerente and admin
 router.post('/', authorizeRoles('garcom', 'gerente', 'admin'), openComanda);
 router.post('/:comandaId/items', authorizeRoles('garcom', 'gerente', 'admin'), addItemToComanda);
+router.put('/:comandaId/items/:itemId', authorizeRoles('garcom','gerente','admin'), updateItemQuantity);
 router.delete('/:comandaId/items/:itemId', authorizeRoles('garcom', 'gerente', 'admin'), removeItemFromComanda);
 
 // Routes for gerente and admin only

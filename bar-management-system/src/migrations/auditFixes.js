@@ -1,0 +1,5 @@
+module.exports=async sequelize=>{
+ await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT true,
+ ADD COLUMN IF NOT EXISTS email VARCHAR(150) NOT NULL DEFAULT '', ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ ALTER TABLE tickets ADD COLUMN IF NOT EXISTS sale_id INTEGER REFERENCES sales(id)`);
+};

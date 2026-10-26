@@ -1,5 +1,6 @@
 const express = require('express');
 const { 
+  exportReport,
   getSalesReport,
   getProductConsumptionReport,
   getWaiterPerformanceReport,
@@ -18,6 +19,10 @@ const router = express.Router();
 // All routes require authentication
 router.use(authenticateToken);
 
+router.get('/categories', authorizeRoles('gerente','admin'),getSalesByCategory);
+router.get('/payments', authorizeRoles('gerente','admin'),getSalesByPaymentMethod);
+router.get('/hourly', authorizeRoles('gerente','admin'),getSalesByHour);
+router.get('/export/:format', authorizeRoles('gerente','admin'),(req,res,next)=>{if(!['csv','pdf'].includes(req.params.format))return res.sendStatus(404);return exportReport(req,res,next);});
 // Routes accessible by gerente and admin
 router.get('/sales', authorizeRoles('gerente', 'admin'), getSalesReport);
 router.get('/products', authorizeRoles('gerente', 'admin'), getProductConsumptionReport);

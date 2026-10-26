@@ -93,3 +93,9 @@ NODE_PATH=/tmp/pdv-browser/node_modules PDV_WEB_URL=http://127.0.0.1:5178 node s
 ```
 
 O teste HTTP de PDF requer `pdftotext`, disponível nesta máquina. O teste de navegador requer a instalação temporária de Playwright descrita acima e utiliza `scripts/fixtures/logo.png`, uma imagem sintética de teste. Impressoras físicas continuam fora da validação.
+
+## Correções após auditoria (26/10/2026)
+
+A validação atual está em [docs/validacao-20261026/README.md](docs/validacao-20261026/README.md), com resultados, imagens e limites. Substitui as limitações de fluxos relatadas nas etapas anteriores deste documento. A migração `auditFixes.js` é aditiva; inicialização padrão preserva os dados. Usuários agora têm e-mail/status e exclusão lógica. Tickets novos registram a venda no caixa. Receber comanda exige caixa aberto; apenas contas pagas entram nas receitas. Estorno de venda em caixa fechado é recusado para preservar a conferência histórica. Não force reset do banco para preparar o ambiente.
+
+Os scripts de teste foram ajustados para abrir caixa explicitamente quando necessário. O relatório antigo é histórico, não o estado atual. Impressão física, conector Windows e funcionalidades SaaS continuam pendentes.

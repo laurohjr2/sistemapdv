@@ -15,6 +15,7 @@ const {User,sequelize} = require('../bar-management-system/src/models');
   await sequelize.authenticate();
   await sequelize.sync();
   await require('../bar-management-system/src/migrations/queueSeating')(sequelize);
+  await require('../bar-management-system/src/migrations/auditFixes')(sequelize);
   await User.findOrCreate({where:{username:'admin.dev'},defaults:{passwordHash:process.env.DEV_ADMIN_PASSWORD,role:'admin'}});
   await sequelize.close();
   console.log('Banco e administrador de desenvolvimento preparados. Credenciais em .pdv-local/development.env.');

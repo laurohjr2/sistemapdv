@@ -17,8 +17,8 @@ router.get('/comanda/:id', authorizeRoles('garcom', 'gerente', 'admin'), generat
 router.get('/comanda/:id/reprint', authorizeRoles('garcom', 'gerente', 'admin'), reprintReceipt);
 
 // Routes for gerente and admin only
-router.get('/sales-report', authorizeRoles('gerente', 'admin'), generateSalesReport);
-router.get('/product-report', authorizeRoles('gerente', 'admin'), generateProductReport);
+router.get('/sales-report', authorizeRoles('gerente', 'admin'), (req,res,next)=>{req.params.format='pdf';req.query.type='sales';return require('../controllers/reportController').exportReport(req,res,next)});
+router.get('/product-report', authorizeRoles('gerente', 'admin'), (req,res,next)=>{req.params.format='pdf';req.query.type='products';return require('../controllers/reportController').exportReport(req,res,next)});
 
 module.exports = router;
 

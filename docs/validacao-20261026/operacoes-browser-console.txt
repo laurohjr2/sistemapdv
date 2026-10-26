@@ -1,0 +1,1 @@
+Navegador aprovado: cadastro no estoque, entrada, saldo em Produtos, preparo até entrega na cozinha e downloads PDF/CSV e teste de impressão em PDF.

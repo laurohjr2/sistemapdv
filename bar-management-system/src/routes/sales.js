@@ -3,7 +3,7 @@ const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
 
 // Importar modelos necessários
-const { Sale, SaleItem, Product, StockMovement, CashRegister } = require('../models');
+const { Sale, SaleItem, Product, StockMovement, CashRegister, Ticket } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 
 const { sequelize } = require('../models');
@@ -138,7 +138,14 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
   try {
     if (!['admin', 'gerente'].includes(req.user.role)) throw fail('Sem permissão para cancelar vendas', 403);
     const sale = await sequelize.transaction(async transaction => {
+      const snapshot = await Sale.findByPk(req.params.id, { transaction });
+      if (!snapshot) throw fail('Venda não encontrada',404);
+      const cash = await CashRegister.findByPk(snapshot.cash_register_id,{transaction,lock:transaction.LOCK.UPDATE});
+      if (!cash?.is_open) throw fail('O caixa desta venda já foi fechado');
       const sale = await Sale.findByPk(req.params.id, { transaction, lock: transaction.LOCK.UPDATE });
+      const ticket = await Ticket.findOne({where:{sale_id:sale.id},transaction,lock:transaction.LOCK.UPDATE});
+      if(ticket && ticket.status !== 'pending') throw fail('Ticket já utilizado ou cancelado');
+      if(ticket) await ticket.update({status:'cancelled'},{transaction});
       if (!sale) throw fail('Venda não encontrada', 404);
       if (sale.status === 'cancelled') throw fail('Venda já foi cancelada');
       const items = await SaleItem.findAll({ where: { sale_id: sale.id }, order: [['product_id', 'ASC']], transaction });

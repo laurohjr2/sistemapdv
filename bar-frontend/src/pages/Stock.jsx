@@ -19,7 +19,6 @@ const Stock = () => {
   const [stockSummary, setStockSummary] = useState({});
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
@@ -28,7 +27,6 @@ const Stock = () => {
   const [isAddStockOpen, setIsAddStockOpen] = useState(false);
   const [isRemoveStockOpen, setIsRemoveStockOpen] = useState(false);
   const [isAdjustStockOpen, setIsAdjustStockOpen] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   
   // Form states
@@ -58,7 +56,7 @@ const Stock = () => {
     name: '',
     category: '',
     price: '',
-    unitOfMeasure: 'un',
+    unitOfMeasure: 'unidade',
     minStockAlert: '10',
     description: ''
   });
@@ -131,7 +129,8 @@ const Stock = () => {
       await api.post('/products', {
         name: newProductForm.name,
         category: newProductForm.category,
-        price: parseFloat(newProductForm.price),
+        salePrice: parseFloat(newProductForm.price),
+        costPrice: 0,
         unitOfMeasure: newProductForm.unitOfMeasure,
         minStockAlert: parseFloat(newProductForm.minStockAlert),
         description: newProductForm.description
@@ -219,7 +218,7 @@ const Stock = () => {
       name: '',
       category: '',
       price: '',
-      unitOfMeasure: 'un',
+      unitOfMeasure: 'unidade',
       minStockAlert: '10',
       description: ''
     });
@@ -347,11 +346,11 @@ const Stock = () => {
                           <SelectValue placeholder="Unidade" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="un">Unidade</SelectItem>
+                          <SelectItem value="unidade">Unidade</SelectItem>
                           <SelectItem value="kg">Quilograma</SelectItem>
-                          <SelectItem value="l">Litro</SelectItem>
+                          <SelectItem value="litro">Litro</SelectItem>
                           <SelectItem value="ml">Mililitro</SelectItem>
-                          <SelectItem value="g">Grama</SelectItem>
+                          <SelectItem value="gramas">Grama</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

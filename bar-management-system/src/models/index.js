@@ -57,6 +57,8 @@ SaleItem.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 Comanda.belongsTo(User, { foreignKey: 'closedByUserId', as: 'closedByUser' });
 
+ComandaItem.belongsTo(User, {foreignKey:'deliveredByUserId',as:'deliveredByUser'});
+
 // Ticket associations
 Product.hasMany(Ticket, { foreignKey: 'product_id', as: 'tickets' });
 Ticket.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });

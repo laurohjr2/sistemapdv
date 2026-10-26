@@ -1,0 +1,66 @@
+[
+  {
+    "name": "Dashboard",
+    "errors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "Vendas",
+    "errors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "Mesas",
+    "errors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "Estoque",
+    "errors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "Comandas",
+    "errors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "Cozinha",
+    "errors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "Fila",
+    "errors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "Relatorios",
+    "errors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "Configuracoes",
+    "errors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "Usuarios",
+    "errors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "Produtos",
+    "errors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "Impressao",
+    "errors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "Usuarios: formulário de criação",
+    "status": 201
+  }
+]

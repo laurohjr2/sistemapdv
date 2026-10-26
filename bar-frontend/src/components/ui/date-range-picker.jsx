@@ -15,7 +15,7 @@ export function DatePickerWithRange({
   ...props
 }) {
   return (
-    <div className={cn("grid gap-2", className)}>
+    <div className={cn("grid gap-2", className)} {...props}>
       <Popover>
         <PopoverTrigger asChild>
           <Button

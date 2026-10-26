@@ -2,162 +2,28 @@ const { StockMovement, Product, User, Comanda, sequelize } = require('../models'
 const { logAction } = require('../utils/auditLogger');
 const { Op } = require('sequelize');
 
-const addStock = async (req, res) => {
-  try {
-    const { productId, quantity, notes, unitCost } = req.body;
-
-    if (!productId || !quantity || quantity <= 0) {
-      return res.status(400).json({ 
-        error: 'Product ID and positive quantity are required' 
-      });
-    }
-
-    const product = await Product.findByPk(productId);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    const stockMovement = await StockMovement.create({
-      productId,
-      type: 'entrada',
-      quantity,
-      userId: req.user.id,
-      notes,
-      unitCost: unitCost || product.costPrice
-    });
-
-    const newStock = parseFloat(product.currentStock) + parseFloat(quantity);
-    await product.update({
-      currentStock: newStock
-    });
-
-    await logAction(req.user.id, 'stock_added', {
-      productId,
-      productName: product.name,
-      quantity,
-      oldStock: product.currentStock,
-      newStock: newStock
-    });
-
-    res.status(201).json({
-      message: 'Stock added successfully',
-      stockMovement,
-      newStock: newStock
-    });
-  } catch (error) {
-    console.error('Add stock error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+const changeStock = mode => async(req,res,next)=>{
+ try {
+  const result=await sequelize.transaction(async transaction=>{
+   const product=await Product.findByPk(req.body.productId,{transaction,lock:transaction.LOCK.UPDATE});
+   if(!product)throw Object.assign(new Error('Produto não encontrado'),{status:404});
+   const oldStock=Number(product.currentStock),quantity=Number(mode==='adjust'?req.body.newQuantity:req.body.quantity);
+   if(!Number.isFinite(quantity)||quantity<(mode==='adjust'?0:0.001)||Math.abs(quantity*1000-Math.round(quantity*1000))>1e-6)throw Object.assign(new Error('Quantidade inválida'),{status:400});
+   const newStock=mode==='adjust'?quantity:oldStock+(mode==='add'?quantity:-quantity),difference=newStock-oldStock;
+   if(newStock<0)throw Object.assign(new Error('Estoque insuficiente'),{status:400});
+   const cost=Number(req.body.unitCost??product.costPrice);if(!Number.isFinite(cost)||cost<0)throw Object.assign(new Error('Custo inválido'),{status:400});
+   let stockMovement;
+   if(difference){
+    stockMovement=await StockMovement.create({productId:product.id,userId:req.user.id,type:difference>0?'entrada':'saida',quantity:Math.abs(difference),unitCost:cost,reason:mode==='adjust'?'adjustment':mode==='add'?'purchase':req.body.reason||'manual_adjustment',notes:req.body.notes,batchNumber:req.body.batchNumber,expirationDate:req.body.expirationDate||null},{transaction});
+    await product.update({currentStock:newStock},{transaction});
+   }
+   return {oldStock,newStock,difference,stockMovement};
+  });
+  await logAction(req.user.id,`stock_${mode}`,{productId:req.body.productId,oldStock:result.oldStock,newStock:result.newStock});
+  res.status(mode==='adjust'?200:201).json(result);
+ }catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 };
-
-const removeStock = async (req, res) => {
-  try {
-    const { productId, quantity, notes, reason } = req.body;
-
-    if (!productId || !quantity || quantity <= 0) {
-      return res.status(400).json({ 
-        error: 'Product ID and positive quantity are required' 
-      });
-    }
-
-    const product = await Product.findByPk(productId);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    if (parseFloat(product.currentStock) < parseFloat(quantity)) {
-      return res.status(400).json({ 
-        error: 'Insufficient stock. Available: ' + product.currentStock 
-      });
-    }
-
-    const stockMovement = await StockMovement.create({
-      productId,
-      type: 'saida',
-      quantity,
-      userId: req.user.id,
-      notes: notes || reason,
-      reason: reason || 'manual_adjustment'
-    });
-
-    const newStock = parseFloat(product.currentStock) - parseFloat(quantity);
-    await product.update({
-      currentStock: newStock
-    });
-
-    await logAction(req.user.id, 'stock_removed', {
-      productId,
-      productName: product.name,
-      quantity,
-      reason,
-      oldStock: product.currentStock,
-      newStock: newStock
-    });
-
-    res.status(201).json({
-      message: 'Stock removed successfully',
-      stockMovement,
-      newStock: newStock
-    });
-  } catch (error) {
-    console.error('Remove stock error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-const adjustStock = async (req, res) => {
-  try {
-    const { productId, newQuantity, notes } = req.body;
-
-    if (!productId || newQuantity < 0) {
-      return res.status(400).json({ 
-        error: 'Product ID and non-negative quantity are required' 
-      });
-    }
-
-    const product = await Product.findByPk(productId);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    const oldStock = parseFloat(product.currentStock);
-    const newStock = parseFloat(newQuantity);
-    const difference = newStock - oldStock;
-
-    if (difference !== 0) {
-      await StockMovement.create({
-        productId,
-        type: difference > 0 ? 'entrada' : 'saida',
-        quantity: Math.abs(difference),
-        userId: req.user.id,
-        notes: notes || 'Stock adjustment',
-        reason: 'adjustment'
-      });
-
-      await product.update({
-        currentStock: newStock
-      });
-
-      await logAction(req.user.id, 'stock_adjusted', {
-        productId,
-        productName: product.name,
-        oldStock,
-        newStock,
-        difference
-      });
-    }
-
-    res.json({
-      message: 'Stock adjusted successfully',
-      oldStock,
-      newStock,
-      difference
-    });
-  } catch (error) {
-    console.error('Adjust stock error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
+const addStock=changeStock('add'),removeStock=changeStock('remove'),adjustStock=changeStock('adjust');
 
 const getStockMovements = async (req, res) => {
   try {
@@ -351,10 +217,8 @@ const getStockSummary = async (req, res) => {
       }
     });
 
-    const totalStockValue = await Product.sum(
-      sequelize.literal('"currentStock" * "costPrice"'),
-      { where: { active: true } }
-    );
+    const valuation = await Product.findAll({attributes:[[sequelize.fn('SUM',sequelize.literal('"current_stock" * "cost_price"')),'total']],where:{active:true},raw:true});
+    const totalStockValue = Number(valuation[0]?.total || 0);
 
     const recentMovements = await StockMovement.count({
       where: {

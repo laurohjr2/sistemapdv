@@ -1,0 +1,160 @@
+[
+  {
+    "route": "/",
+    "name": "Dashboard",
+    "rendered": true,
+    "headings": [
+      "Dashboard"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/sales",
+    "name": "Vendas",
+    "rendered": true,
+    "headings": [
+      "Vendas",
+      "Painel de Vendas",
+      "Auditoria 1792988618909",
+      "Cadastro estoque 1792988618909",
+      "Custo zero 1792988618909",
+      "Integridade 1792988676021"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/tables",
+    "name": "Mesas",
+    "rendered": true,
+    "headings": [
+      "Mesas",
+      "Mesas"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/stock",
+    "name": "Estoque",
+    "rendered": true,
+    "headings": [
+      "Estoque",
+      "Estoque"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/comandas",
+    "name": "Comandas",
+    "rendered": true,
+    "headings": [
+      "Comandas",
+      "Comandas"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/kitchen",
+    "name": "Cozinha",
+    "rendered": true,
+    "headings": [
+      "Cozinha",
+      "Pedidos da cozinha"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/queue",
+    "name": "Fila",
+    "rendered": true,
+    "headings": [
+      "Fila de Espera",
+      "Fila de espera"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/reports",
+    "name": "Relatorios",
+    "rendered": true,
+    "headings": [
+      "Relatórios",
+      "Relatórios"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/settings",
+    "name": "Configuracoes",
+    "rendered": true,
+    "headings": [
+      "Configurações",
+      "Configurações"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "route": "/users",
+    "name": "Usuarios",
+    "rendered": true,
+    "headings": [
+      "Usuários",
+      "Usuários"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": [
+      "deactivated1792988676021\t\tGarçom\tInativo\t",
+      "inactive1792988618909\t\tGarçom\tInativo\t"
+    ]
+  },
+  {
+    "route": "/products",
+    "name": "Produtos",
+    "rendered": true,
+    "headings": [
+      "Produtos",
+      "Produtos"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": [
+      "Produtos Inativos",
+      "Inativos (0)"
+    ]
+  },
+  {
+    "route": "/print",
+    "name": "Impressao",
+    "rendered": true,
+    "headings": [
+      "Impressão",
+      "Impressão"
+    ],
+    "errors": [],
+    "failedRequests": [],
+    "visibleMessages": []
+  },
+  {
+    "name": "Usuarios: formulário de criação",
+    "passed": true,
+    "status": 201
+  }
+]

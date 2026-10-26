@@ -38,6 +38,8 @@ const Layout = () => {
     { name: 'Dashboard', href: '/', icon: Home, roles: ['gerente', 'admin'] },
     { name: 'Vendas', href: '/sales', icon: Receipt, roles: ['garcom', 'gerente', 'admin'] },
     { name: 'Mesas', href: '/tables', icon: Table, roles: ['garcom', 'gerente', 'admin'] },
+    { name: 'Produtos', href: '/products', icon: Package, roles: ['gerente', 'admin'] },
+    { name: 'Impressão', href: '/print', icon: Printer, roles: ['garcom', 'gerente', 'admin'] },
     { name: 'Estoque', href: '/stock', icon: Warehouse, roles: ['gerente', 'admin'] },
     { name: 'Comandas', href: '/comandas', icon: Receipt, roles: ['garcom', 'gerente', 'admin'] },
     { name: 'Cozinha', href: '/kitchen', icon: ChefHat, roles: ['garcom', 'gerente', 'admin'] },

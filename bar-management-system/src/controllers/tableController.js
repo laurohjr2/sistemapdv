@@ -198,68 +198,14 @@ const openTableComanda = async (req, res) => {
   }
 };
 
-const closeTableComanda = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { paymentMethod } = req.body;
-
-    const table = await Table.findByPk(id);
-    if (!table) {
-      return res.status(404).json({ error: 'Table not found' });
-    }
-
-    const comanda = await Comanda.findOne({
-      where: { tableId: id, status: 'aberta' },
-      include: [
-        {
-          model: ComandaItem,
-          as: 'items',
-          include: [
-            {
-              model: Product,
-              as: 'product',
-              attributes: ['name', 'salePrice']
-            }
-          ]
-        }
-      ]
-    });
-
-    if (!comanda) {
-      return res.status(404).json({ error: 'No open comanda found for this table' });
-    }
-
-    await comanda.update({
-      status: 'fechada',
-      closedAt: new Date(),
-      paymentMethod
-    });
-
-    // Update table status
-    await table.update({ status: 'disponivel' });
-
-    await logAction(req.user.id, 'comanda_closed', {
-      comandaId: comanda.id,
-      tableNumber: table.tableNumber,
-      totalValue: comanda.totalValue,
-      paymentMethod
-    });
-
-    res.json({
-      message: 'Comanda closed successfully',
-      comanda,
-      receipt: {
-        tableNumber: table.tableNumber,
-        items: comanda.items,
-        totalValue: comanda.totalValue,
-        paymentMethod,
-        closedAt: comanda.closedAt
-      }
-    });
-  } catch (error) {
-    console.error('Close table comanda error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+const closeTableComanda = async(req,res,next)=>{
+ try{
+ const comanda=await require('../services/comandaOperations').close({tableId:req.params.id,userId:req.user.id,paymentMethod:req.body.paymentMethod});
+ const table=await Table.findByPk(req.params.id);
+ const items=await ComandaItem.findAll({where:{comandaId:comanda.id},include:[{model:Product,as:'product'}]});
+ const receipt={tableNumber:table.tableNumber,comandaId:comanda.id,items:items.map(item=>({productName:item.product.name,quantity:item.quantity,priceAtSale:item.priceAtSale,totalItemValue:item.totalItemValue})),totalValue:comanda.finalValue,paymentMethod:comanda.paymentMethod,closedAt:comanda.closedAt};
+ res.json({comanda,receipt,message:'Comanda paga e mesa liberada'});
+ }catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 };
 
 const getTableReceipt = async (req, res) => {

@@ -171,17 +171,6 @@ const Tables = () => {
     );
   };
 
-  const handleChangeStatus = async (tableId, newStatus) => {
-    try {
-      await api.put(`/tables/${tableId}`, { status: newStatus });
-      toast.success('Status da mesa atualizado!');
-      fetchTables();
-    } catch (error) {
-      console.error('Erro ao atualizar status:', error);
-      toast.error('Erro ao atualizar status da mesa');
-    }
-  };
-
   const printReceipt = () => {
     if (!receiptData) return;
     

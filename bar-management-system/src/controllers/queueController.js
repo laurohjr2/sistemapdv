@@ -31,6 +31,7 @@ const getQueueItems = async (req, res) => {
       {
         model: Comanda,
         as: 'comanda',
+        where: {status:'aberta'},
         attributes: ['id', 'type', 'customerName', 'tableId'],
         include: [
           {
@@ -210,75 +211,17 @@ const updateItemPriority = async (req, res) => {
   }
 };
 
-const getQueueSummary = async (req, res) => {
-  try {
-    const summary = await ComandaItem.findAll({
-      attributes: [
-        'preparationStatus',
-        [ComandaItem.sequelize.fn('COUNT', ComandaItem.sequelize.col('id')), 'count']
-      ],
-      where: {
-        preparationStatus: {
-          [Op.in]: ['pendente', 'preparando', 'pronto']
-        }
-      },
-      group: ['preparationStatus']
-    });
-    const averagePreparationTime = await ComandaItem.findAll({
-      attributes: [
-        [
-          ComandaItem.sequelize.fn(
-            'AVG',
-            ComandaItem.sequelize.literal(
-              'EXTRACT(EPOCH FROM (preparation_completed_at - preparation_started_at))/60'
-            )
-          ),
-          'avgMinutes'
-        ]
-      ],
-      where: {
-        preparationStatus: 'pronto',
-        preparationStartedAt: { [Op.not]: null },
-        preparationCompletedAt: { [Op.not]: null },
-        createdAt: {
-          [Op.gte]: new Date(Date.now() - 24 * 60 * 60 * 1000) // Últimas 24 horas
-        }
-      }
-    });
-
-    const oldestPendingItem = await ComandaItem.findOne({
-      where: { preparationStatus: 'pendente' },
-      order: [['created_at', 'ASC']],
-      include: [
-        {
-          model: Product,
-          as: 'product',
-          attributes: ['name']
-        }
-      ]
-    });
-
-    const formattedSummary = {
-      pendente: 0,
-      preparando: 0,
-      pronto: 0,
-      averagePreparationTime: parseFloat(averagePreparationTime[0]?.dataValues?.avgMinutes || 0).toFixed(1),
-      oldestPendingItem: oldestPendingItem ? {
-        id: oldestPendingItem.id,
-        productName: oldestPendingItem.product.name,
-        waitingTime: Math.round((new Date() - new Date(oldestPendingItem.createdAt)) / (1000 * 60))
-      } : null
-    };
-
-    summary.forEach(item => {
-      formattedSummary[item.preparationStatus] = parseInt(item.dataValues.count);
-    });
-
-    res.json(formattedSummary);
-  } catch (error) {
-    console.error('Get queue summary error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+const getQueueSummary = async(req,res,next)=>{
+ try {
+ const items=await ComandaItem.findAll({include:[{model:Comanda,as:'comanda',where:{status:'aberta'},attributes:['id']},{model:Product,as:'product',attributes:['name']}]});
+ const summary={pendente:0,preparando:0,pronto:0,averagePreparationTime:0,oldestPendingItem:null};
+ let count=0,total=0;
+ for(const i of items){if(i.preparationStatus in summary)summary[i.preparationStatus]++;if(i.preparationStartedAt&&i.preparationCompletedAt){total+=(i.preparationCompletedAt-i.preparationStartedAt)/60000;count++;}}
+ summary.averagePreparationTime=count?Number((total/count).toFixed(1)):0;
+ const oldest=items.filter(i=>i.preparationStatus==='pendente').sort((a,b)=>a.created_at-b.created_at)[0];
+ if(oldest)summary.oldestPendingItem={id:oldest.id,productName:oldest.product.name,waitingTime:Math.max(0,Math.round((Date.now()-new Date(oldest.created_at))/60000))};
+ res.json(summary);
+ }catch(e){next(e)}
 };
 
 const getItemsByTable = async (req, res) => {

@@ -211,7 +211,7 @@ const Products = () => {
   };
 
   const getStockStatusBadge = (product) => {
-    const current = parseFloat(product.stock_quantity || 0);
+    const current = parseFloat(product.currentStock || 0);
     const min = parseFloat(product.minStockAlert || 0);
     
     if (current <= 0) {
@@ -238,7 +238,7 @@ const Products = () => {
     const matchesTab = activeTab === 'all' || 
                       (activeTab === 'active' && product.active) ||
                       (activeTab === 'inactive' && !product.active) ||
-                      (activeTab === 'low_stock' && parseFloat(product.stock_quantity || 0) <= parseFloat(product.minStockAlert || 0));
+                      (activeTab === 'low_stock' && parseFloat(product.currentStock || 0) <= parseFloat(product.minStockAlert || 0));
     
     return matchesSearch && matchesCategory && matchesTab;
   });
@@ -247,7 +247,7 @@ const Products = () => {
     total: products.length,
     active: products.filter(p => p.active).length,
     inactive: products.filter(p => !p.active).length,
-    lowStock: products.filter(p => parseFloat(p.stock_quantity || 0) <= parseFloat(p.minStockAlert || 0)).length
+    lowStock: products.filter(p => parseFloat(p.currentStock || 0) <= parseFloat(p.minStockAlert || 0)).length
   };
 
   return (
@@ -356,13 +356,9 @@ const Products = () => {
                           <SelectContent>
                             <SelectItem value="unidade">Unidade</SelectItem>
                             <SelectItem value="kg">Quilograma</SelectItem>
-                            <SelectItem value="g">Grama</SelectItem>
-                            <SelectItem value="l">Litro</SelectItem>
+                            <SelectItem value="gramas">Grama</SelectItem>
+                            <SelectItem value="litro">Litro</SelectItem>
                             <SelectItem value="ml">Mililitro</SelectItem>
-                            <SelectItem value="m">Metro</SelectItem>
-                            <SelectItem value="cm">Centímetro</SelectItem>
-                            <SelectItem value="caixa">Caixa</SelectItem>
-                            <SelectItem value="pacote">Pacote</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -685,7 +681,7 @@ const Products = () => {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span>
-                              {parseFloat(product.stock_quantity || 0).toFixed(3)} {product.unitOfMeasure}
+                              {parseFloat(product.currentStock || 0).toFixed(3)} {product.unitOfMeasure}
                             </span>
                             {getStockStatusBadge(product)}
                           </div>
@@ -769,7 +765,7 @@ const Products = () => {
                 <div>
                   <Label className="text-sm font-medium">Estoque Atual</Label>
                   <p className="text-sm">
-                    {parseFloat(viewingProduct.stock_quantity || 0).toFixed(3)} {viewingProduct.unitOfMeasure}
+                    {parseFloat(viewingProduct.currentStock || 0).toFixed(3)} {viewingProduct.unitOfMeasure}
                   </p>
                 </div>
               </div>

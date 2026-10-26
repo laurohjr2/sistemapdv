@@ -21,6 +21,8 @@ const User = sequelize.define('User', {
     allowNull: false,
     field: 'password_hash'
   },
+  active: {type:DataTypes.BOOLEAN,allowNull:false,defaultValue:true},
+  email: {type:DataTypes.STRING(150),allowNull:false,defaultValue:''},
   role: {
     type: DataTypes.ENUM('garcom', 'gerente', 'admin'),
     allowNull: false,
@@ -29,6 +31,8 @@ const User = sequelize.define('User', {
 }, {
   tableName: 'users',
   timestamps: true,
+  paranoid: true,
+  deletedAt: 'deleted_at',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
   hooks: {

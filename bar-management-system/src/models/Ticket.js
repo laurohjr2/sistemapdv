@@ -7,6 +7,7 @@ const Ticket = sequelize.define('Ticket', {
     primaryKey: true,
     autoIncrement: true
   },
+  sale_id: {type:DataTypes.INTEGER,allowNull:true},
   ticket_number: {
     type: DataTypes.STRING,
     allowNull: false,

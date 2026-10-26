@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
           const response = await authAPI.validateToken();
           setUserState(response.data.user);
           setUser(response.data.user);
-        } catch (error) {
+        } catch {
           removeToken();
           removeUser();
           setUserState(null);
