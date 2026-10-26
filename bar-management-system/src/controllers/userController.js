@@ -1,3 +1,4 @@
+function createScopedModule() {
 const { User } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 
@@ -101,10 +102,13 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = {
+return {
   getAllUsers,
   getUserById,
   updateUser,
   deleteUser
 };
 
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["getAllUsers", "getUserById", "updateUser", "deleteUser"]);

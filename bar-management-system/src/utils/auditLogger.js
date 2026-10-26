@@ -1,3 +1,4 @@
+function createScopedModule() {
 const { AuditLog } = require('../models');
 
 const logAction = async (userId, action, details = null) => {
@@ -12,7 +13,10 @@ const logAction = async (userId, action, details = null) => {
   }
 };
 
-module.exports = {
+return {
   logAction
 };
 
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["logAction"]);

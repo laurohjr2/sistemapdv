@@ -4,7 +4,7 @@ const base = process.env.PDV_API_URL || 'http://127.0.0.1:5174/api';
 let token;
 let checks = 0;
 async function request(path, method='GET', data, expected=200) {
-  const response = await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})},body:data===undefined?undefined:JSON.stringify(data),signal:AbortSignal.timeout(15000)});
+  const response = await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})},body:data===undefined?undefined:JSON.stringify(path==='/auth/login'?{...data,company:process.env.PDV_COMPANY||'demo'}:data),signal:AbortSignal.timeout(15000)});
   const body = await response.json();
   if (expected !== null) assert.equal(response.status,expected,`${method} ${path}: ${JSON.stringify(body)}`);
   checks++;

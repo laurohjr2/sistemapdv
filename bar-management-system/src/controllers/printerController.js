@@ -1,3 +1,4 @@
+function createScopedModule() {
 const { Comanda, ComandaItem, Table, Product, User } = require('../models');
 const printerService = require('../services/printerService');
 const { logAction } = require('../utils/auditLogger');
@@ -121,9 +122,12 @@ const testPrint = async (req, res) => {
   }
 };
 
-module.exports = {
+return {
   printComanda,
   printReceipt,
   testPrint
 };
 
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["printComanda", "printReceipt", "testPrint"]);

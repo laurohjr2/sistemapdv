@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+module.exports = function defineModel(sequelize) {
 
 const WaitingQueue = sequelize.define('WaitingQueue', {
   id: {
@@ -53,5 +53,7 @@ const WaitingQueue = sequelize.define('WaitingQueue', {
   updatedAt: 'updated_at'
 });
 
-module.exports = WaitingQueue;
+return WaitingQueue;
 
+
+};

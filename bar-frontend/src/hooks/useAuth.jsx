@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import { authAPI } from '../lib/api';
+import api, { authAPI } from '../lib/api';
 import { getToken, setToken, removeToken, getUser, setUser, removeUser } from '../lib/auth';
 
 const AuthContext = createContext();
@@ -38,29 +38,35 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await authAPI.login(credentials);
+      const response = await authAPI.login({...credentials,company:credentials.company?.trim().toLowerCase()});
       const { token, user } = response.data;
-      
+
+      localStorage.setItem('company',user.company);window.dispatchEvent(new Event('pdv-company-change'));
       setToken(token);
       setUser(user);
       setUserState(user);
-      
+
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.error || 'Erro ao fazer login' 
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Erro ao fazer login'
       };
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if(user?.support){try{await api.post('/support/session/end');}catch{/* A sessão local é encerrada mesmo em falha de conexão. */}}
     removeToken();
     removeUser();
     setUserState(null);
   };
 
+  const enterSupportSession = ({token,user}) => {
+    localStorage.setItem('company',user.company);window.dispatchEvent(new Event('pdv-company-change'));setToken(token);setUser(user);setUserState(user);
+  };
   const value = {
+    enterSupportSession,
     user,
     login,
     logout,

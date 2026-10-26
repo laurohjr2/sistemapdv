@@ -1,10 +1,11 @@
+function createScopedModule() {
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '24h'
+const generateToken = (userId, company) => {
+  return jwt.sign({ userId, company, scope:'tenant' }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '24h', audience:'pdv-tenant',issuer:'pdv-platform'
   });
 };
 
@@ -26,7 +27,7 @@ const login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = generateToken(user.id);
+    const token = generateToken(user.id, req.tenant.slug);
 
     await logAction(user.id, 'login', { username });
 
@@ -36,6 +37,7 @@ const login = async (req, res) => {
       user: {
         id: user.id,
         username: user.username,
+        company:req.tenant.slug,
         role: user.role
       }
     });
@@ -74,6 +76,7 @@ const register = async (req, res) => {
       await logAction(req.user.id, 'user_created', { 
         newUserId: user.id, 
         username: user.username, 
+        company:req.tenant.slug,
         role: user.role 
       });
     }
@@ -83,6 +86,7 @@ const register = async (req, res) => {
       user: {
         id: user.id,
         username: user.username,
+        company:req.tenant.slug,
         role: user.role
       }
     });
@@ -99,6 +103,8 @@ const validateToken = async (req, res) => {
       user: {
         id: req.user.id,
         username: req.user.username,
+        company:req.tenant.slug,
+        support:Boolean(req.supportUser),
         role: req.user.role
       }
     });
@@ -108,9 +114,12 @@ const validateToken = async (req, res) => {
   }
 };
 
-module.exports = {
+return {
   login,
   register,
   validateToken
 };
 
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["login", "register", "validateToken"]);

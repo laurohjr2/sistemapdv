@@ -1,0 +1,212 @@
+{
+  "base": "http://127.0.0.1:5187/api",
+  "version": "correções em validação",
+  "passed": 51,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Produto: consultar/editar cadastro",
+      "status": "PASS"
+    },
+    {
+      "name": "Produto: preço de custo zero permitido",
+      "status": "PASS"
+    },
+    {
+      "name": "Estoque: entrada e saldo",
+      "status": "PASS"
+    },
+    {
+      "name": "Estoque: saída e acerto",
+      "status": "PASS"
+    },
+    {
+      "name": "GET /stock/report",
+      "status": "PASS"
+    },
+    {
+      "name": "GET /stock/summary",
+      "status": "PASS"
+    },
+    {
+      "name": "GET /stock/movements",
+      "status": "PASS"
+    },
+    {
+      "name": "GET /stock/low-stock",
+      "status": "PASS"
+    },
+    {
+      "name": "GET /stock/history/:product",
+      "status": "PASS"
+    },
+    {
+      "name": "Caixa: abertura",
+      "status": "PASS"
+    },
+    {
+      "name": "Comanda: abrir e lançar produto",
+      "status": "PASS"
+    },
+    {
+      "name": "Comanda: alterar quantidade pelo endpoint usado na tela",
+      "status": "PASS"
+    },
+    {
+      "name": "Cozinha GET /queue",
+      "status": "PASS"
+    },
+    {
+      "name": "Cozinha GET /queue/summary",
+      "status": "PASS"
+    },
+    {
+      "name": "Cozinha GET /queue/report",
+      "status": "PASS"
+    },
+    {
+      "name": "Cozinha GET /queue/table/:table",
+      "status": "PASS"
+    },
+    {
+      "name": "Cozinha: iniciar preparo de item",
+      "status": "PASS"
+    },
+    {
+      "name": "Comanda: fechar com PIX",
+      "status": "PASS"
+    },
+    {
+      "name": "Usuário: criar pela rota usada no menu",
+      "status": "PASS"
+    },
+    {
+      "name": "Usuário: criar pela API de autenticação e fazer login",
+      "status": "PASS"
+    },
+    {
+      "name": "Usuário: atualizar perfil",
+      "status": "PASS"
+    },
+    {
+      "name": "Usuário: alterar senha pela rota usada no menu",
+      "status": "PASS"
+    },
+    {
+      "name": "Permissão: garçom não cadastra produto",
+      "status": "PASS"
+    },
+    {
+      "name": "Permissão: garçom não altera configurações",
+      "status": "PASS"
+    },
+    {
+      "name": "Permissão: garçom não consulta usuários",
+      "status": "PASS"
+    },
+    {
+      "name": "Ticket: emissão com token válido do login",
+      "status": "PASS"
+    },
+    {
+      "name": "Venda balcão: preço do servidor e baixa de estoque",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/dashboard",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/sales",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/products",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/waiters",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/comparative?period1Start=2026-10-01&period1End=2026-10-31&period2Start=2026-09-01&period2End=2026-09-30",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/sales-by-category",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/sales-by-payment",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/sales-by-hour",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/stock",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/financial",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/categories",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/payments",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/hourly",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/export/pdf?type=sales",
+      "status": "PASS"
+    },
+    {
+      "name": "Relatório GET /reports/export/csv?type=sales",
+      "status": "PASS"
+    },
+    {
+      "name": "Estorno: venda retorna estoque uma única vez",
+      "status": "PASS"
+    },
+    {
+      "name": "Caixa: consolida balcão, comanda alterada e ticket, separando dinheiro",
+      "status": "PASS"
+    },
+    {
+      "name": "Caixa fechado: impede estorno retroativo",
+      "status": "PASS"
+    },
+    {
+      "name": "Mesa: fechar pelo menu mesas marca pagamento como pago",
+      "status": "PASS"
+    },
+    {
+      "name": "Impressão: rota do serviço de impressora acessível",
+      "status": "PASS"
+    },
+    {
+      "name": "Usuário: excluir funcionário com login prévio",
+      "status": "PASS"
+    },
+    {
+      "name": "Estoque: cadastrar produto com os campos enviados pelo formulário",
+      "status": "PASS"
+    },
+    {
+      "name": "Usuário: desativação impede novo login",
+      "status": "PASS"
+    },
+    {
+      "name": "Produtos: API mantém saldo para o campo usado pela tela",
+      "status": "PASS"
+    }
+  ]
+}

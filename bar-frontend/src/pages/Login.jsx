@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -13,6 +13,7 @@ import BusinessBrand from '../components/BusinessBrand';
 const Login = () => {
   const { login, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
+    company: localStorage.getItem('company') || '',
     username: '',
     password: '',
   });
@@ -62,6 +63,10 @@ const Login = () => {
             )}
             
             <div className="space-y-2">
+              <Label htmlFor="company">Código da empresa</Label>
+              <Input id="company" name="company" onBlur={e=>{localStorage.setItem('company',e.target.value.trim().toLowerCase());window.dispatchEvent(new Event('pdv-company-change'));}} value={formData.company} onChange={handleChange} required disabled={loading} placeholder="Ex.: meu-bar" autoComplete="organization" />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="username">Usuário</Label>
               <Input
                 id="username"
@@ -94,6 +99,7 @@ const Login = () => {
               Entrar
             </Button>
           </form>
+          <Link to="/support" className="mt-4 block text-center text-sm underline">Acesso do suporte</Link>
         </CardContent>
       </Card>
     </div>

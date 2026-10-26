@@ -1,3 +1,4 @@
+function createRouter() {
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
@@ -167,4 +168,7 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+return router;
+
+}
+module.exports=require('../tenancy/scopedModule').router(createRouter);

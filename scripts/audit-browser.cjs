@@ -10,7 +10,7 @@ process.loadEnvFile(path.resolve(__dirname,'../.pdv-local/development.env'));
  page.on('pageerror',e=>errors.push(e.message));
  page.on('response',response=>{if(response.url().includes('/api/') && response.status()>=400)failedRequests.push({path:new URL(response.url()).pathname,status:response.status()});});
  try{
- await page.goto(base+'/login');await page.getByLabel('Usuário',{exact:true}).fill('admin.dev');await page.getByLabel('Senha',{exact:true}).fill(process.env.DEV_ADMIN_PASSWORD);await page.getByRole('button',{name:'Entrar',exact:true}).click();await page.waitForURL(base+'/');
+ await page.goto(base+'/login');await page.getByLabel('Código da empresa',{exact:true}).fill(process.env.PDV_COMPANY||'demo');await page.getByLabel('Usuário',{exact:true}).fill('admin.dev');await page.getByLabel('Senha',{exact:true}).fill(process.env.DEV_ADMIN_PASSWORD);await page.getByRole('button',{name:'Entrar',exact:true}).click();await page.waitForURL(base+'/');
  for(const [route,name] of [['/','Dashboard'],['/sales','Vendas'],['/tables','Mesas'],['/stock','Estoque'],['/comandas','Comandas'],['/kitchen','Cozinha'],['/queue','Fila'],['/reports','Relatorios'],['/settings','Configuracoes'],['/users','Usuarios'],['/products','Produtos'],['/print','Impressao']]){
   errors=[];failedRequests=[];
   await page.goto(base+route);await page.waitForLoadState('networkidle');

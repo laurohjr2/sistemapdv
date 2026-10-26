@@ -1,3 +1,4 @@
+function createScopedModule() {
 const { StockMovement, Product, User, Comanda, sequelize } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 const { Op } = require('sequelize');
@@ -251,7 +252,7 @@ const getStockStatus = (product) => {
   return 'good_stock';
 };
 
-module.exports = {
+return {
   addStock,
   removeStock,
   adjustStock,
@@ -261,3 +262,6 @@ module.exports = {
   getStockHistory,
   getStockSummary
 };
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["addStock", "removeStock", "adjustStock", "getStockMovements", "getLowStockProducts", "getStockReport", "getStockHistory", "getStockSummary"]);

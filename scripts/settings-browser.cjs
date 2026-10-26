@@ -10,7 +10,7 @@ process.loadEnvFile(path.resolve(__dirname,'../.pdv-local/development.env'));
  let original,headers;
  try{
   await page.goto(base+'/login');
-  await page.getByLabel('Usuário',{exact:true}).fill('admin.dev');await page.getByLabel('Senha',{exact:true}).fill(process.env.DEV_ADMIN_PASSWORD);
+  await page.getByLabel('Código da empresa',{exact:true}).fill(process.env.PDV_COMPANY||'demo');await page.getByLabel('Usuário',{exact:true}).fill('admin.dev');await page.getByLabel('Senha',{exact:true}).fill(process.env.DEV_ADMIN_PASSWORD);
   await page.getByRole('button',{name:'Entrar',exact:true}).click();await page.waitForURL(base+'/');
   headers={Authorization:`Bearer ${await page.evaluate(()=>localStorage.getItem('token'))}`};
   original=await (await page.request.get(base+'/api/settings',{headers})).json();

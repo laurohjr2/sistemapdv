@@ -1,3 +1,4 @@
+function createRouter() {
 const router=require('express').Router();
 const {authenticateToken}=require('../middleware/auth');
 const {sequelize,CashRegister}=require('../models');
@@ -28,4 +29,7 @@ router.post('/close',async(req,res,next)=>{
  }catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 });
 router.get('/report/:id',async(req,res,next)=>{try{const cash=await CashRegister.findByPk(req.params.id);if(!cash)return res.status(404).json({error:'Caixa não encontrado'});res.json({...cash.toJSON(),...summary(await revenue({cashRegisterId:cash.id}))});}catch(e){next(e)}});
-module.exports=router;
+return router;
+
+}
+module.exports=require('../tenancy/scopedModule').router(createRouter);

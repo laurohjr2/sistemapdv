@@ -5,20 +5,24 @@ const BusinessContext=createContext(null);
 const defaults={companyName:'Sistema PDV',logo:null,receiptMessage:'Obrigado pela preferência!'};
 export function BusinessProvider({children}) {
   const {user}=useAuth();
-  const identity=user?.id;
+  const identity=user ? `${user.company}:${user.id}` : null;
+  const [selectedCompany,setSelectedCompany]=useState(localStorage.getItem('company')||'');
+  useEffect(()=>{const update=()=>setSelectedCompany(localStorage.getItem('company')||'');window.addEventListener('pdv-company-change',update);return()=>window.removeEventListener('pdv-company-change',update);},[]);
+  const company=user?.company || selectedCompany;
   const [business,setBusiness]=useState(defaults);
   const [businessError,setBusinessError]=useState('');
   const refreshBusiness=useCallback(async()=>{
-    const {data}=await api.get(identity?'/settings':'/settings/branding');
+    const {data}=await api.get(identity?'/settings':'/settings/branding',identity?{}:{params:{company}});
     setBusiness(data);setBusinessError('');return data;
-  },[identity]);
+  },[identity,company]);
   useEffect(()=>{
     let active=true;
+    if(!identity&&!company){setBusiness(defaults);return;}
     setBusiness(defaults);
-    api.get(identity?'/settings':'/settings/branding').then(({data})=>{if(active){setBusiness(data);setBusinessError('');}})
+    api.get(identity?'/settings':'/settings/branding',identity?{}:{params:{company}}).then(({data})=>{if(active){setBusiness(data);setBusinessError('');}})
       .catch(()=>{if(active)setBusinessError('Não foi possível carregar os dados do estabelecimento.');});
     return ()=>{active=false;};
-  },[identity]);
+  },[identity,company]);
   useEffect(()=>{document.title=`${business.companyName} — PDV`;},[business.companyName]);
   return <BusinessContext.Provider value={{business,setBusiness,businessError,refreshBusiness}}>{children}</BusinessContext.Provider>;
 }

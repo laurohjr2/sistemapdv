@@ -5,7 +5,7 @@ const output=process.env.PDV_AUDIT_DIR||'docs/validacao-20261026';mkdirSync(outp
 const base=process.env.PDV_API_URL||'http://127.0.0.1:5179/api';
 let token;const results=[];
 async function req(path,method='GET',data,auth=token){
- const response=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(auth?{Authorization:`Bearer ${auth}`}:{})},body:data===undefined?undefined:JSON.stringify(data),signal:AbortSignal.timeout(10000)});
+ const response=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(auth?{Authorization:`Bearer ${auth}`}:{})},body:data===undefined?undefined:JSON.stringify(path==='/auth/login'?{...data,company:process.env.PDV_COMPANY||'demo'}:data),signal:AbortSignal.timeout(10000)});
  const text=await response.text();let body;try{body=JSON.parse(text)}catch{body=response.headers.get('content-type')?.includes('pdf')?'PDF':text.slice(0,100)}
  return {status:response.status,body};
 }

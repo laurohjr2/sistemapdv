@@ -1,7 +1,8 @@
+function createRouter() {
 const express = require('express');
 const PDFDocument = require('pdfkit');
 const {authenticateToken,authorizeRoles}=require('../middleware/auth');
-const BusinessSettings=require('../models/BusinessSettings');
+const {BusinessSettings}=require('../models');
 const {getSettings}=require('../services/businessSettingsService');
 const {logAction}=require('../utils/auditLogger');
 const router=express.Router();
@@ -77,4 +78,7 @@ router.put('/',authenticateToken,authorizeRoles('admin'),express.json({limit:'40
     next(error);
   }
 });
-module.exports=router;
+return router;
+
+}
+module.exports=require('../tenancy/scopedModule').router(createRouter);

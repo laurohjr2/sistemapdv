@@ -1,3 +1,4 @@
+function createScopedModule() {
 const operations = require('../services/comandaOperations');
 const { openTable } = require('../services/tableSeatingService');
 const { Comanda, ComandaItem, Table, Product, User, StockMovement, sequelize } = require('../models');
@@ -255,7 +256,7 @@ const cancelComanda = async(req,res,next)=>{
  }catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 };
 
-module.exports = {
+return {
   openComanda,
   addItemToComanda,
   updateItemQuantity,
@@ -268,3 +269,6 @@ module.exports = {
   cancelComanda
 };
 
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["openComanda", "addItemToComanda", "updateItemQuantity", "getComandaById", "closeComanda", "removeItemFromComanda", "getAllComandas", "getOpenComandas", "updateComandaPaymentStatus", "cancelComanda"]);

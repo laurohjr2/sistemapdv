@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+module.exports = function defineModel(sequelize) {
 
 const AuditLog = sequelize.define('AuditLog', {
   id: {
@@ -37,5 +37,7 @@ const AuditLog = sequelize.define('AuditLog', {
   timestamps: false
 });
 
-module.exports = AuditLog;
+return AuditLog;
 
+
+};

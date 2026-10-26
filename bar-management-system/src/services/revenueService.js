@@ -1,3 +1,4 @@
+function createScopedModule() {
 const {Sale,SaleItem,Comanda,ComandaItem,Product,User}=require('../models');
 const {Op}=require('sequelize');
 const money=n=>Math.round(Number(n)*100)/100;
@@ -18,4 +19,7 @@ function summary(rows){
  const byPayment={};for(const row of rows)byPayment[row.paymentMethod]=money((byPayment[row.paymentMethod]||0)+row.total);
  const totalRevenue=money(rows.reduce((n,r)=>n+r.total,0));return {totalRevenue,totalSales:rows.length,averageTicket:rows.length?money(totalRevenue/rows.length):0,byPayment,cashRevenue:byPayment.dinheiro||0};
 }
-module.exports={revenue,summary,money};
+return {revenue,summary,money};
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["revenue", "summary", "money"]);

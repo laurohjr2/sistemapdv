@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+module.exports = function defineModel(sequelize) {
 // Cadastro do estabelecimento desta instalação. Não representa isolamento SaaS.
-module.exports = sequelize.define('BusinessSettings', {
+return sequelize.define('BusinessSettings', {
   id: {type:DataTypes.INTEGER,primaryKey:true,defaultValue:1},
   companyName: {type:DataTypes.STRING(100),allowNull:false,defaultValue:'Sistema PDV'},
   legalName: {type:DataTypes.STRING(150),allowNull:false,defaultValue:''},
@@ -15,3 +15,5 @@ module.exports = sequelize.define('BusinessSettings', {
   receiptMessage: {type:DataTypes.STRING(200),allowNull:false,defaultValue:'Obrigado pela preferência!'},
   logo: {type:DataTypes.TEXT,allowNull:true}
 }, {tableName:'business_settings',timestamps:true});
+
+};

@@ -1,3 +1,4 @@
+function createScopedModule() {
 const {sequelize,Ticket,Product,CashRegister,Sale,SaleItem,StockMovement}=require('../models');
 const {randomUUID}=require('node:crypto');
 const fail=m=>Object.assign(new Error(m),{status:400});
@@ -37,4 +38,7 @@ const cancelTicket=handler(async(req,res)=>{
   await sale.update({status:'cancelled'},{transaction});return t.update({status:'cancelled'},{transaction});
  });res.json({ticket});
 });
-module.exports={createTicket,getTickets,getTicketByNumber,redeemTicket,cancelTicket};
+return {createTicket,getTickets,getTicketByNumber,redeemTicket,cancelTicket};
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["createTicket", "getTickets", "getTicketByNumber", "redeemTicket", "cancelTicket"]);

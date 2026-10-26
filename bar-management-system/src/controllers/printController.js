@@ -1,3 +1,4 @@
+function createScopedModule() {
 const { printHeader } = require('../services/businessSettingsService');
 const { Comanda, ComandaItem, Product, User, Table } = require('../models');
 const PDFDocument = require('pdfkit');
@@ -435,10 +436,13 @@ const reprintReceipt = async (req, res) => {
   }
 };
 
-module.exports = {
+return {
   generateComandaReceipt,
   generateSalesReport,
   generateProductReport,
   reprintReceipt
 };
 
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["generateComandaReceipt", "generateSalesReport", "generateProductReport", "reprintReceipt"]);

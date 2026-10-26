@@ -1,3 +1,4 @@
+function createScopedModule() {
 const { Product } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 const { Op } = require('sequelize');
@@ -334,7 +335,7 @@ const searchProducts = async (req, res) => {
   }
 };
 
-module.exports = {
+return {
   getAllProducts,
   getProductById,
   createProduct,
@@ -346,3 +347,6 @@ module.exports = {
   searchProducts
 };
 
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["getAllProducts", "getProductById", "createProduct", "updateProduct", "deleteProduct", "getCategories", "getProductsByCategory", "getLowStockProducts", "searchProducts"]);

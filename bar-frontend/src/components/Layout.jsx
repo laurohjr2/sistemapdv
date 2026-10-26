@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import BusinessBrand from './BusinessBrand';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { hasRole } from '../lib/auth';
 import { Button } from './ui/button';
@@ -26,6 +26,7 @@ import {
 const Layout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate=useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
@@ -124,6 +125,7 @@ const Layout = () => {
 
       {/* Main content */}
       <div className="lg:pl-64">
+        {user?.support && <div role="status" className="flex flex-wrap items-center justify-between gap-3 bg-amber-100 p-3 text-amber-950"><span>Modo de suporte — empresa {user.company} · Somente consulta</span><Button variant="outline" onClick={async()=>{await logout();navigate('/support');}}>Sair do suporte</Button></div>}
         {/* Top bar */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
           <div className="flex items-center justify-between px-4 py-3">
@@ -152,7 +154,7 @@ const Layout = () => {
               
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-muted-foreground">
-                  {user?.username} ({user?.role})
+                  {user?.username} ({user?.support?'suporte':user?.role})
                 </span>
                 <Button
                   variant="ghost"

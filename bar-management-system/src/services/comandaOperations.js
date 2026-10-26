@@ -1,3 +1,4 @@
+function createScopedModule() {
 const {sequelize,Comanda,ComandaItem,Product,StockMovement,Table,CashRegister}=require('../models');
 const fail=(message,status=400)=>Object.assign(new Error(message),{status});
 const quantity=value=>{const n=Number(value);if(!Number.isFinite(n)||n<=0||Math.abs(n*1000-Math.round(n*1000))>1e-6)throw fail('Quantidade positiva com até três casas decimais obrigatória');return n};
@@ -40,4 +41,7 @@ async function close({id,tableId,userId,paymentMethod,paymentStatus='pago',disco
   return comanda;
  });
 }
-module.exports={changeItem,close,fail};
+return {changeItem,close,fail};
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["changeItem", "close", "fail"]);

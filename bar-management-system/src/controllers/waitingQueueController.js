@@ -1,3 +1,4 @@
+function createScopedModule() {
 const { WaitingQueue, sequelize } = require('../models');
 const { openTable, httpError, isUuid } = require('../services/tableSeatingService');
 const { logAction } = require('../utils/auditLogger');
@@ -134,7 +135,7 @@ const getQueueStats = async (req, res) => {
   }
 };
 
-module.exports = {
+return {
   addToQueue,
   getQueue,
   seatClient,
@@ -142,3 +143,6 @@ module.exports = {
   getQueueStats
 };
 
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["addToQueue", "getQueue", "seatClient", "cancelQueueEntry", "getQueueStats"]);

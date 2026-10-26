@@ -1,3 +1,4 @@
+function createScopedModule() {
 const { Table, Comanda } = require('../models');
 const httpError = (status, message) => Object.assign(new Error(message), { status });
 const isUuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -19,4 +20,7 @@ async function openTable({ tableId, userId, customerName, customerPhone, numberO
   await table.update({status:'ocupada'}, { transaction });
   return { table, comanda };
 }
-module.exports = { openTable, httpError, isUuid };
+return { openTable, httpError, isUuid };
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["openTable", "httpError", "isUuid"]);

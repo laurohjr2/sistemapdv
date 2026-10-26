@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+module.exports = function defineModel(sequelize) {
 
 const ComandaItem = sequelize.define('ComandaItem', {
   id: {
@@ -107,5 +107,7 @@ const ComandaItem = sequelize.define('ComandaItem', {
   updatedAt: 'updated_at'
 });
 
-module.exports = ComandaItem;
+return ComandaItem;
 
+
+};

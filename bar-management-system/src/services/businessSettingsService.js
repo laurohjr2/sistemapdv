@@ -1,4 +1,5 @@
-const BusinessSettings = require('../models/BusinessSettings');
+function createScopedModule() {
+const {BusinessSettings} = require('../models');
 const getSettings = async () => (await BusinessSettings.findByPk(1))?.toJSON() || {
   companyName:'Sistema PDV',legalName:'',cnpj:'',phone:'',email:'',address:'',city:'',state:'',postalCode:'',receiptMessage:'Obrigado pela preferência!',logo:null
 };
@@ -16,4 +17,7 @@ async function printHeader(doc) {
   doc.moveDown();
   return settings;
 }
-module.exports={getSettings,printHeader};
+return {getSettings,printHeader};
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["getSettings", "printHeader"]);

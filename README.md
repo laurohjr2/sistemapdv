@@ -29,10 +29,14 @@ Consulte [DEVELOPMENT.md](DEVELOPMENT.md) para instalar, iniciar e testar no amb
 
 Foram executadas 28 verificações HTTP do fluxo geral, 36 da integração fila–mesa–comanda e um teste de navegador incluindo pagamento e liberação da mesa. Os scripts de teste estão em `scripts/`.
 
-Esta é uma base de desenvolvimento. Impressão física, isolamento entre empresas, assinaturas e acesso master de suporte ainda precisam ser concluídos. A validação não cobre todos os fluxos herdados da aplicação. Os Dockerfiles e o seed antigo são legados e não fazem parte da instalação validada; não execute o seed em um banco com dados que precisa preservar.
+Esta é uma base de desenvolvimento. Impressão física, assinaturas e painel master comercial completo ainda precisam ser concluídos; a separação de bancos e o suporte para consulta estão descritos na entrega multiempresa. A validação não cobre todos os fluxos herdados da aplicação. Os Dockerfiles e o seed antigo são legados e não fazem parte da instalação validada; não execute o seed em um banco com dados que precisa preservar.
 
 Credenciais, banco local e dependências são excluídos do Git.
 
 ## Auditoria funcional
 
 As falhas da auditoria anterior foram corrigidas nos cenários executados. Consulte a [validação atual, resultados por fluxo e telas](docs/validacao-20261026/README.md). A [auditoria anterior](docs/auditoria/README.md) é mantida como histórico. Impressão física/Windows e implantação ainda precisam de validação antes de uso real.
+
+## Bancos separados e suporte
+
+A separação por empresa foi implementada: banco central, banco/credenciais exclusivos por cliente, login com código da empresa e ID do cliente visível apenas em sessão autorizada de suporte nas Configurações. Consulte a [arquitetura, testes e imagens desta entrega](docs/multiempresa-20261026/README.md).

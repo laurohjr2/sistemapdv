@@ -1,3 +1,4 @@
+function createRouter() {
 const express = require('express');
 const { getAllUsers, getUserById, updateUser, deleteUser } = require('../controllers/userController');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
@@ -26,5 +27,8 @@ router.get('/:id', authorizeRoles('admin'), getUserById);
 router.put('/:id', authorizeRoles('admin'), updateUser);
 router.delete('/:id', authorizeRoles('admin'), deleteUser);
 
-module.exports = router;
+return router;
 
+
+}
+module.exports=require('../tenancy/scopedModule').router(createRouter);

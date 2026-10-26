@@ -1,3 +1,4 @@
+function createScopedModule() {
 const { openTable } = require('../services/tableSeatingService');
 const { Table, Comanda, ComandaItem, Product, User, sequelize } = require('../models');
 const { logAction } = require('../utils/auditLogger');
@@ -265,7 +266,7 @@ const getTableReceipt = async (req, res) => {
   }
 };
 
-module.exports = {
+return {
   getAllTables,
   getTableById,
   createTable,
@@ -276,3 +277,6 @@ module.exports = {
   getTableReceipt
 };
 
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["getAllTables", "getTableById", "createTable", "updateTable", "deleteTable", "openTableComanda", "closeTableComanda", "getTableReceipt"]);

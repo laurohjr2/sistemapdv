@@ -99,3 +99,11 @@ O teste HTTP de PDF requer `pdftotext`, disponível nesta máquina. O teste de n
 A validação atual está em [docs/validacao-20261026/README.md](docs/validacao-20261026/README.md), com resultados, imagens e limites. Substitui as limitações de fluxos relatadas nas etapas anteriores deste documento. A migração `auditFixes.js` é aditiva; inicialização padrão preserva os dados. Usuários agora têm e-mail/status e exclusão lógica. Tickets novos registram a venda no caixa. Receber comanda exige caixa aberto; apenas contas pagas entram nas receitas. Estorno de venda em caixa fechado é recusado para preservar a conferência histórica. Não force reset do banco para preparar o ambiente.
 
 Os scripts de teste foram ajustados para abrir caixa explicitamente quando necessário. O relatório antigo é histórico, não o estado atual. Impressão física, conector Windows e funcionalidades SaaS continuam pendentes.
+
+## Plataforma multiempresa — estado atual
+
+A configuração vigente está em [docs/multiempresa-20261026/README.md](docs/multiempresa-20261026/README.md). Substitui as notas anteriores de banco único por instalação. O código da empresa `demo` deve ser informado no login de desenvolvimento; o ID interno não é exposto aos usuários da empresa.
+
+O runtime precisa de `.pdv-local/platform.json`, do arquivo de ambiente privado e dos bancos provisionados. Execute o bootstrap pelos scripts; não faça sync/reset de um banco arbitrário no servidor HTTP. Antes de publicar o ambiente, execute `node --env-file=.pdv-local/development.env scripts/platform-backup.cjs` para reter banco central e todos os bancos de empresas. Preservar somente o antigo development.sql não é suficiente. A restauração da plataforma é chamada pelo database.sh e foi exercitada em instância PostgreSQL separada. Clonar só o repositório inicia uma demonstração nova, sem recuperar empresas anteriores.
+
+Credenciais privadas e snapshots não entram no Git. Os nomes dos arquivos não são segredos, mas seus conteúdos são. O seed antigo foi desativado para evitar apagar dados de empresas. O suporte usa conta central, sessão de consulta de 15 minutos e trilha de auditoria; a tela não oferece edição no modo suporte.

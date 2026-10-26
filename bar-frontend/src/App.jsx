@@ -17,6 +17,7 @@ import Reports from './pages/Reports';
 import Print from './pages/Print';
 import './App.css';
 import Settings from './pages/Settings';
+import Support from './pages/Support';
 import { BusinessProvider } from './hooks/useBusiness';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
       <Toaster richColors />
       <Router>
         <Routes>
+          <Route path="/support" element={<Support />} />
           <Route path="/login" element={<Login />} />
           <Route
             path="/*"

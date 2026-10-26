@@ -4,11 +4,11 @@ import {execFileSync} from 'node:child_process';
 const base=process.env.PDV_API_URL||'http://127.0.0.1:5177/api';
 let token,checks=0;
 async function request(path,method='GET',data,status=200,auth=token){
- const response=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(auth?{Authorization:`Bearer ${auth}`}:{})},body:data===undefined?undefined:JSON.stringify(data),signal:AbortSignal.timeout(15000)});
+ const response=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(auth?{Authorization:`Bearer ${auth}`}:{})},body:data===undefined?undefined:JSON.stringify(path==='/auth/login'?{...data,company:process.env.PDV_COMPANY||'demo'}:data),signal:AbortSignal.timeout(15000)});
  const body=await response.json();assert.equal(response.status,status,`${method} ${path}: ${JSON.stringify(body)}`);checks++;return body;
 }
 await request('/settings','GET',undefined,401);
-const branding=await request('/settings/branding');assert.deepEqual(Object.keys(branding).sort(),['companyName','logo']);
+const branding=await request(`/settings/branding?company=${encodeURIComponent(process.env.PDV_COMPANY||'demo')}`);assert.deepEqual(Object.keys(branding).sort(),['companyName','logo']);
 token=(await request('/auth/login','POST',{username:'admin.dev',password:process.env.DEV_ADMIN_PASSWORD})).token;
 const original=await request('/settings');
 const keys=['companyName','legalName','cnpj','phone','email','address','city','state','postalCode','receiptMessage','logo'];

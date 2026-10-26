@@ -13,6 +13,10 @@ for attempt in $(seq 1 30); do
   sleep 1
 done
 docker exec pdv-dev-db pg_isready -U postgres
-if "$created" && test -s .pdv-local/development.sql; then
+if "$created" && ! test -f .pdv-local/platform.json && test -s .pdv-local/development.sql; then
   docker exec -i pdv-dev-db psql -v ON_ERROR_STOP=1 -U postgres bar_management < .pdv-local/development.sql >/dev/null
+fi
+
+if test -f .pdv-local/platform.json; then
+  if "$created"; then PDV_RESTORE_FRESH=1 node scripts/platform-restore.cjs; else node scripts/platform-restore.cjs; fi
 fi

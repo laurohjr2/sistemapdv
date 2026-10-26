@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+module.exports = function defineModel(sequelize) {
 
 const StockMovement = sequelize.define('StockMovement', {
   id: {
@@ -120,5 +120,7 @@ const StockMovement = sequelize.define('StockMovement', {
   }
 });
 
-module.exports = StockMovement;
+return StockMovement;
 
+
+};

@@ -9,7 +9,7 @@ process.loadEnvFile('/workspace/sistemapdv/.pdv-local/development.env');
  page.setDefaultTimeout(12000);
  const errors=[]; page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/login');
- await page.getByLabel('Usuário',{exact:true}).fill('admin.dev');
+ await page.getByLabel('Código da empresa',{exact:true}).fill(process.env.PDV_COMPANY||'demo');await page.getByLabel('Usuário',{exact:true}).fill('admin.dev');
  await page.getByLabel('Senha',{exact:true}).fill(process.env.DEV_ADMIN_PASSWORD);
  await page.getByRole('button',{name:'Entrar',exact:true}).click();
  await page.waitForURL(base+'/');

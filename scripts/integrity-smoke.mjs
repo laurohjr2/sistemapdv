@@ -3,7 +3,7 @@ import {randomBytes} from 'node:crypto';
 const base=process.env.PDV_API_URL||'http://127.0.0.1:5183/api';
 let token,checks=0;
 async function req(path,method='GET',data,expected=200,auth=token){
- const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(auth?{Authorization:`Bearer ${auth}`}:{})},body:data===undefined?undefined:JSON.stringify(data),signal:AbortSignal.timeout(15000)});
+ const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(auth?{Authorization:`Bearer ${auth}`}:{})},body:data===undefined?undefined:JSON.stringify(path==='/auth/login'?{...data,company:process.env.PDV_COMPANY||'demo'}:data),signal:AbortSignal.timeout(15000)});
  const text=await r.text();let body;try{body=JSON.parse(text)}catch{body=text.slice(0,20)}
  if(expected!==null)assert.equal(r.status,expected,`${method} ${path}: ${JSON.stringify(body)}`);checks++;return {status:r.status,body};
 }

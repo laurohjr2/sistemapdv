@@ -4,7 +4,7 @@ process.loadEnvFile(path.resolve(__dirname,'../.pdv-local/development.env'));
  const base=process.env.PDV_WEB_URL||'http://127.0.0.1:5183';const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox','--disable-dev-shm-usage']});
  const page=await browser.newPage({viewport:{width:1440,height:1000},locale:'pt-BR',reducedMotion:'reduce'});page.setDefaultTimeout(15000);page.on('dialog',dialog=>dialog.accept());const errors=[];page.on('pageerror',e=>errors.push(e.message));
  try{
- await page.goto(base+'/login');await page.getByLabel('Usuário',{exact:true}).fill('admin.dev');await page.getByLabel('Senha',{exact:true}).fill(process.env.DEV_ADMIN_PASSWORD);await page.getByRole('button',{name:'Entrar',exact:true}).click();await page.waitForURL(base+'/');
+ await page.goto(base+'/login');await page.getByLabel('Código da empresa',{exact:true}).fill(process.env.PDV_COMPANY||'demo');await page.getByLabel('Usuário',{exact:true}).fill('admin.dev');await page.getByLabel('Senha',{exact:true}).fill(process.env.DEV_ADMIN_PASSWORD);await page.getByRole('button',{name:'Entrar',exact:true}).click();await page.waitForURL(base+'/');
  const headers={Authorization:`Bearer ${await page.evaluate(()=>localStorage.getItem('token'))}`};
  const name=`Produto fluxo ${Date.now()}`;
  await page.goto(base+'/stock');await page.getByRole('button',{name:'Cadastrar Produto',exact:true}).click();

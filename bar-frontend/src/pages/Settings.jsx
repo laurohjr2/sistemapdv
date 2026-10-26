@@ -11,6 +11,7 @@ export default function Settings() {
   const {user}=useAuth();
   const {setBusiness}=useBusiness();
   const [form,setForm]=useState(empty);
+  const [clientInfo,setClientInfo]=useState(null);
   const [loading,setLoading]=useState(true);
   const [saving,setSaving]=useState(false);
   const [error,setError]=useState('');
@@ -18,7 +19,7 @@ export default function Settings() {
   const editable=user?.role==='admin';
   async function load(){
     setLoading(true);setError('');
-    try{const {data}=await api.get('/settings');setForm({...empty,...data});}
+    try{const {data}=await api.get('/settings');setForm({...empty,...data});if(user?.support)setClientInfo((await api.get('/support/company-info')).data);}
     catch{setError('Não foi possível carregar as configurações. Tente novamente.');}
     finally{setLoading(false);}
   }
@@ -52,7 +53,8 @@ export default function Settings() {
     <div><h1 className="text-3xl font-bold">Configurações</h1><p className="text-muted-foreground">Dados e identidade visual do estabelecimento.</p></div>
     {error&&<div role="alert" className="rounded-md border border-red-300 p-3 text-red-700">{error} <Button type="button" variant="link" onClick={load} disabled={saving}>Recarregar dados salvos</Button></div>}
     {success&&<div role="status" className="rounded-md border border-green-300 p-3">{success}</div>}
-    {!editable&&<p className="text-sm text-muted-foreground">Você pode consultar os dados. Apenas o administrador pode alterá-los.</p>}
+    {!editable&&<p className="text-sm text-muted-foreground">{user?.support?'Sessão de suporte: consulta autorizada, com alterações desabilitadas.':'Você pode consultar os dados. Apenas o administrador pode alterá-los.'}</p>}
+    {user?.support && clientInfo && <Card><CardHeader><CardTitle>Identificação para suporte</CardTitle></CardHeader><CardContent><Label>ID do cliente</Label><p className="mt-2 break-all font-mono" data-testid="support-client-id">{clientInfo.clientId}</p><p className="mt-2 text-sm text-muted-foreground">Disponível somente nesta sessão de suporte.</p></CardContent></Card>}
     <form onSubmit={save} className="space-y-6">
       <fieldset disabled={!editable||saving} className="space-y-6">
         <Card><CardHeader><CardTitle>Identidade da empresa</CardTitle><CardDescription>O nome e a logo aparecem no sistema e nos comprovantes.</CardDescription></CardHeader><CardContent className="space-y-5">

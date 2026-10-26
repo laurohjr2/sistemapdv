@@ -1,3 +1,4 @@
+function createScopedModule() {
 const {revenue,summary,money}=require('../services/revenueService');
 const {Product,Comanda}=require('../models');
 const {Op}=require('sequelize');
@@ -34,4 +35,7 @@ const exportReport=handler(async(req,res)=>{
  }
  const doc=new PDFDocument({margin:40});res.type('application/pdf').attachment('relatorio.pdf');doc.pipe(res);await printHeader(doc);doc.fontSize(14).text('Relatório de operações');doc.fontSize(10).text(`Receita: R$ ${summary(data).totalRevenue.toFixed(2)} · Operações: ${data.length}`);doc.moveDown();for(const row of table)doc.fontSize(9).text(Object.entries(row).map(([k,v])=>`${k}: ${v}`).join(' | '));doc.end();
 });
-module.exports={getSalesReport,getProductConsumptionReport,getWaiterPerformanceReport,getSalesByCategory,getSalesByPaymentMethod,getSalesByHour,getStockReport,getFinancialSummary,getDashboardData,getComparativeReport,exportReport};
+return {getSalesReport,getProductConsumptionReport,getWaiterPerformanceReport,getSalesByCategory,getSalesByPaymentMethod,getSalesByHour,getStockReport,getFinancialSummary,getDashboardData,getComparativeReport,exportReport};
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["getSalesReport", "getProductConsumptionReport", "getWaiterPerformanceReport", "getSalesByCategory", "getSalesByPaymentMethod", "getSalesByHour", "getStockReport", "getFinancialSummary", "getDashboardData", "getComparativeReport", "exportReport"]);

@@ -6,7 +6,7 @@ let checks = 0;
 async function request(path, method = 'GET', data, status = 200) {
   const response = await fetch(base + path, { method,
     headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    body: data === undefined ? undefined : JSON.stringify(data) });
+    body: data === undefined ? undefined : JSON.stringify(path==='/auth/login'?{...data,company:process.env.PDV_COMPANY||'demo'}:data) });
   const body = await response.json();
   assert.equal(response.status, status, `${method} ${path}: ${JSON.stringify(body)}`);
   checks++;

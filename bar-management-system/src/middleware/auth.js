@@ -1,45 +1,11 @@
-const jwt = require('jsonwebtoken');
-const { User } = require('../models');
-
-const authenticateToken = async (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findByPk(decoded.userId);
-    
-    if (!user || !user.active) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    return res.status(403).json({ error: 'Invalid or expired token' });
-  }
+async function authenticateToken(req,res,next){
+ if(req.supportUser){req.user={id:req.supportUser.id,username:req.supportUser.username,role:'gerente',support:true};return next();}
+ if(req.claims?.scope!=='tenant'||req.claims.company!==req.tenant?.slug)return res.status(401).json({error:'Sessão inválida'});
+ try{const {User}=require('../models');const user=await User.findByPk(req.claims.userId);if(!user?.active)return res.status(401).json({error:'Sessão inválida'});req.user=user;next();}catch(error){next(error)}
+}
+const authorizeRoles=(...roles)=>(req,res,next)=>{
+ if(!req.user)return res.sendStatus(401);
+ if(!roles.includes(req.user.role))return res.status(403).json({error:'Permissão insuficiente'});
+ next();
 };
-
-const authorizeRoles = (...roles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
-    }
-
-    next();
-  };
-};
-
-module.exports = {
-  authenticateToken,
-  authorizeRoles
-};
-
+module.exports={authenticateToken,authorizeRoles};

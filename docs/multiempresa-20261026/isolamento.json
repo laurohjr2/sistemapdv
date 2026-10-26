@@ -1,0 +1,19 @@
+{
+  "passed": 63,
+  "failed": 0,
+  "coverage": [
+    "bancos e credenciais diferentes",
+    "CONNECT cruzado e central recusado pelo PostgreSQL",
+    "usuários com o mesmo UUID nos dois bancos",
+    "JWT adulterado recusado",
+    "24 requisições concorrentes",
+    "cabeçalhos e parâmetros não trocam o banco",
+    "leituras e escritas cruzadas recusadas",
+    "configurações separadas",
+    "ID ausente para clientes e visível só ao suporte",
+    "sessão suporte somente consulta e revogável",
+    "suspensão afeta somente a empresa correta",
+    "auditoria central",
+    "ID estável após reprovisionamento"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "tenantCount": 6,
+  "checks": [
+    "central restaurado com mesmos IDs e metadados",
+    "contagens de usuários preservadas em cada banco",
+    "credenciais individuais recuperadas",
+    "acesso cruzado continua recusado",
+    "teste realizado em instância PostgreSQL separada"
+  ]
+}

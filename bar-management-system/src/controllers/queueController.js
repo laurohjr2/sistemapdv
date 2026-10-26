@@ -1,3 +1,4 @@
+function createScopedModule() {
 const { ComandaItem, Comanda, Product, User, Table } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 const { Op } = require('sequelize');
@@ -418,7 +419,7 @@ const getPreparationReport = async (req, res) => {
   }
 };
 
-module.exports = {
+return {
   getQueueItems,
   updateItemStatus,
   updateItemPriority,
@@ -428,3 +429,6 @@ module.exports = {
   getPreparationReport
 };
 
+
+}
+module.exports=require('../tenancy/scopedModule')(createScopedModule,["getQueueItems", "updateItemStatus", "updateItemPriority", "getQueueSummary", "getItemsByTable", "markMultipleItemsAsDelivered", "getPreparationReport"]);

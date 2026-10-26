@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+module.exports = function defineModel(sequelize) {
 
 const Comanda = sequelize.define('Comanda', {
   id: {
@@ -149,5 +149,7 @@ const Comanda = sequelize.define('Comanda', {
   }
 });
 
-module.exports = Comanda;
+return Comanda;
 
+
+};
