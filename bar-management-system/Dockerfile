@@ -1,34 +1,9 @@
-# Dockerfile para o Backend
-FROM node:18-alpine
-
-# Definir diretório de trabalho
-WORKDIR /app
-
-# Copiar arquivos de dependências
-COPY package*.json ./
-
-# Instalar dependências
-RUN npm install --production
-
-# Copiar código fonte
-COPY . .
-
-# Copiar arquivo de ambiente para Docker
-COPY .env.docker .env
-
-# Criar usuário não-root para segurança
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
-
-# Criar diretório de logs
-RUN mkdir -p logs && chown -R nodejs:nodejs logs
-
-# Mudar para usuário não-root
-USER nodejs
-
-# Expor porta
+FROM node:24-bookworm-slim
+WORKDIR /app/bar-management-system
+COPY bar-management-system/package*.json ./
+RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
+COPY --chown=node:node bar-management-system/ ./
+COPY --chown=node:node docker/local.cjs /app/docker/local.cjs
+USER node
 EXPOSE 3000
-
-# Comando de inicialização
-CMD ["npm", "start"]
-
+CMD ["node", "/app/docker/local.cjs", "serve"]

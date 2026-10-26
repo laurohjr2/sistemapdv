@@ -1,34 +1,13 @@
-# Multi-stage build para otimizar tamanho da imagem
-
-# Estágio 1: Build
-FROM node:18-alpine AS builder
-
+FROM node:24-bookworm-slim AS builder
 WORKDIR /app
-
-# Copiar arquivos de dependências
-COPY package.json package-lock.json* ./
-
-# Instalar dependências
-RUN npm install --legacy-peer-deps
-
-# Copiar código fonte
+RUN npm install --global pnpm@10.4.1
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 COPY . .
+RUN pnpm build
 
-# Build da aplicação
-RUN npm run build
-
-# Estágio 2: Produção
-FROM nginx:alpine
-
-# Copiar arquivos buildados
+FROM nginx:stable-alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copiar configuração customizada do nginx
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Expor porta
+COPY --chmod=644 nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
-
-# Comando de inicialização
 CMD ["nginx", "-g", "daemon off;"]
-

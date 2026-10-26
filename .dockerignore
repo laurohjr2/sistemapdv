@@ -1,0 +1,12 @@
+.git
+**/node_modules
+**/dist
+.pdv-local
+**/.env
+**/.env.*
+**/*.log
+**/*.sql
+**/*.rar
+**/*.pem
+**/*.key
+docs

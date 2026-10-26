@@ -23,13 +23,17 @@ Capturas reais com dados fictícios de demonstração:
 
 [Ver a tela de Configurações](docs/images/configuracoes.png)
 
+## Testar no Windows com Docker
+
+Consulte o [passo a passo da instalação local](docker/LEIA-ME.md). O Docker Compose prepara frontend, API, bancos e credenciais próprias para teste, preservando os dados em volumes.
+
 ## Desenvolvimento e validação
 
 Consulte [DEVELOPMENT.md](DEVELOPMENT.md) para instalar, iniciar e testar no ambiente cloud. Os scripts atuais usam `/workspace/sistemapdv`.
 
 Foram executadas 28 verificações HTTP do fluxo geral, 36 da integração fila–mesa–comanda e um teste de navegador incluindo pagamento e liberação da mesa. Os scripts de teste estão em `scripts/`.
 
-Esta é uma base de desenvolvimento. Impressão física, assinaturas e painel master comercial completo ainda precisam ser concluídos; a separação de bancos e o suporte para consulta estão descritos na entrega multiempresa. A validação não cobre todos os fluxos herdados da aplicação. Os Dockerfiles e o seed antigo são legados e não fazem parte da instalação validada; não execute o seed em um banco com dados que precisa preservar.
+Esta é uma base de desenvolvimento. Impressão física, assinaturas e painel master comercial completo ainda precisam ser concluídos; a separação de bancos e o suporte para consulta estão descritos na entrega multiempresa. A validação não cobre todos os fluxos herdados da aplicação. Não execute o seed antigo em um banco com dados que precisa preservar.
 
 Credenciais, banco local e dependências são excluídos do Git.
 

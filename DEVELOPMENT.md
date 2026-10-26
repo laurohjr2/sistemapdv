@@ -107,3 +107,20 @@ A configuração vigente está em [docs/multiempresa-20261026/README.md](docs/mu
 O runtime precisa de `.pdv-local/platform.json`, do arquivo de ambiente privado e dos bancos provisionados. Execute o bootstrap pelos scripts; não faça sync/reset de um banco arbitrário no servidor HTTP. Antes de publicar o ambiente, execute `node --env-file=.pdv-local/development.env scripts/platform-backup.cjs` para reter banco central e todos os bancos de empresas. Preservar somente o antigo development.sql não é suficiente. A restauração da plataforma é chamada pelo database.sh e foi exercitada em instância PostgreSQL separada. Clonar só o repositório inicia uma demonstração nova, sem recuperar empresas anteriores.
 
 Credenciais privadas e snapshots não entram no Git. Os nomes dos arquivos não são segredos, mas seus conteúdos são. O seed antigo foi desativado para evitar apagar dados de empresas. O suporte usa conta central, sessão de consulta de 15 minutos e trilha de auditoria; a tela não oferece edição no modo suporte.
+
+## Instalação local Docker
+
+Para testar fora do ambiente cloud, use o [guia Docker para Windows](docker/LEIA-ME.md) e `compose.yaml`. Os Dockerfiles atuais usam Node.js 24 e substituem os arquivos legados. Não use os scripts cloud com caminhos `/workspace` no Windows.
+
+O Compose inicia PostgreSQL, frontend Nginx e backend sem publicar a porta do banco/API. Dois serviços temporários (`prepare` e `provision`) geram os segredos e criam/migram a plataforma e a empresa `demo`. As senhas são únicas por instalação e consultadas pelo comando explícito do guia. O backend roda como usuário `node`, com configuração restrita montada somente para leitura; a senha administrativa PostgreSQL não é montada nele. Não copie `.pdv-local` para as imagens.
+
+Teste de persistência para manutenção (requer Node no host, apenas para executar este teste):
+
+```bash
+node scripts/docker-local-smoke.cjs prepare
+docker compose down
+docker compose up -d --wait --wait-timeout 240
+node scripts/docker-local-smoke.cjs verify
+```
+
+O teste usa a instalação local `demo`, grava uma mensagem de comprovante de teste e confirma sua persistência e a estabilidade do ID após recriar os containers. Não execute contra uma instalação com dados reais.
