@@ -23,6 +23,9 @@ router.get('/search', searchProducts);
 router.get('/categories', getCategories);
 router.get('/low-stock', getLowStockProducts);
 router.get('/category/:category', getProductsByCategory);
+const starterCatalog = require('../controllers/starterCatalogController');
+router.get('/starter-catalogs', authorizeRoles('gerente', 'admin'), starterCatalog.describe);
+router.post('/starter-catalogs/import', authorizeRoles('gerente', 'admin'), starterCatalog.importItems);
 router.get('/:id', getProductById);
 
 // Routes for managers and admins only

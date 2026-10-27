@@ -38,7 +38,7 @@ const getAllProducts = async (req, res) => {
     let filteredProducts = products;
     if (lowStock === 'true') {
       filteredProducts = products.filter(product => 
-        product.itemType!=='service'&&Number(product.currentStock) <= Number(product.minStockAlert)
+        product.active&&product.itemType!=='service'&&Number(product.currentStock) <= Number(product.minStockAlert)
       );
     }
 
@@ -268,7 +268,7 @@ const getCategories = async (req, res) => {
     const existing=await Product.findAll({attributes:['category'],group:['category'],raw:true});
     const known=new Set(categories.map(c=>c.value));for(const value of [...extra,...existing.map(p=>p.category)])if(!known.has(value)){categories.push({value,label:value.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase())});known.add(value);}
     const profile=(await require('../services/businessSettingsService').getSettings()).businessProfile;
-    const preferred={pizzaria:['pizzas','bordas','massas','bebidas_nao_alcoolicas','sobremesas','outros'],oficina:['mao_de_obra','pecas','ferramentas','outros'],autopecas:['pecas','ferramentas','lubrificantes','acessorios','outros'],mercado:['alimentos','bebidas_nao_alcoolicas','limpeza','higiene','outros'],comercio:['mercadorias','servicos','outros']}[profile]||['bebidas_alcoolicas','bebidas_nao_alcoolicas','porcoes','comidas','petiscos','sobremesas','outros'];
+    const preferred={hamburgueria:['comidas','porcoes','bebidas_nao_alcoolicas','sobremesas','outros'],pizzaria:['pizzas','bordas','massas','bebidas_nao_alcoolicas','sobremesas','outros'],oficina:['mao_de_obra','pecas','ferramentas','outros'],autopecas:['pecas','ferramentas','lubrificantes','acessorios','outros'],mercado:['alimentos','bebidas_nao_alcoolicas','limpeza','higiene','outros'],comercio:['mercadorias','servicos','outros']}[profile]||['bebidas_alcoolicas','bebidas_nao_alcoolicas','porcoes','comidas','petiscos','sobremesas','outros'];
     const values=[...new Set([...preferred,...existing.map(p=>p.category)])];
     res.json(values.map(value=>categories.find(c=>c.value===value)||{value,label:value.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase())}));
   } catch (error) {

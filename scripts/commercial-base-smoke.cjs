@@ -43,7 +43,7 @@ const date = (offset = 0) => {
     })
   ).token;
   const profiles = await req("/settings/profiles");
-  assert.equal(profiles.profiles.length, 6);
+  assert.equal(profiles.profiles.length, 7);
   assert.ok(profiles.profiles.some((p) => p.id === "pizzaria"));
   await req("/settings", "PUT", { businessProfile: "pizzaria" });
   // Only dispose of incomplete proposals created by this browser fixture.

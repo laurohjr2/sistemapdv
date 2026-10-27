@@ -14,6 +14,12 @@ const profiles = [
     modules: { ...common, pizza:true, tables: true, kitchen: true },
   },
   {
+    id: "hamburgueria",
+    name: "Hamburgueria",
+    description: "Balcão, mesas, comandas e preparo de lanches na cozinha.",
+    modules: { ...common, tables: true, kitchen: true },
+  },
+  {
     id: "oficina",
     name: "Oficina mecânica",
     description:

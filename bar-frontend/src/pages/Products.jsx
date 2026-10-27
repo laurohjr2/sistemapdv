@@ -1,4 +1,5 @@
 import {useBusiness} from '../hooks/useBusiness';
+import StarterCatalogImport from '../components/StarterCatalogImport';
 import ReportDownload from '../components/ReportDownload';
 import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
@@ -18,7 +19,7 @@ import api from '../lib/api';
 
 const Products = () => {
   const {business}=useBusiness();
-  const foodProfile=['bar_restaurante','pizzaria','mercado'].includes(business.businessProfile||'bar_restaurante');
+  const foodProfile=['bar_restaurante','pizzaria','hamburgueria','mercado'].includes(business.businessProfile||'bar_restaurante');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -249,7 +250,7 @@ const Products = () => {
     const matchesTab = activeTab === 'all' || 
                       (activeTab === 'active' && product.active) ||
                       (activeTab === 'inactive' && !product.active) ||
-                      (activeTab === 'low_stock' && product.itemType!=='service'&&parseFloat(product.currentStock || 0) <= parseFloat(product.minStockAlert || 0));
+                      (activeTab === 'low_stock' && product.active && product.itemType!=='service'&&parseFloat(product.currentStock || 0) <= parseFloat(product.minStockAlert || 0));
     
     return matchesSearch && matchesCategory && matchesTab;
   });
@@ -258,7 +259,7 @@ const Products = () => {
     total: products.length,
     active: products.filter(p => p.active).length,
     inactive: products.filter(p => !p.active).length,
-    lowStock: products.filter(p => p.itemType!=='service'&&parseFloat(p.currentStock || 0) <= parseFloat(p.minStockAlert || 0)).length
+    lowStock: products.filter(p => p.active && p.itemType!=='service'&&parseFloat(p.currentStock || 0) <= parseFloat(p.minStockAlert || 0)).length
   };
 
   return (
@@ -558,6 +559,8 @@ const Products = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      <StarterCatalogImport onImported={() => { fetchProducts(); fetchCategories(); }} />
 
       {/* Estatísticas */}
       <div className="grid gap-4 md:grid-cols-4">

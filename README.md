@@ -60,3 +60,7 @@ Perfis para bar/restaurante, pizzaria, oficina, autopeças, mercado e comércio;
 ## Pizzaria (0.4.0)
 
 [Tamanhos, sabores, bordas, adicionais, regras de preço e preparo integrados a vendas e mesas](docs/pizzaria/README.md).
+
+## Catálogos por perfil — Mark 0.4.1
+
+Importação seletiva de produtos e serviços pré-cadastrados para sete perfis, incluindo Hamburgueria. Os itens entram inativos, com preços e estoque zerados, sem substituir cadastros existentes. Veja o [guia de importação e revisão](docs/catalogos-iniciais/README.md).
