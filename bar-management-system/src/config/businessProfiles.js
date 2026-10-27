@@ -1,4 +1,4 @@
-const common = { workshop:false, pizza:false, quotes: true, purchasing: true, finance: true };
+const common = { autoparts:false, workshop:false, pizza:false, quotes: true, purchasing: true, finance: true };
 const profiles = [
   {
     id: "bar_restaurante",
@@ -24,13 +24,13 @@ const profiles = [
     name: "Oficina mecânica",
     description:
       "Veículos, ordens de serviço, checklist, aprovação e recebimento integrado.",
-    modules: { ...common, workshop:true, tables: false, kitchen: false },
+    modules: { ...common, autoparts:true, workshop:true, tables: false, kitchen: false },
   },
   {
     id: "autopecas",
     name: "Autopeças",
-    description: "Balcão, peças, orçamentos, compras e financeiro.",
-    modules: { ...common, tables: false, kitchen: false },
+    description: "Aplicações por veículo, referências, equivalências, vendas e compras.",
+    modules: { ...common, autoparts:true, tables: false, kitchen: false },
   },
   {
     id: "mercado",
@@ -47,6 +47,7 @@ const profiles = [
   },
 ];
 const moduleNames = {
+  autoparts:"Autopeças — aplicações e equivalências",
   workshop:"Oficina — veículos e ordens de serviço",
   pizza:"Pizzaria — montagem e cardápio",
   tables: "Mesas e comandas",

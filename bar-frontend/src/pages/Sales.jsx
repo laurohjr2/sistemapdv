@@ -31,7 +31,7 @@ const Sales = () => {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(() => new URLSearchParams(window.location.search).get('search')?.slice(0,200)||'');
   const [barcodeInput, setBarcodeInput] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('dinheiro');
@@ -429,7 +429,8 @@ const Sales = () => {
 
   const filteredProducts = products.filter(product => !pizzaBases.has(product.id)).filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category?.toLowerCase().includes(searchTerm.toLowerCase())
+    product.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    [product.barcode,product.partDetails?.manufacturer,product.partDetails?.partNumber,...(product.partDetails?.originalCodes||[])].some(value=>value?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (

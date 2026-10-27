@@ -1,5 +1,5 @@
 function createScopedModule() {
-const { Product } = require('../models');
+const { Product, PartDetail } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 const { Op } = require('sequelize');
 
@@ -32,6 +32,7 @@ const getAllProducts = async (req, res) => {
 
     const products = await Product.findAll({
       where: whereClause,
+      include:[{model:PartDetail,as:'partDetails'}],
       order: [['name', 'ASC']]
     });
 
