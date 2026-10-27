@@ -7,6 +7,7 @@ import { useAuth } from "../hooks/useAuth.jsx";
 import { hasRole } from "../lib/auth";
 import { Button } from "./ui/button";
 import {
+  Wrench,
   Pizza,
   FileText,
   Truck,
@@ -67,6 +68,7 @@ const Layout = () => {
       module: "quotes",
       area: "Comercial",
     },
+    {name:"Oficina",href:"/workshop",icon:Wrench,roles:["garcom","gerente","admin"],module:"workshop",area:"Atendimento"},
     {
       name: "Mesas",
       href: "/tables",

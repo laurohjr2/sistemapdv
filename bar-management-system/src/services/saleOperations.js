@@ -9,6 +9,7 @@ function factory() {
     Customer,
     Quote,
     AuditLog,
+    WorkOrder,
   } = require("../models");
   const {
     fail,
@@ -18,7 +19,10 @@ function factory() {
     lineCents,
     today,
   } = require("./commercialValidation");
-  async function create({ body, user }) {
+  async function create({ body, user, workOrderId }) {
+    if (body.sourceWorkOrderId) throw fail("Receba a OS pelo menu Oficina");
+    if (workOrderId && body.sourceQuoteId)
+      throw fail("Origem do recebimento inválida");
     const source = body.sourceQuoteId ? uuid(body.sourceQuoteId) : null;
     let discount = cents(body.discount_amount ?? 0, "Desconto", true);
     if (!source && discount && !["admin", "gerente"].includes(user.role))
@@ -32,6 +36,8 @@ function factory() {
     )
       throw fail("Método de pagamento inválido");
     return sequelize.transaction(async (transaction) => {
+      if (workOrderId)
+        await require("./workshopOperations").enabled(transaction);
       const cash = await CashRegister.findByPk(body.cash_register_id, {
         transaction,
         lock: transaction.LOCK.UPDATE,
@@ -51,8 +57,32 @@ function factory() {
         );
       if (quote && quote.validUntil < today())
         throw fail("Orçamento vencido. Crie uma nova proposta para aprovação.");
-      const items = quote
-        ? quote.lines.map((l) => ({
+      const workOrder = workOrderId
+        ? await WorkOrder.findByPk(uuid(workOrderId), {
+            transaction,
+            lock: transaction.LOCK.UPDATE,
+          })
+        : null;
+      if (workOrderId && !workOrder)
+        throw fail("Ordem de serviço não encontrada", 404);
+      if (workOrder) {
+        if (workOrder.revision !== body.revision)
+          throw fail(
+            "A OS mudou em outro terminal. Recarregue antes de receber.",
+            409,
+          );
+        if (workOrder.status !== "ready")
+          throw fail("Somente uma OS pronta pode ser recebida");
+        if (
+          workOrder.saleId &&
+          (await Sale.findByPk(workOrder.saleId, { transaction }))?.status ===
+            "completed"
+        )
+          throw fail("Esta OS já foi recebida", 409);
+      }
+      const document = quote || workOrder;
+      const items = document
+        ? document.lines.map((l) => ({
             product_id: l.productId,
             quantity: l.quantity,
           }))
@@ -88,7 +118,7 @@ function factory() {
           throw fail("Informe de 1 a 99 pizzas inteiras por item");
         if (resolved && item.product_id && item.product_id !== id)
           throw fail("Produto-base divergente da montagem");
-        if (!quote && !resolved && baseIds.has(id))
+        if (!document && !resolved && baseIds.has(id))
           throw fail("Use Montar pizza para escolher os sabores deste produto");
         quantities.set(id, quantity((quantities.get(id) || 0) + q));
         requested.push({
@@ -105,7 +135,7 @@ function factory() {
             : null,
         });
       }
-      const customerId = quote ? quote.customerId : body.customerId;
+      const customerId = document ? document.customerId : body.customerId;
       const customer = customerId
         ? await Customer.findByPk(uuid(customerId), { transaction })
         : null;
@@ -136,7 +166,7 @@ function factory() {
       }
       for (const row of merged) {
         const product = products.get(row.id),
-          quoted = quote?.lines.find((l) => l.productId === row.id);
+          quoted = document?.lines.find((l) => l.productId === row.id);
         if (quoted && quoted.itemType !== product.itemType)
           throw fail(
             "O tipo de um item do orçamento foi alterado. Revise a proposta.",
@@ -151,7 +181,7 @@ function factory() {
         total += amount;
         lines.push({ ...row, product, unitPrice, stockTracked, amount });
       }
-      if (quote) discount = cents(quote.discount, "Desconto", true);
+      if (document) discount = cents(document.discount, "Desconto", true);
       if (total > 9999999999 || discount > total)
         throw fail("Desconto ou total inválido");
       total -= discount;
@@ -163,6 +193,10 @@ function factory() {
       const sale = await Sale.create(
         {
           sourceQuoteId: source,
+          sourceWorkOrderId: workOrder?.id || null,
+          notes: workOrder
+            ? `Ordem de serviço #${workOrder.number} — ${workOrder.vehicleSnapshot.plate}`
+            : null,
           customerId: customer?.id || null,
           discount_amount: discount / 100,
           payments,
@@ -211,6 +245,20 @@ function factory() {
       if (quote)
         await quote.update(
           { status: "converted", saleId: sale.id },
+          { transaction },
+        );
+      if (workOrder)
+        await workOrder.update(
+          {
+            saleId: sale.id,
+            revision: workOrder.revision + 1,
+            events: require("./workshopOperations").event(
+              workOrder,
+              user,
+              "paid",
+              `Venda #${sale.id}`,
+            ),
+          },
           { transaction },
         );
       await AuditLog.create(

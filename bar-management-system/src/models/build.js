@@ -1,4 +1,6 @@
 module.exports = function buildModels(sequelize) {
+const Vehicle=require('./Vehicle')(sequelize);
+const WorkOrder=require('./WorkOrder')(sequelize);
 const PizzaCatalog=require('./PizzaCatalog')(sequelize);
 const User = require('./User')(sequelize);
 const Product = require('./Product')(sequelize);
@@ -23,6 +25,8 @@ const FinancialPayment=require('./FinancialPayment')(sequelize);
 const CashMovement=require('./CashMovement')(sequelize);
 const BusinessSettings = require('./BusinessSettings')(sequelize);
 
+Vehicle.belongsTo(Customer,{foreignKey:'customerId',as:'customer'});
+WorkOrder.belongsTo(Sale,{foreignKey:'saleId',as:'sale'});
 FinancialEntry.hasMany(FinancialPayment,{foreignKey:'entryId',as:'payments'});
 Sale.belongsTo(Customer,{foreignKey:'customerId',as:'customer'});
 Comanda.belongsTo(Customer,{foreignKey:'customerId',as:'customer'});
@@ -77,7 +81,7 @@ Product.hasMany(Ticket, { foreignKey: 'product_id', as: 'tickets' });
 Ticket.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 return {
-  sequelize,
+  sequelize, Vehicle, WorkOrder,
   PizzaCatalog,
   User,
   Product,

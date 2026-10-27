@@ -47,6 +47,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/customers',require('./src/routes/customers'));
 app.use('/api/products', productRoutes);
 app.use('/api/pizza',require('./src/routes/pizza'));
+app.use('/api/workshop',require('./src/routes/workshop'));
 app.use('/api/commerce',require('./src/routes/commerce'));
 app.use('/api/stock', stockRoutes);
 app.use('/api/tables', require('./src/middleware/businessModule')('tables'), tableRoutes);

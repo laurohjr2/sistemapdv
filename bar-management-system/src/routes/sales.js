@@ -93,6 +93,8 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
       if (!snapshot) throw fail('Venda não encontrada',404);
       const cash = await CashRegister.findByPk(snapshot.cash_register_id,{transaction,lock:transaction.LOCK.UPDATE});
       if (!cash?.is_open) throw fail('O caixa desta venda já foi fechado');
+      const workOrder=snapshot.sourceWorkOrderId?await require('../models').WorkOrder.findByPk(snapshot.sourceWorkOrderId,{transaction,lock:transaction.LOCK.UPDATE}):null;
+      if(workOrder?.status==='delivered')throw fail('A OS já foi entregue. O recebimento não pode ser cancelado por este fluxo.');
       const sale = await Sale.findByPk(req.params.id, { transaction, lock: transaction.LOCK.UPDATE });
       const ticket = await Ticket.findOne({where:{sale_id:sale.id},transaction,lock:transaction.LOCK.UPDATE});
       if(ticket && ticket.status !== 'pending') throw fail('Ticket já utilizado ou cancelado');
@@ -109,6 +111,7 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
           notes: `Cancelamento da venda #${sale.id}` }, { transaction });
       }
       await sale.update({ status: 'cancelled' }, { transaction });
+      if(workOrder)await workOrder.update({revision:workOrder.revision+1,events:require('../services/workshopOperations').event(workOrder,req.user,'payment_cancelled',`Venda #${sale.id} cancelada; estoque reposto`)},{transaction});
       return sale;
     });
     await logAction(req.user.id, 'sale_cancelled', { saleId: sale.id });

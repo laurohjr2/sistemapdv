@@ -91,6 +91,7 @@ router.put('/',authenticateToken,authorizeRoles('admin'),express.json({limit:'6m
         const pendingTables=previous.pizza&&!next.pizza?await ComandaItem.count({where:{pizza:{[Op.ne]:null}},include:[{model:Comanda,as:'comanda',where:{status:'aberta'}}],transaction}):0;
         if(pendingSales||pendingTables)throw invalid('Finalize as pizzas em preparo e as comandas com pizzas antes de desativar o módulo.');
       }
+      if(previous.workshop&&!next.workshop&&await require('../models').WorkOrder.count({where:{status:['draft','waiting','approved','in_progress','ready']},transaction}))throw invalid('Conclua ou cancele as ordens de serviço antes de desativar a oficina.');
       if(previous.quotes&&!next.quotes&&await Quote.count({where:{status:['draft','sent','approved']},transaction}))throw invalid('Conclua ou cancele os orçamentos em andamento antes de desativar o módulo.');
       if(previous.purchasing&&!next.purchasing&&await PurchaseOrder.count({where:{status:['ordered','partial']},transaction}))throw invalid('Conclua os pedidos de compra em andamento antes de desativar o módulo.');
       if(previous.finance&&!next.finance){for(const entry of await FinancialEntry.findAll({where:{cancelled:false},transaction})){const paid=await FinancialPayment.sum('amount',{where:{entryId:entry.id},transaction})||0;if(Math.round(Number(entry.amount)*100)>Math.round(Number(paid)*100))throw invalid('Quite as contas pendentes antes de desativar o financeiro.');}}
