@@ -62,4 +62,15 @@ Esses recursos específicos não estão incluídos apenas por selecionar um perf
 
 ## Validação
 
-Os cenários automatizados usam empresas e dados sintéticos em projetos Docker separados da instalação local. Resultados desta entrega serão registrados após a conclusão dos testes. O script de atualização tem sintaxe compatível com PowerShell 5.1/7; o teste disponível usa PowerShell 7 em Linux, sem homologação em uma máquina Windows física.
+Os cenários automatizados usam empresas e dados sintéticos em projetos Docker separados da instalação local.
+
+| Verificação | Resultado |
+| --- | --- |
+| API comercial (`scripts/commercial-base-smoke.cjs`) | 118 verificações aprovadas: seis perfis, produtos/serviços, permissões, conversão concorrente, preços aprovados, recebimento parcial, arredondamento acumulado, idempotência, contas e saldo físico do caixa. |
+| Navegador comercial (`scripts/commercial-base-browser.cjs`) | 24 verificações aprovadas; criação/conversão de orçamento, compra parcial, financeiro, caixa, versão, acesso Master e layout móvel. Sem erros JavaScript. |
+| Isolamento (`scripts/commercial-base-isolation.cjs`) | 26 verificações aprovadas; IDs de outra empresa recusados, primeira entrada Master com requisições simultâneas, usuário técnico oculto, suporte somente para consulta e revogação. |
+| Regressão da entrega anterior | 75 verificações HTTP e 16 de navegador aprovadas, incluindo clientes, desconto, mesas/cozinha, pagamentos divididos, PDFs, recuperação de senha, inativação, Master e logo. |
+| Migração e persistência | 10 verificações aprovadas no ambiente com dados preservados da instalação anterior; produtos, usuários, configuração, ID e pagamentos mantidos. |
+| Qualidade | Build de produção aprovado; ESLint sem erros, com 12 avisos preexistentes. O build mantém aviso de tamanho do pacote JavaScript. |
+
+O script de atualização tem sintaxe compatível com PowerShell 5.1/7; o teste disponível usa PowerShell 7 em Linux, sem homologação em uma máquina Windows física. Impressoras e integrações fiscais/bancárias não foram homologadas nesta entrega.

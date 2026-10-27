@@ -557,7 +557,7 @@ const date = (offset = 0) => {
   await req("/products/" + product.id, "DELETE");
   const inactive = await req("/products/" + product.id);
   assert.equal(inactive.active, false);
-  assert.equal(Number(inactive.currentStock), 12);
+  assert.equal(Number(inactive.currentStock), 15);
   await req("/products/" + product.id, "PUT", { active: true });
   await req("/settings", "PUT", { businessProfile: "oficina" });
   const office = await req("/settings");

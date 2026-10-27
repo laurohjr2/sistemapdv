@@ -12,6 +12,21 @@ function Invoke-Checked {
         throw "Falha ao executar $Program $($Arguments -join ' '). A atualizacao foi interrompida."
     }
 }
+# Local health/version checks must not go through an HTTP proxy.
+function Get-LocalJson {
+    param([string]$Uri)
+    Add-Type -AssemblyName System.Net.Http
+    $handler = [System.Net.Http.HttpClientHandler]::new()
+    $handler.UseProxy = $false
+    $client = [System.Net.Http.HttpClient]::new($handler)
+    $client.Timeout = [TimeSpan]::FromSeconds(20)
+    try {
+        $content = $client.GetStringAsync($Uri).GetAwaiter().GetResult()
+        return ($content | ConvertFrom-Json)
+    } finally {
+        $client.Dispose()
+    }
+}
 $servicesStopped = $false
 $updateLock = $null
 try {
@@ -52,8 +67,8 @@ try {
     $publishedPort = ($mapping | Select-Object -First 1).Trim().Split(':')[-1]
     if ($publishedPort -notmatch '^\d+$') { throw 'Porta publicada invalida.' }
     $baseUrl = 'http://127.0.0.1:' + $publishedPort
-    $api = Invoke-RestMethod -Uri ($baseUrl + '/api/version') -TimeoutSec 20
-    $frontend = Invoke-RestMethod -Uri ($baseUrl + '/release.json') -TimeoutSec 20
+    $api = Get-LocalJson -Uri ($baseUrl + '/api/version')
+    $frontend = Get-LocalJson -Uri ($baseUrl + '/release.json')
     if ($api.version -ne $release.version -or $frontend.version -ne $release.version) {
         throw "Versoes diferentes: esperada $($release.version), servidor $($api.version), interface $($frontend.version). O backup foi preservado."
     }
