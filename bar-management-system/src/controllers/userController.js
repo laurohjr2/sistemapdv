@@ -5,7 +5,7 @@ const { logAction } = require('../utils/auditLogger');
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
-      order: [['created_at', 'DESC']]
+      where:{platformUserId:null}, paranoid: false, order: [['created_at', 'DESC']]
     });
 
     res.json(users);
@@ -18,7 +18,7 @@ const getAllUsers = async (req, res) => {
 const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(id, {paranoid:false});
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -36,11 +36,12 @@ const updateUser = async (req, res) => {
     const { id } = req.params;
     const { username, role, password, email, active } = req.body;
 
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(id, {paranoid:false});
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    if(user.platformUserId)return res.status(403).json({error:'Conta da plataforma é gerenciada exclusivamente pelo fornecedor'});
     const updateData = {};
     if (username) updateData.username = username;
     if (role) updateData.role = role;
@@ -58,6 +59,7 @@ const updateUser = async (req, res) => {
       updateData.active = active;
     }
     if (id === req.user.id && role && role !== 'admin') return res.status(400).json({error:'Não é possível remover seu próprio acesso de administrador'});
+    if (active === true && user.deleted_at) await user.restore();
     await user.update(updateData);
 
     await logAction(req.user.id, 'user_updated', {
@@ -83,7 +85,7 @@ const deleteUser = async (req, res) => {
       return res.status(400).json({ error: 'Cannot delete your own account' });
     }
 
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(id, {paranoid:false});
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -93,9 +95,10 @@ const deleteUser = async (req, res) => {
       username: user.username
     });
 
-    await user.destroy();
+    if(user.platformUserId)return res.status(403).json({error:'Conta da plataforma é gerenciada exclusivamente pelo fornecedor'});
+    await user.update({active:false});
 
-    res.json({ message: 'User deleted successfully' });
+    res.json({ message: 'Usuário inativado. O histórico foi preservado.' });
   } catch (error) {
     console.error('Delete user error:', error);
     res.status(500).json({ error: 'Internal server error' });

@@ -2,6 +2,8 @@ const { DataTypes } = require('sequelize');
 module.exports = function defineModel(sequelize) {
 
 const Sale = sequelize.define('Sale', {
+  customerId: {type:DataTypes.UUID,allowNull:true},
+  payments: {type:DataTypes.JSONB,allowNull:true},
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -30,6 +32,7 @@ const Sale = sequelize.define('Sale', {
     allowNull: false,
     comment: 'Método de pagamento utilizado'
   },
+  discount_amount: {type:DataTypes.DECIMAL(10,2),allowNull:false,defaultValue:0},
   total_amount: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,

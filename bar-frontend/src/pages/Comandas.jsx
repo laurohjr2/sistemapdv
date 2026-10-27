@@ -1,3 +1,5 @@
+import {useAuth} from '../hooks/useAuth';
+import PixPayment from '../components/PixPayment';
 import { useBusiness } from '../hooks/useBusiness';
 import { receiptHeader, escapeHtml } from '../lib/receipt';
 import React, { useState, useEffect } from 'react';
@@ -18,6 +20,7 @@ import { useSearchParams } from 'react-router-dom';
 
 const Comandas = () => {
   const {business} = useBusiness();
+  const {user}=useAuth();
   const [searchParams] = useSearchParams();
   const requestedComanda = searchParams.get('comanda');
   const [comandas, setComandas] = useState([]);
@@ -26,13 +29,13 @@ const Comandas = () => {
   const [loading, setLoading] = useState(true);
   const [selectedComanda, setSelectedComanda] = useState(null);
   const [activeTab, setActiveTab] = useState('open');
-  
+
   // Dialog states
   const [isNewComandaOpen, setIsNewComandaOpen] = useState(false);
   const [isViewComandaOpen, setIsViewComandaOpen] = useState(false);
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [isCloseComandaOpen, setIsCloseComandaOpen] = useState(false);
-  
+
   // Form states
   const [newComandaForm, setNewComandaForm] = useState({
     type: 'balcao',
@@ -40,13 +43,13 @@ const Comandas = () => {
     customerPhone: '',
     deliveryType: 'balcao'
   });
-  
+
   const [addItemForm, setAddItemForm] = useState({
     productId: '',
     quantity: '',
     notes: ''
   });
-  
+
   const [closeComandaForm, setCloseComandaForm] = useState({
     paymentMethod: '',
     paymentStatus: 'pago',
@@ -76,7 +79,7 @@ const Comandas = () => {
         api.get('/comandas/open'),
         api.get('/comandas')
       ]);
-      
+
       setOpenComandas(openResponse.data);
       setComandas(allResponse.data.comandas);
     } catch (error) {
@@ -105,7 +108,7 @@ const Comandas = () => {
         customerPhone: newComandaForm.customerPhone || null,
         deliveryType: newComandaForm.deliveryType
       });
-      
+
       toast.success('Comanda criada com sucesso!');
       setIsNewComandaOpen(false);
       resetNewComandaForm();
@@ -120,7 +123,7 @@ const Comandas = () => {
     e.preventDefault();
     try {
       const product = products.find(p => p.id === addItemForm.productId);
-      
+
       if (!product) {
         toast.error('Produto não encontrado');
         return;
@@ -136,13 +139,13 @@ const Comandas = () => {
         quantity: parseFloat(addItemForm.quantity),
         notes: addItemForm.notes
       });
-      
+
       toast.success('Item adicionado à comanda!');
       setIsAddItemOpen(false);
       resetAddItemForm();
       fetchComandas();
       fetchProducts();
-      
+
       // Atualizar a comanda selecionada
       const updatedComanda = await api.get(`/comandas/${selectedComanda.id}`);
       setSelectedComanda(updatedComanda.data);
@@ -162,7 +165,7 @@ const Comandas = () => {
       toast.success('Item removido da comanda!');
       fetchComandas();
       fetchProducts();
-      
+
       // Atualizar a comanda selecionada
       const updatedComanda = await api.get(`/comandas/${selectedComanda.id}`);
       setSelectedComanda(updatedComanda.data);
@@ -182,7 +185,7 @@ const Comandas = () => {
       await api.put(`/comandas/${selectedComanda.id}/items/${itemId}`, {
         quantity: newQuantity
       });
-      
+
       // Atualizar a comanda selecionada
       const updatedComanda = await api.get(`/comandas/${selectedComanda.id}`);
       setSelectedComanda(updatedComanda.data);
@@ -202,13 +205,13 @@ const Comandas = () => {
         discountPercentage: closeComandaForm.discountPercentage ? parseFloat(closeComandaForm.discountPercentage) : 0,
         notes: closeComandaForm.notes
       });
-      
+
       toast.success('Comanda fechada com sucesso!');
       setIsCloseComandaOpen(false);
       setIsViewComandaOpen(false);
       resetCloseComandaForm();
       fetchComandas();
-      
+
       // Imprimir comprovante se necessário
       if (response.data.receipt) {
         printReceipt(response.data.receipt);
@@ -242,7 +245,7 @@ const Comandas = () => {
             <p>Data: ${new Date(receiptData.closedAt).toLocaleString('pt-BR')}</p>
             ${receiptData.customerName ? `<p>Cliente: ${receiptData.customerName}</p>` : ''}
           </div>
-          
+
           <table class="table">
             <thead>
               <tr>
@@ -257,28 +260,28 @@ const Comandas = () => {
                 <tr>
                   <td>${item.product?.name}</td>
                   <td>${item.quantity}</td>
-                  <td>R$ ${parseFloat(item.priceAtSale).toFixed(2)}</td>
-                  <td>R$ ${parseFloat(item.totalItemValue).toFixed(2)}</td>
+                  <td>R$ ${parseFloat(item.priceAtSale).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                  <td>R$ ${parseFloat(item.totalItemValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                 </tr>
               `).join('') || ''}
             </tbody>
           </table>
-          
-          ${receiptData.discountValue > 0 ? `<p>Desconto: R$ ${receiptData.discountValue.toFixed(2)}</p>` : ''}
-          
+
+          ${receiptData.discountValue > 0 ? `<p>Desconto: R$ ${Number(receiptData.discountValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>` : ''}
+
           <div class="total">
-            Total: R$ ${parseFloat(receiptData.totalValue).toFixed(2)}
+            Total: R$ ${parseFloat(receiptData.finalValue??receiptData.totalValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
           </div>
-          
-          <p>Forma de Pagamento: ${receiptData.paymentMethod}</p>
-          
+
+          ${receiptData.payments?.length?receiptData.payments.map(p=>`<p>Pagamento: ${escapeHtml(p.method)} — R$ ${Number(p.amount).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>`).join(''):`<p>Forma de pagamento: ${escapeHtml(receiptData.paymentMethod||'')}</p>`}
+
           <div class="footer">
             <p>${escapeHtml(business.receiptMessage)}</p>
           </div>
         </body>
       </html>
     `;
-    
+
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.print();
@@ -350,7 +353,7 @@ const Comandas = () => {
             Gerencie comandas de balcão, mesa e delivery
           </p>
         </div>
-        
+
         <Dialog open={isNewComandaOpen} onOpenChange={setIsNewComandaOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -383,7 +386,7 @@ const Comandas = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="customerName">Nome do Cliente (Opcional)</Label>
                   <Input
@@ -392,7 +395,7 @@ const Comandas = () => {
                     onChange={(e) => setNewComandaForm({...newComandaForm, customerName: e.target.value})}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="customerPhone">Telefone (Opcional)</Label>
                   <Input
@@ -424,7 +427,7 @@ const Comandas = () => {
             <div className="text-2xl font-bold">{openComandas.length}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total do Dia</CardTitle>
@@ -433,14 +436,14 @@ const Comandas = () => {
           <CardContent>
             <div className="text-2xl font-bold">
               R$ {comandas
-                .filter(c => c.status === 'fechada' && 
+                .filter(c => c.status === 'fechada' &&
                   new Date(c.closedAt).toDateString() === new Date().toDateString())
                 .reduce((total, c) => total + parseFloat(c.totalValue || 0), 0)
-                .toFixed(2)}
+                .toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Comandas do Dia</CardTitle>
@@ -448,13 +451,13 @@ const Comandas = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {comandas.filter(c => 
+              {comandas.filter(c =>
                 new Date(c.openedAt).toDateString() === new Date().toDateString()
               ).length}
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
@@ -463,12 +466,12 @@ const Comandas = () => {
           <CardContent>
             <div className="text-2xl font-bold">
               R$ {(() => {
-                const closedToday = comandas.filter(c => 
-                  c.status === 'fechada' && 
+                const closedToday = comandas.filter(c =>
+                  c.status === 'fechada' &&
                   new Date(c.closedAt).toDateString() === new Date().toDateString()
                 );
                 const total = closedToday.reduce((sum, c) => sum + parseFloat(c.totalValue || 0), 0);
-                return closedToday.length > 0 ? (total / closedToday.length).toFixed(2) : '0.00';
+                return closedToday.length > 0 ? (total / closedToday.length).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '0.00';
               })()}
             </div>
           </CardContent>
@@ -480,7 +483,7 @@ const Comandas = () => {
           <TabsTrigger value="open">Abertas ({openComandas.length})</TabsTrigger>
           <TabsTrigger value="all">Todas</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="open" className="space-y-4">
           <Card>
             <CardHeader>
@@ -518,7 +521,7 @@ const Comandas = () => {
                           {comanda.items?.length || 0} item(s)
                         </TableCell>
                         <TableCell>
-                          R$ {parseFloat(comanda.totalValue || 0).toFixed(2)}
+                          R$ {parseFloat(comanda.totalValue || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
@@ -542,7 +545,7 @@ const Comandas = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="all" className="space-y-4">
           <Card>
             <CardHeader>
@@ -578,7 +581,7 @@ const Comandas = () => {
                           {new Date(comanda.openedAt).toLocaleString('pt-BR')}
                         </TableCell>
                         <TableCell>
-                          R$ {parseFloat(comanda.totalValue || 0).toFixed(2)}
+                          R$ {parseFloat(comanda.totalValue || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                         </TableCell>
                         <TableCell>
                           <Button
@@ -611,7 +614,7 @@ const Comandas = () => {
               Detalhes e itens da comanda
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedComanda && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -632,7 +635,7 @@ const Comandas = () => {
                   <p className="text-sm">{selectedComanda.customerPhone || 'Não informado'}</p>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <Label className="text-sm font-medium">Itens da Comanda</Label>
@@ -646,7 +649,7 @@ const Comandas = () => {
                     </Button>
                   )}
                 </div>
-                
+
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
@@ -685,8 +688,8 @@ const Comandas = () => {
                               item.quantity
                             )}
                           </TableCell>
-                          <TableCell>R$ {parseFloat(item.priceAtSale).toFixed(2)}</TableCell>
-                          <TableCell>R$ {parseFloat(item.totalItemValue).toFixed(2)}</TableCell>
+                          <TableCell>R$ {parseFloat(item.priceAtSale).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</TableCell>
+                          <TableCell>R$ {parseFloat(item.totalItemValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</TableCell>
                           {selectedComanda.status === 'aberta' && (
                             <TableCell>
                               <Button
@@ -704,15 +707,15 @@ const Comandas = () => {
                   </Table>
                 </div>
               </div>
-              
+
               <div className="text-right">
                 <div className="text-lg font-bold">
-                  Total: R$ {parseFloat(selectedComanda.totalValue || 0).toFixed(2)}
+                  Total: R$ {parseFloat(selectedComanda.totalValue || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                 </div>
               </div>
             </div>
           )}
-          
+
           <DialogFooter>
             {selectedComanda?.status === 'aberta' && (
               <Button onClick={() => setIsCloseComandaOpen(true)}>
@@ -757,14 +760,14 @@ const Comandas = () => {
                   <SelectContent>
                     {products.map((product) => (
                       <SelectItem key={product.id} value={String(product.id)}>
-                        {product.name} - R$ {parseFloat(product.salePrice).toFixed(2)} 
+                        {product.name} - R$ {parseFloat(product.salePrice).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                         (Estoque: {Number(product.currentStock)})
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="quantity">Quantidade</Label>
                 <Input
@@ -776,7 +779,7 @@ const Comandas = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="notes">Observações</Label>
                 <Textarea
@@ -826,19 +829,20 @@ const Comandas = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+
+              {closeComandaForm.paymentMethod==='pix'&&<PixPayment/>}
+              {['admin','gerente'].includes(user?.role)&&<div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="discountValue">Desconto (R$)</Label>
                   <Input
                     id="discountValue"
-                    type="number"
+                    currency
                     step="0.01"
                     value={closeComandaForm.discountValue}
                     onChange={(e) => setCloseComandaForm({...closeComandaForm, discountValue: e.target.value})}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="discountPercentage">Desconto (%)</Label>
                   <Input
@@ -849,8 +853,8 @@ const Comandas = () => {
                     onChange={(e) => setCloseComandaForm({...closeComandaForm, discountPercentage: e.target.value})}
                   />
                 </div>
-              </div>
-              
+              </div>}
+
               <div className="space-y-2">
                 <Label htmlFor="notes">Observações</Label>
                 <Textarea
@@ -860,11 +864,11 @@ const Comandas = () => {
                   rows={2}
                 />
               </div>
-              
+
               {selectedComanda && (
                 <div className="text-right">
                   <div className="text-lg font-bold">
-                    Total: R$ {parseFloat(selectedComanda.totalValue || 0).toFixed(2)}
+                    Total: R$ {parseFloat(selectedComanda.totalValue || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                   </div>
                 </div>
               )}

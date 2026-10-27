@@ -117,8 +117,8 @@ const generateComandaReceipt = async (req, res) => {
       
       doc.text(productName, 50, itemY);
       doc.text(item.quantity.toString(), 200, itemY);
-      doc.text(`R$ ${parseFloat(item.priceAtSale).toFixed(2)}`, 250, itemY);
-      doc.text(`R$ ${parseFloat(item.totalItemValue).toFixed(2)}`, 350, itemY);
+      doc.text(`R$ ${parseFloat(item.priceAtSale).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`, 250, itemY);
+      doc.text(`R$ ${parseFloat(item.totalItemValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`, 350, itemY);
     });
 
     // Atualizar posição Y
@@ -130,22 +130,23 @@ const generateComandaReceipt = async (req, res) => {
 
     // Totais
     doc.fontSize(12);
-    doc.text(`Subtotal: R$ ${parseFloat(comanda.totalValue).toFixed(2)}`, { align: 'right' });
+    doc.text(`Subtotal: R$ ${parseFloat(comanda.totalValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`, { align: 'right' });
     
     if (comanda.discountValue > 0) {
-      doc.text(`Desconto: R$ ${parseFloat(comanda.discountValue).toFixed(2)}`, { align: 'right' });
+      doc.text(`Desconto: R$ ${parseFloat(comanda.discountValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`, { align: 'right' });
     }
     
     if (comanda.discountPercentage > 0) {
       const percentDiscount = (parseFloat(comanda.totalValue) * parseFloat(comanda.discountPercentage)) / 100;
-      doc.text(`Desconto (${comanda.discountPercentage}%): R$ ${percentDiscount.toFixed(2)}`, { align: 'right' });
+      doc.text(`Desconto (${comanda.discountPercentage}%): R$ ${percentDiscount.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`, { align: 'right' });
     }
 
-    doc.fontSize(14).text(`TOTAL: R$ ${parseFloat(comanda.finalValue || comanda.totalValue).toFixed(2)}`, { align: 'right' });
+    doc.fontSize(14).text(`TOTAL: R$ ${parseFloat(comanda.finalValue || comanda.totalValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`, { align: 'right' });
     doc.moveDown();
 
     // Método de pagamento
-    if (comanda.paymentMethod) {
+    if(comanda.payments?.length){for(const p of comanda.payments)doc.fontSize(12).text(`Pagamento: ${p.method} — R$ ${Number(p.amount).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`);}
+    if (comanda.paymentMethod && !comanda.payments?.length) {
       const paymentMethods = {
         'dinheiro': 'Dinheiro',
         'cartao_credito': 'Cartão de Crédito',
@@ -251,8 +252,8 @@ const generateSalesReport = async (req, res) => {
       doc.fontSize(14).text('RESUMO EXECUTIVO');
       doc.fontSize(12);
       doc.text(`Total de Comandas: ${totalComandas}`);
-      doc.text(`Faturamento Total: R$ ${totalVendas.toFixed(2)}`);
-      doc.text(`Ticket Médio: R$ ${ticketMedio.toFixed(2)}`);
+      doc.text(`Faturamento Total: R$ ${totalVendas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`);
+      doc.text(`Ticket Médio: R$ ${ticketMedio.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`);
       doc.moveDown();
 
       // Tabela de comandas
@@ -287,7 +288,7 @@ const generateSalesReport = async (req, res) => {
         doc.text(location.substring(0, 15), 200, itemY);
         
         doc.text(comanda.openedByUser.username.substring(0, 15), 300, itemY);
-        doc.text(`R$ ${parseFloat(comanda.finalValue || comanda.totalValue).toFixed(2)}`, 450, itemY);
+        doc.text(`R$ ${parseFloat(comanda.finalValue || comanda.totalValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`, 450, itemY);
 
         if ((index + 1) % 30 === 0) {
           currentY = 50;
@@ -404,7 +405,7 @@ const generateProductReport = async (req, res) => {
         doc.text(item.product.category.substring(0, 15), 200, itemY);
         doc.text(parseFloat(item.dataValues.totalQuantity).toFixed(1), 300, itemY);
         doc.text(item.dataValues.orderCount.toString(), 350, itemY);
-        doc.text(`R$ ${parseFloat(item.dataValues.totalRevenue).toFixed(2)}`, 450, itemY);
+        doc.text(`R$ ${parseFloat(item.dataValues.totalRevenue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`, 450, itemY);
 
         if ((index + 1) % 35 === 0) {
           currentY = 50;

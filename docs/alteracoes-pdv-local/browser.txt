@@ -1,0 +1,1 @@
+16 verificações de navegador aprovadas; sem erros JavaScript. Capturas em work/browser-images.

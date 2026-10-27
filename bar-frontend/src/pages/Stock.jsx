@@ -1,3 +1,4 @@
+import ReportDownload from '../components/ReportDownload';
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -269,7 +270,7 @@ const Stock = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Estoque</h1>
+          <ReportDownload type="stock" label="Relatório de estoque"/><h1 className="text-3xl font-bold tracking-tight">Estoque</h1>
           <p className="text-muted-foreground">
             Controle de entrada e saída de produtos
           </p>
@@ -327,7 +328,7 @@ const Stock = () => {
                       <Label htmlFor="productPrice">Preço de Venda *</Label>
                       <Input
                         id="productPrice"
-                        type="number"
+                        currency
                         step="0.01"
                         value={newProductForm.price}
                         onChange={(e) => setNewProductForm({...newProductForm, price: e.target.value})}
@@ -439,7 +440,7 @@ const Stock = () => {
                     <Label htmlFor="addUnitCost">Custo Unitário</Label>
                     <Input
                       id="addUnitCost"
-                      type="number"
+                      currency
                       step="0.01"
                       value={addStockForm.unitCost}
                       onChange={(e) => setAddStockForm({...addStockForm, unitCost: e.target.value})}
@@ -685,7 +686,7 @@ const Stock = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              R$ {parseFloat(stockSummary.totalStockValue || 0).toFixed(2)}
+              R$ {parseFloat(stockSummary.totalStockValue || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
             </div>
           </CardContent>
         </Card>
@@ -761,7 +762,7 @@ const Stock = () => {
                           {product.minStockAlert} {product.unitOfMeasure}
                         </TableCell>
                         <TableCell>
-                          R$ {parseFloat(product.stockValue).toFixed(2)}
+                          R$ {parseFloat(product.stockValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                         </TableCell>
                         <TableCell>
                           {getStockStatusBadge(product)}

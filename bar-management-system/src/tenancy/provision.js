@@ -11,7 +11,7 @@ async function prepareDatabase(admin,database,role,password,existing=false){
  await admin.query(`REVOKE CONNECT ON DATABASE ${quote(database)} FROM PUBLIC`);
  await admin.query(`GRANT CONNECT ON DATABASE ${quote(database)} TO ${quote(role)}`);
 }
-async function migrate(sequelize){const models=buildModels(sequelize);await sequelize.sync();await require('../migrations/queueSeating')(sequelize);await require('../migrations/auditFixes')(sequelize);return models;}
+async function migrate(sequelize){const models=buildModels(sequelize);await sequelize.sync();await require('../migrations/queueSeating')(sequelize);await require('../migrations/auditFixes')(sequelize);await require('../migrations/customerExperience')(sequelize);return models;}
 async function grantData(sequelize,role){await sequelize.query(`GRANT USAGE ON SCHEMA public TO ${quote(role)}; GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO ${quote(role)}; GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO ${quote(role)}`);}
 async function initializeUnlocked(){
  if(fs.existsSync(configPath()))return JSON.parse(fs.readFileSync(configPath(),'utf8'));
@@ -20,7 +20,7 @@ async function initializeUnlocked(){
  const suffix=crypto.randomBytes(6).toString('hex'),database=`pdv_central_${suffix}`,role=`pdv_c_${suffix}`,password=crypto.randomBytes(32).toString('hex');
  await prepareDatabase(admin,database,role,password);
  const config={central:{database,username:role,password,host:process.env.DB_HOST||'127.0.0.1',port:Number(process.env.DB_PORT||5432)},connections:{}};
- const central=platform(config);try{await central.sequelize.sync();}finally{await central.sequelize.close()}
+ const central=platform(config);try{await require('./platform').migrateCentral(central);}finally{await central.sequelize.close()}
  persist(config);return config;
  }finally{await admin.close()}
 }

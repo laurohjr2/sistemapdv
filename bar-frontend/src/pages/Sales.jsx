@@ -1,3 +1,6 @@
+import {useAuth} from '../hooks/useAuth';
+import CustomerSelect from '../components/CustomerSelect';
+import PixPayment from '../components/PixPayment';
 import { useBusiness } from '../hooks/useBusiness';
 import { receiptHeader, escapeHtml } from '../lib/receipt';
 import { useState, useEffect } from 'react';
@@ -15,6 +18,9 @@ import api from "../lib/api";
 
 const Sales = () => {
   const {business} = useBusiness();
+  const {user}=useAuth();
+  const [discount,setDiscount]=useState('');
+  const [customerId,setCustomerId]=useState('');
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [sales, setSales] = useState([]);
@@ -31,7 +37,6 @@ const Sales = () => {
   const [isCloseCashDialogOpen, setIsCloseCashDialogOpen] = useState(false);
   const [openingAmount, setOpeningAmount] = useState('');
   const [closingAmount, setClosingAmount] = useState('');
-  const [openedBy, setOpenedBy] = useState('');
   const [lastSaleReceipt, setLastSaleReceipt] = useState(null);
 
   // Estados para tickets rápidos
@@ -78,7 +83,7 @@ const Sales = () => {
   };
 
   const openCashRegister = async () => {
-    if (!openedBy.trim() || !openingAmount) {
+    if (!openingAmount) {
       setError('Preencha todos os campos obrigatórios');
       return;
     }
@@ -86,12 +91,11 @@ const Sales = () => {
     try {
       setLoading(true);
       await api.post('/cash-register/open', {
-        opened_by: openedBy,
+
         opening_amount: parseFloat(openingAmount)
       });
       
       setIsOpenCashDialogOpen(false);
-      setOpenedBy('');
       setOpeningAmount('');
       await fetchCashRegisterStatus();
       alert('Caixa aberto com sucesso!');
@@ -120,7 +124,7 @@ const Sales = () => {
       await fetchCashRegisterStatus();
       
       // Mostrar relatório de fechamento
-      alert(`Caixa fechado com sucesso!\n\nResumo do dia:\nVendas: R$ ${response.data.total_sales.toFixed(2)}\nDiferença: R$ ${response.data.difference.toFixed(2)}`);
+      alert(`Caixa fechado com sucesso!\n\nResumo do dia:\nVendas: R$ ${response.data.total_sales.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}\nDiferença: R$ ${response.data.difference.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`);
     } catch (error) {
       setError('Erro ao fechar caixa');
       console.error('Erro ao fechar caixa:', error);
@@ -197,7 +201,7 @@ const Sales = () => {
           <div class="content">
             <p><strong>Produto:</strong> ${ticket.product.name}</p>
             <p><strong>Quantidade:</strong> ${ticket.quantity} ${ticket.product.unitOfMeasure}</p>
-            <p><strong>Valor:</strong> R$ ${Number(ticket.total_amount).toFixed(2)}</p>
+            <p><strong>Valor:</strong> R$ ${Number(ticket.total_amount).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
             ${ticket.customer_name ? `<p><strong>Cliente:</strong> ${ticket.customer_name}</p>` : ''}
             ${ticket.notes ? `<p><strong>Obs:</strong> ${ticket.notes}</p>` : ''}
             <p><strong>Emitido em:</strong> ${new Date(ticket.issued_at).toLocaleString('pt-BR')}</p>
@@ -220,6 +224,7 @@ const Sales = () => {
   };
 
   const addToCart = (product) => {
+    if(!cashRegister?.is_open){setError('Você precisa abrir um caixa para vender');return;}
     const existingItem = cart.find(item => item.id === product.id);
     
     if (existingItem) {
@@ -269,7 +274,7 @@ const Sales = () => {
   };
 
   const getTotalAmount = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return Math.max(0,Math.round((cart.reduce((total, item) => total + (item.price * item.quantity), 0)-Number(discount||0))*100)/100);
   };
 
   const handleBarcodeSearch = () => {
@@ -286,7 +291,7 @@ const Sales = () => {
 
   const completeSale = async () => {
     if (!cashRegister || !cashRegister.is_open) {
-      setError('Caixa deve estar aberto para realizar vendas');
+      setError('Você precisa abrir um caixa para vender');
       return;
     }
 
@@ -305,6 +310,7 @@ const Sales = () => {
           quantity: item.quantity,
           unit_price: item.price
         })),
+        customerId:customerId||null,discount_amount:Number(discount||0),
         payment_method: paymentMethod,
         total_amount: getTotalAmount(),
         cash_register_id: cashRegister.id
@@ -321,13 +327,14 @@ const Sales = () => {
           unit_price: item.price,
           total: item.price * item.quantity
         })),
-        total: getTotalAmount(),
+        total: Number(response.data.total_amount),
+        customerId:customerId||null,discount_amount:Number(discount||0),
         payment_method: paymentMethod,
         date: new Date().toLocaleString('pt-BR')
       };
 
       setLastSaleReceipt(receiptData);
-      clearCart();
+      clearCart();setDiscount('');setCustomerId('');
       setIsCartOpen(false);
       await fetchProducts();
       await fetchSales();
@@ -335,7 +342,7 @@ const Sales = () => {
       
       alert('Venda realizada com sucesso!');
     } catch (error) {
-      setError('Erro ao processar venda');
+      setError(error.response?.data?.error||'Erro ao processar venda');
       console.error('Erro ao processar venda:', error);
     } finally {
       setLoading(false);
@@ -380,15 +387,15 @@ const Sales = () => {
                 <tr>
                   <td>${item.name}</td>
                   <td>${item.quantity}</td>
-                  <td>R$ ${item.unit_price.toFixed(2)}</td>
-                  <td>R$ ${item.total.toFixed(2)}</td>
+                  <td>R$ ${item.unit_price.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                  <td>R$ ${item.total.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
           
           <div class="total">
-            Total: R$ ${receiptData.total.toFixed(2)}
+            Total: R$ ${receiptData.total.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
           </div>
           
           <p>Forma de Pagamento: ${receiptData.payment_method}</p>
@@ -562,8 +569,8 @@ const Sales = () => {
                     <Label htmlFor="opened_by">Responsável</Label>
                     <Input
                       id="opened_by"
-                      value={openedBy}
-                      onChange={(e) => setOpenedBy(e.target.value)}
+                      value={user?.username||''}
+                      readOnly
                       placeholder="Nome do responsável"
                       required
                     />
@@ -572,7 +579,7 @@ const Sales = () => {
                     <Label htmlFor="opening_amount">Valor Inicial (R$)</Label>
                     <Input
                       id="opening_amount"
-                      type="number"
+                      currency
                       step="0.01"
                       value={openingAmount}
                       onChange={(e) => setOpeningAmount(e.target.value)}
@@ -608,7 +615,7 @@ const Sales = () => {
                     <Label htmlFor="closing_amount">Valor Final (R$)</Label>
                     <Input
                       id="closing_amount"
-                      type="number"
+                      currency
                       step="0.01"
                       value={closingAmount}
                       onChange={(e) => setClosingAmount(e.target.value)}
@@ -618,7 +625,7 @@ const Sales = () => {
                   </div>
                   {cashRegister && (
                     <div className="text-sm text-muted-foreground">
-                      <p>Valor inicial: R$ {Number(cashRegister.opening_amount || 0).toFixed(2)}</p>
+                      <p>Valor inicial: R$ {Number(cashRegister.opening_amount || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
                       <p>Aberto por: {cashRegister.opened_by}</p>
                     </div>
                   )}
@@ -688,8 +695,8 @@ const Sales = () => {
                               </Button>
                             </div>
                           </TableCell>
-                          <TableCell>R$ {item.price.toFixed(2)}</TableCell>
-                          <TableCell>R$ {(item.price * item.quantity).toFixed(2)}</TableCell>
+                          <TableCell>R$ {item.price.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</TableCell>
+                          <TableCell>R$ {(item.price * item.quantity).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</TableCell>
                           <TableCell>
                             <Button
                               variant="outline"
@@ -708,11 +715,13 @@ const Sales = () => {
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center text-lg font-semibold">
                     <span>Total:</span>
-                    <span>R$ {getTotalAmount().toFixed(2)}</span>
+                    <span>R$ {getTotalAmount().toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
+                  <CustomerSelect value={customerId} onChange={setCustomerId}/>
+                  {['admin','gerente'].includes(user?.role)&&<label>Desconto (R$)<Input currency value={discount} onChange={e=>setDiscount(e.target.value)}/></label>}
                   <Label htmlFor="payment_method">Forma de Pagamento</Label>
                   <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                     <SelectTrigger>
@@ -725,6 +734,7 @@ const Sales = () => {
                       <SelectItem value="pix">PIX</SelectItem>
                     </SelectContent>
                   </Select>
+                  {paymentMethod==='pix'&&<PixPayment/>}
                 </div>
 
                 <div className="flex justify-end space-x-2">
@@ -796,7 +806,7 @@ const Sales = () => {
                           <div className="flex-1">
                             <h3 className="font-semibold">{product.name}</h3>
                             <p className="text-sm text-muted-foreground">{product.category}</p>
-                            <p className="text-lg font-bold text-primary">R$ {Number(product.salePrice).toFixed(2)}</p>
+                            <p className="text-lg font-bold text-primary">R$ {Number(product.salePrice).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
                             <p className="text-xs text-muted-foreground">
                               Estoque: {Number(product.currentStock)}
                             </p>
@@ -840,12 +850,12 @@ const Sales = () => {
                         <div className="flex-1">
                           <p className="font-medium text-sm">{item.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {item.quantity}x R$ {item.price.toFixed(2)}
+                            {item.quantity}x R$ {item.price.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                           </p>
                         </div>
                         <div className="flex items-center space-x-1">
                           <span className="font-semibold text-sm">
-                            R$ {(item.price * item.quantity).toFixed(2)}
+                            R$ {(item.price * item.quantity).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                           </span>
                           <Button
                             variant="ghost"
@@ -860,7 +870,7 @@ const Sales = () => {
                     <div className="border-t pt-2 mt-2">
                       <div className="flex justify-between items-center font-semibold">
                         <span>Total:</span>
-                        <span>R$ {getTotalAmount().toFixed(2)}</span>
+                        <span>R$ {getTotalAmount().toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
                       </div>
                     </div>
                   </>
@@ -919,7 +929,7 @@ const Sales = () => {
                     <TableCell>
                       {new Date(sale.created_at).toLocaleDateString('pt-BR')}
                     </TableCell>
-                    <TableCell>R$ {Number(sale.total_amount).toFixed(2)}</TableCell>
+                    <TableCell>R$ {Number(sale.total_amount).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</TableCell>
                     <TableCell>{sale.payment_method}</TableCell>
                     <TableCell>
                       <Badge variant={sale.status === 'completed' ? 'default' : 'destructive'}>

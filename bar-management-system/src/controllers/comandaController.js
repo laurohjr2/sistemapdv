@@ -22,7 +22,7 @@ const openComanda = async (req, res) => {
     let table;
     if (type === 'mesa') {
       ({table, comanda} = await sequelize.transaction(transaction => openTable({
-        tableId, userId:req.user.id, customerName, customerPhone, transaction
+        tableId, userId:req.user.id, customerName, customerPhone, customerId:req.body.customerId, transaction
       })));
     } else if (type === 'balcao' && !tableId) {
       comanda = await Comanda.create({ type, customerName, customerPhone, deliveryType, openedByUserId:req.user.id });
@@ -103,7 +103,7 @@ const getComandaById = async (req, res) => {
 };
 
 const closeComanda = async(req,res,next)=>{
- try{const comanda=await operations.close({...req.body,id:req.params.id,userId:req.user.id});await logAction(req.user.id,'comanda_closed',{comandaId:comanda.id});res.json({comanda});}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
+ try{const comanda=await operations.close({...req.body,id:req.params.id,userId:req.user.id,role:req.user.role});await logAction(req.user.id,'comanda_closed',{comandaId:comanda.id});res.json({comanda});}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 };
 const removeItemFromComanda = async(req,res,next)=>{
  try{await operations.changeItem({comandaId:req.params.comandaId,itemId:req.params.itemId,userId:req.user.id,remove:true});res.json({message:'Item removido'});}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}

@@ -6,6 +6,7 @@ const router = express.Router();
 
 // Public routes
 router.post('/login', login);
+router.use(require('./passwordRecovery'));
 
 // Protected routes
 router.post('/register', authenticateToken, authorizeRoles('admin'), register);

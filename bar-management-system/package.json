@@ -27,6 +27,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "node-thermal-printer": "^4.4.4",
+    "nodemailer": "^10.2.1",
     "pdfkit": "^0.17.1",
     "pg": "^8.13.1",
     "sequelize": "^6.37.5",

@@ -1,0 +1,4 @@
+30 verificações HTTP aprovadas: autenticação, estoque, comanda, mesa, PDF, venda, estorno, relatórios e fila. Dados fictícios mantidos no banco de desenvolvimento.
+36 verificações HTTP aprovadas: fila → mesa → comanda, capacidade, histórico, falhas sem alteração e disputas simultâneas.
+42 verificações HTTP aprovadas: concorrência de estoque/caixa/cancelamento, tickets, desconto, separação de pagamentos, recebimento posterior e revogação de acesso.
+27 verificações HTTP aprovadas: cadastro, persistência, CNPJ, campos inválidos, logo, edição parcial, remoção e permissões.

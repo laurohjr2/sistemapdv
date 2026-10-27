@@ -44,3 +44,7 @@ As falhas da auditoria anterior foram corrigidas nos cenários executados. Consu
 ## Bancos separados e suporte
 
 A separação por empresa foi implementada: banco central, banco/credenciais exclusivos por cliente, login com código da empresa e ID do cliente visível apenas em sessão autorizada de suporte nas Configurações. Consulte a [arquitetura, testes e imagens desta entrega](docs/multiempresa-20261026/README.md).
+
+## Alterações de operação do PDV local
+
+Consulte a [lista de alterações, atualização com backup, conta Master/Admin e configuração de recuperação de senha](docs/alteracoes-pdv-local/README.md).

@@ -90,3 +90,7 @@ O endereço fica restrito ao próprio computador. PostgreSQL e API não têm por
 Este pacote é para testes locais. A implantação online, cobrança automática, painel comercial e integração com impressoras Windows ainda são etapas separadas. A impressão em PDF pode ser testada; imprimir fisicamente depende da integração e do computador. O Docker local não adiciona um modo offline ao produto SaaS: a versão comercial continuará dependendo dos serviços online.
 
 [Consultar os cenários validados desta instalação](VALIDACAO.md).
+
+## Atualizar uma instalação existente
+
+Veja o [procedimento com backup, novidades do PDV, acesso Master/Admin e SMTP](../docs/alteracoes-pdv-local/README.md). Preserve os volumes existentes e faça login novamente após atualizar.

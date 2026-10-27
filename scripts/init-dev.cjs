@@ -8,7 +8,7 @@ process.loadEnvFile(env);
  const config=await initializePlatform();
  const central=require('../bar-management-system/src/tenancy/platform').platform(config);
  try{
-  await central.sequelize.sync();
+  await require('../bar-management-system/src/tenancy/platform').migrateCentral(central);
   await provisionTenant({slug:process.env.DEV_COMPANY||'demo',name:'Estabelecimento de demonstração',existingDatabase:process.env.DB_NAME||'bar_management',adminUsername:'admin.dev',adminPassword:process.env.DEV_ADMIN_PASSWORD});
   if(!process.env.DEV_SUPPORT_PASSWORD){const password=crypto.randomBytes(18).toString('base64url');fs.appendFileSync(env,`DEV_SUPPORT_PASSWORD=${password}\n`);process.env.DEV_SUPPORT_PASSWORD=password;}
   await central.SupportUser.findOrCreate({where:{username:'support.dev'},defaults:{passwordHash:await require('../bar-management-system/node_modules/bcryptjs').hash(process.env.DEV_SUPPORT_PASSWORD,12)}});

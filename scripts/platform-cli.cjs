@@ -8,7 +8,7 @@ const {platform}=require('../bar-management-system/src/tenancy/platform');
   console.log(JSON.stringify(result));return;
  }
  const central=platform(await initializePlatform());try{
- await central.sequelize.sync();
+ await require('../bar-management-system/src/tenancy/platform').migrateCentral(central);
  if(command==='suspend'||command==='activate'){
   const [count]=await central.Tenant.update({status:command==='suspend'?'suspended':'active'},{where:{slug}});if(!count)throw new Error('Empresa não encontrada');console.log('Situação atualizada.');
  }else if(command==='support-user'){

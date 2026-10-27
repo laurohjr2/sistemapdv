@@ -4,7 +4,7 @@ const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
 
 // Importar modelos necessários
-const { Sale, SaleItem, Product, StockMovement, CashRegister, Ticket } = require('../models');
+const { Sale, SaleItem, Product, StockMovement, CashRegister, Ticket, Customer } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 
 const { sequelize } = require('../models');
@@ -18,7 +18,10 @@ router.post('/', authenticateToken, async (req, res) => {
     if (!['dinheiro', 'cartao_credito', 'cartao_debito', 'pix'].includes(payment_method)) {
       throw fail('Método de pagamento inválido');
     }
-    if (!cash_register_id) throw fail('Caixa aberto é obrigatório');
+    if (!cash_register_id) throw fail('Você precisa abrir um caixa para vender');
+    const discount=Number(req.body.discount_amount||0);
+    if(!Number.isFinite(discount)||discount<0||Math.abs(discount*100-Math.round(discount*100))>1e-6)throw fail('Desconto inválido');
+    if(discount&&!['admin','gerente'].includes(req.user.role))throw fail('Somente gerente e administrador podem dar descontos',403);
     const quantities = new Map();
     for (const item of items) {
       const quantity = Number(item.quantity);
@@ -32,7 +35,9 @@ router.post('/', authenticateToken, async (req, res) => {
       const cashRegister = await CashRegister.findByPk(cash_register_id, {
         transaction, lock: transaction.LOCK.UPDATE
       });
-      if (!cashRegister?.is_open) throw fail('Caixa deve estar aberto para realizar vendas');
+      if (!cashRegister?.is_open) throw fail('Você precisa abrir um caixa para vender');
+      const customer=req.body.customerId?await Customer.findByPk(req.body.customerId,{transaction}):null;
+      if(req.body.customerId&&!customer?.active)throw fail('Cliente não encontrado ou inativo');
       const lines = [];
       let totalCents = 0;
       // Ordem fixa evita impasses entre vendas com produtos em ordem diferente.
@@ -44,7 +49,11 @@ router.post('/', authenticateToken, async (req, res) => {
         totalCents += cents;
         lines.push({ product, quantity, cents });
       }
+      if(Math.round(discount*100)>totalCents)throw fail('Desconto excede o total');
+      totalCents-=Math.round(discount*100);
+      const payments=require('../services/payments').settlement(req.body.payments,payment_method,totalCents/100);
       const sale = await Sale.create({
+        payments,customerId:customer?.id||null,discount_amount:discount,
         user_id: req.user.id, cash_register_id, payment_method,
         total_amount: totalCents / 100, status: 'completed'
       }, { transaction });

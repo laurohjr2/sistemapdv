@@ -13,6 +13,8 @@ return sequelize.define('BusinessSettings', {
   state: {type:DataTypes.STRING(2),allowNull:false,defaultValue:''},
   postalCode: {type:DataTypes.STRING(8),allowNull:false,defaultValue:''},
   receiptMessage: {type:DataTypes.STRING(200),allowNull:false,defaultValue:'Obrigado pela preferência!'},
+  pixKey: {type:DataTypes.STRING(200),allowNull:false,defaultValue:''},
+  pixQrCode: {type:DataTypes.TEXT,allowNull:true},
   logo: {type:DataTypes.TEXT,allowNull:true}
 }, {tableName:'business_settings',timestamps:true});
 

@@ -14,7 +14,7 @@ const routerFactory=central=>{
   const session=await central.SupportSession.create({supportUserId:req.supportUser.id,tenantId:tenant.id,expiresAt:new Date(Date.now()+15*60000)});
   await central.SupportAudit.create({supportUserId:req.supportUser.id,tenantId:tenant.id,action:'support_session_opened'});
   const token=jwt.sign({scope:'support-session',supportUserId:req.supportUser.id,version:req.supportUser.updatedAt.toISOString(),sessionId:session.id,company:tenant.slug},process.env.JWT_SECRET,{expiresIn:'15m',audience:'pdv-tenant',issuer:'pdv-platform'});
-  res.json({token,user:{id:req.supportUser.id,username:req.supportUser.username,role:'gerente',support:true,company:tenant.slug}});
+  res.json({token,user:{id:req.supportUser.id,username:req.supportUser.username,role:req.supportUser.isMaster?'admin':'gerente',master:Boolean(req.supportUser.isMaster),support:true,company:tenant.slug}});
  }catch(e){next(e)}});
  router.delete('/sessions/:id',authenticate,async(req,res,next)=>{try{await central.SupportSession.update({revoked:true},{where:{id:req.params.id,supportUserId:req.supportUser.id}});res.sendStatus(204)}catch(e){next(e)}});
  return router;

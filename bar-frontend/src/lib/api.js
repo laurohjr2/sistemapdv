@@ -23,7 +23,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if ((error.response?.status === 401 || error.response?.data?.code === 'COMPANY_SUSPENDED') && !error.config?.url?.startsWith('/support') && error.config?.url !== '/auth/login' && !error.config?.url?.startsWith('/settings/branding')) {
+    if ((error.response?.status === 401 || error.response?.data?.code === 'COMPANY_SUSPENDED') && !error.config?.url?.startsWith('/support') && !error.config?.url?.startsWith('/auth/') && !error.config?.url?.startsWith('/settings/branding')) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';

@@ -19,14 +19,15 @@ async function main() {
     create(path.join(secrets, 'postgres-password'), 32, 0o444);
     create(path.join(secrets, 'admin-password'), 12);
     create(path.join(secrets, 'support-password'), 12);
+    create(path.join(secrets, 'master-password'), 16);
     create(path.join(state, 'jwt-secret'), 32);
-    for (const file of ['admin-password', 'support-password']) fs.chownSync(path.join(secrets, file), 1000, 1000);
+    for (const file of ['admin-password', 'support-password','master-password']) fs.chownSync(path.join(secrets, file), 1000, 1000);
     fs.chownSync(path.join(state, 'jwt-secret'), 1000, 1000);
     console.log('Segredos locais preparados. Nenhuma senha foi escrita nos logs.');
     return;
   }
   if (mode === 'credentials') {
-    console.log(`Empresa: demo\nUsuário: admin.local\nSenha: ${read('admin-password')}\n\nSuporte: /support\nUsuário: support.local\nSenha: ${read('support-password')}`);
+    console.log(`Empresa: demo\nUsuário: admin.local\nSenha: ${read('admin-password')}\n\nSuporte: /support\nUsuário: support.local\nSenha: ${read('support-password')}\n\nMaster: /support\nUsuário Master: master.local\nSenha Master: ${read('master-password')}`);
     return;
   }
   if (mode === 'provision') {
@@ -36,8 +37,9 @@ async function main() {
     const config = await initializePlatform();
     const central = platform(config);
     try {
-      await central.sequelize.sync();
+      await require('../bar-management-system/src/tenancy/platform').migrateCentral(central);
       await provisionTenant({ slug: 'demo', name: 'Minha empresa', adminUsername: 'admin.local', adminPassword: read('admin-password') });
+      await central.SupportUser.findOrCreate({where:{username:'master.local'},defaults:{passwordHash:await require('../bar-management-system/node_modules/bcryptjs').hash(read('master-password'),12),isMaster:true}});
       await central.SupportUser.findOrCreate({ where: { username: 'support.local' }, defaults: { passwordHash: await require('../bar-management-system/node_modules/bcryptjs').hash(read('support-password'), 12) } });
     } finally { await central.sequelize.close(); }
     console.log('Empresa demo e suporte preparados. Dados existentes preservados.');

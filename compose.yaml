@@ -52,6 +52,9 @@ services:
 
   backend:
     <<: *app
+    env_file:
+      - path: ./.pdv-local/mail.env
+        required: false
     volumes:
       - platform_data:/state:ro
     depends_on:

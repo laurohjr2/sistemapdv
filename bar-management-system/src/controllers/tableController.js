@@ -12,7 +12,7 @@ const getAllTables = async (req, res) => {
           as: 'comandas',
           where: { status: 'aberta' },
           required: false,
-          attributes: ['id', 'openedAt', 'totalValue'],
+          attributes: ['id', 'openedAt', 'totalValue','customerName','customerId'],
           include: [
             {
               model: ComandaItem,
@@ -48,7 +48,7 @@ const getTableById = async (req, res) => {
           as: 'comandas',
           where: { status: 'aberta' },
           required: false,
-          attributes: ['id', 'openedAt', 'totalValue'],
+          attributes: ['id', 'openedAt', 'totalValue','customerName','customerId'],
           include: [
             {
               model: ComandaItem,
@@ -201,10 +201,10 @@ const openTableComanda = async (req, res) => {
 
 const closeTableComanda = async(req,res,next)=>{
  try{
- const comanda=await require('../services/comandaOperations').close({tableId:req.params.id,userId:req.user.id,paymentMethod:req.body.paymentMethod});
+ const comanda=await require('../services/comandaOperations').close({...req.body,tableId:req.params.id,userId:req.user.id,role:req.user.role});
  const table=await Table.findByPk(req.params.id);
  const items=await ComandaItem.findAll({where:{comandaId:comanda.id},include:[{model:Product,as:'product'}]});
- const receipt={tableNumber:table.tableNumber,comandaId:comanda.id,items:items.map(item=>({productName:item.product.name,quantity:item.quantity,priceAtSale:item.priceAtSale,totalItemValue:item.totalItemValue})),totalValue:comanda.finalValue,paymentMethod:comanda.paymentMethod,closedAt:comanda.closedAt};
+ const receipt={tableNumber:table.tableNumber,comandaId:comanda.id,items:items.map(item=>({productName:item.product.name,quantity:item.quantity,priceAtSale:item.priceAtSale,totalItemValue:item.totalItemValue})),totalValue:comanda.finalValue,payments:comanda.payments,paymentMethod:comanda.paymentMethod,closedAt:comanda.closedAt};
  res.json({comanda,receipt,message:'Comanda paga e mesa liberada'});
  }catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 };

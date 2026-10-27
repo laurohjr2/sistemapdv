@@ -33,7 +33,7 @@ const Reports = () => {
   const [paymentData, setPaymentData] = useState([]);
   const [hourlyData, setHourlyData] = useState([]);
   const [productData, setProductData] = useState([]);
-  const [, setWaiterData] = useState([]);
+  const [waiterData, setWaiterData] = useState([]);
   const [financialSummary, setFinancialSummary] = useState({});
   const [stockReport, setStockReport] = useState([]);
   
@@ -184,9 +184,9 @@ const Reports = () => {
           
           <div class="summary">
             <h3>Resumo Financeiro</h3>
-            <p><strong>Receita Total:</strong> R$ ${parseFloat(financialSummary.totalRevenue || 0).toFixed(2)}</p>
+            <p><strong>Receita Total:</strong> R$ ${parseFloat(financialSummary.totalRevenue || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
             <p><strong>Total de Vendas:</strong> ${financialSummary.totalSales || 0}</p>
-            <p><strong>Ticket Médio:</strong> R$ ${parseFloat(financialSummary.averageTicket || 0).toFixed(2)}</p>
+            <p><strong>Ticket Médio:</strong> R$ ${parseFloat(financialSummary.averageTicket || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
           </div>
           
           <table class="table">
@@ -202,7 +202,7 @@ const Reports = () => {
                 <tr>
                   <td>${item.date}</td>
                   <td>${item.sales}</td>
-                  <td>R$ ${parseFloat(item.revenue).toFixed(2)}</td>
+                  <td>R$ ${parseFloat(item.revenue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -235,7 +235,7 @@ const Reports = () => {
           <div class="summary">
             <h3>Resumo por Forma de Pagamento</h3>
             ${paymentData.map(item => `
-              <p><strong>${item.method}:</strong> R$ ${parseFloat(item.total).toFixed(2)} (${item.count} transações)</p>
+              <p><strong>${item.method}:</strong> R$ ${parseFloat(item.total).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} (${item.count} transações)</p>
             `).join('')}
           </div>
         </body>
@@ -309,9 +309,9 @@ const Reports = () => {
           <div class="grid">
             <div class="summary">
               <h3>Resumo Financeiro</h3>
-              <p><strong>Receita Total:</strong> R$ ${parseFloat(financialSummary.totalRevenue || 0).toFixed(2)}</p>
+              <p><strong>Receita Total:</strong> R$ ${parseFloat(financialSummary.totalRevenue || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
               <p><strong>Total de Vendas:</strong> ${financialSummary.totalSales || 0}</p>
-              <p><strong>Ticket Médio:</strong> R$ ${parseFloat(financialSummary.averageTicket || 0).toFixed(2)}</p>
+              <p><strong>Ticket Médio:</strong> R$ ${parseFloat(financialSummary.averageTicket || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
             </div>
             
             <div class="summary">
@@ -407,6 +407,7 @@ const Reports = () => {
         </CardContent>
       </Card>
 
+      <section className="rounded border p-4 space-y-3"><h2 className="text-xl font-bold">Ranking de vendedores</h2><p>Vendas concluídas e comandas pagas no período selecionado. Comandas são atribuídas ao atendente que as abriu.</p><Button variant="outline" onClick={async()=>{try{const response=await api.get('/reports/export/pdf',{params:{type:'waiters',startDate:dateRange.from?.toISOString(),endDate:dateRange.to&&new Date(new Date(dateRange.to).setHours(23,59,59,999)).toISOString()},responseType:'blob'});const url=URL.createObjectURL(response.data);const a=document.createElement('a');a.href=url;a.download='ranking-vendedores.pdf';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}catch{toast.error('Não foi possível gerar o ranking');}}}>Imprimir / baixar ranking</Button>{waiterData.map((row,i)=><div key={row.name} className="flex gap-4 border-b py-2"><strong>{i+1}º {row.name}</strong><span>{row.count} operações</span><span>{Number(row.revenue).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span></div>)}</section>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
@@ -426,7 +427,7 @@ const Reports = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  R$ {parseFloat(financialSummary.totalRevenue || 0).toFixed(2)}
+                  R$ {parseFloat(financialSummary.totalRevenue || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {typeof financialSummary.revenueGrowth === 'number' ? `${financialSummary.revenueGrowth.toFixed(1)}% vs período anterior` : 'Comparação com período anterior indisponível'}
@@ -454,7 +455,7 @@ const Reports = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  R$ {parseFloat(financialSummary.averageTicket || 0).toFixed(2)}
+                  R$ {parseFloat(financialSummary.averageTicket || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {typeof financialSummary.ticketGrowth === 'number' ? `${financialSummary.ticketGrowth.toFixed(1)}% vs período anterior` : 'Comparação com período anterior indisponível'}
@@ -628,7 +629,7 @@ const Reports = () => {
                         <p className="text-sm text-muted-foreground">{payment.count} transações</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold">R$ {parseFloat(payment.total).toFixed(2)}</p>
+                        <p className="font-bold">R$ {parseFloat(payment.total).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
                         <p className="text-sm text-muted-foreground">
                           {((Number(financialSummary.totalRevenue) ? payment.total / financialSummary.totalRevenue : 0) * 100).toFixed(1)}%
                         </p>

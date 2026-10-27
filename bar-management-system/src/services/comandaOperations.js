@@ -23,7 +23,9 @@ async function changeItem({comandaId,itemId,productId,amount,notes,userId,remove
   return ComandaItem.create({comandaId,productId:product.id,quantity:next,priceAtSale:price,totalItemValue:itemTotal,notes},{transaction});
  });
 }
-async function close({id,tableId,userId,paymentMethod,paymentStatus='pago',discountValue=0,discountPercentage=0,notes}){
+async function close({id,tableId,userId,role,payments,paymentMethod,paymentStatus='pago',discountValue=0,discountPercentage=0,notes}){
+ if(payments?.length)paymentMethod=payments[0].method;
+ if((Number(discountValue)||Number(discountPercentage))&&!['admin','gerente'].includes(role))throw fail('Somente gerente e administrador podem dar descontos',403);
  if(!['dinheiro','pix','cartao_credito','cartao_debito','vale_refeicao'].includes(paymentMethod))throw fail('Forma de pagamento inválida');
  if(!['pago','pendente','nao_pago'].includes(paymentStatus))throw fail('Estado de pagamento inválido');
  discountValue=Number(discountValue);discountPercentage=Number(discountPercentage);
@@ -36,7 +38,9 @@ async function close({id,tableId,userId,paymentMethod,paymentStatus='pago',disco
   if(!comanda)throw fail('Comanda não encontrada',404);
   if(comanda.status!=='aberta')throw fail('Comanda não está aberta');
   if(discountValue+Number(comanda.totalValue)*discountPercentage/100>Number(comanda.totalValue))throw fail('Desconto excede o total');
-  await comanda.update({status:'fechada',closedAt:new Date(),closedByUserId:userId,paymentMethod,paymentStatus,discountValue,discountPercentage,notes,cashRegisterId:cash?.id||null},{transaction});
+  const total=Math.round((Number(comanda.totalValue)-discountValue-Number(comanda.totalValue)*discountPercentage/100)*100)/100;
+  const normalized=require('./payments').settlement(payments,paymentMethod,total);
+  await comanda.update({payments:normalized,status:'fechada',closedAt:new Date(),closedByUserId:userId,paymentMethod,paymentStatus,discountValue,discountPercentage,notes,cashRegisterId:cash?.id||null},{transaction});
   if(comanda.tableId)await Table.update({status:'disponivel'},{where:{id:comanda.tableId},transaction});
   return comanda;
  });

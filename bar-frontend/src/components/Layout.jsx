@@ -40,11 +40,10 @@ const Layout = () => {
     { name: 'Vendas', href: '/sales', icon: Receipt, roles: ['garcom', 'gerente', 'admin'] },
     { name: 'Mesas', href: '/tables', icon: Table, roles: ['garcom', 'gerente', 'admin'] },
     { name: 'Produtos', href: '/products', icon: Package, roles: ['gerente', 'admin'] },
-    { name: 'Impressão', href: '/print', icon: Printer, roles: ['garcom', 'gerente', 'admin'] },
     { name: 'Estoque', href: '/stock', icon: Warehouse, roles: ['gerente', 'admin'] },
     { name: 'Comandas', href: '/comandas', icon: Receipt, roles: ['garcom', 'gerente', 'admin'] },
     { name: 'Cozinha', href: '/kitchen', icon: ChefHat, roles: ['garcom', 'gerente', 'admin'] },
-    { name: 'Fila de Espera', href: '/queue', icon: Clock, roles: ['garcom', 'gerente', 'admin'] },
+    { name: 'Clientes', href: '/customers', icon: Users, roles: ['garcom','gerente','admin'] },
     { name: 'Relatórios', href: '/reports', icon: BarChart3, roles: ['gerente', 'admin'] },
     { name: 'Configurações', href: '/settings', icon: Settings, roles: ['gerente', 'admin'] },
     { name: 'Usuários', href: '/users', icon: Users, roles: ['admin'] },
@@ -125,7 +124,7 @@ const Layout = () => {
 
       {/* Main content */}
       <div className="lg:pl-64">
-        {user?.support && <div role="status" className="flex flex-wrap items-center justify-between gap-3 bg-amber-100 p-3 text-amber-950"><span>Modo de suporte — empresa {user.company} · Somente consulta</span><Button variant="outline" onClick={async()=>{await logout();navigate('/support');}}>Sair do suporte</Button></div>}
+        {user?.support && <div role="status" className="flex flex-wrap items-center justify-between gap-3 bg-amber-100 p-3 text-amber-950"><span>{user.master?'Acesso Master — controle total':'Modo de suporte — somente consulta'} · empresa {user.company}</span><Button variant="outline" onClick={async()=>{await logout();navigate('/support');}}>Sair do suporte</Button></div>}
         {/* Top bar */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
           <div className="flex items-center justify-between px-4 py-3">

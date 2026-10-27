@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 
-const generateToken = (userId, company) => {
-  return jwt.sign({ userId, company, scope:'tenant' }, process.env.JWT_SECRET, {
+const generateToken = (userId, company, passwordHash) => {
+  return jwt.sign({ userId, company, scope:'tenant',credentialVersion:require('node:crypto').createHash('sha256').update(passwordHash).digest('hex') }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '24h', audience:'pdv-tenant',issuer:'pdv-platform'
   });
 };
@@ -18,7 +18,7 @@ const login = async (req, res) => {
     }
 
     const user = await User.findOne({ where: { username } });
-    if (!user || !user.active) {
+    if (!user || !user.active || user.platformUserId) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -27,7 +27,7 @@ const login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = generateToken(user.id, req.tenant.slug);
+    const token = generateToken(user.id, req.tenant.slug,user.passwordHash);
 
     await logAction(user.id, 'login', { username });
 
@@ -102,9 +102,9 @@ const validateToken = async (req, res) => {
       valid: true,
       user: {
         id: req.user.id,
-        username: req.user.username,
+        username: req.master?req.supportUser.username:req.user.username,
         company:req.tenant.slug,
-        support:Boolean(req.supportUser),
+        support:Boolean(req.supportUser),master:Boolean(req.master),
         role: req.user.role
       }
     });

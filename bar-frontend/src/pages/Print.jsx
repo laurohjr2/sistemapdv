@@ -299,7 +299,7 @@ const Print = () => {
                           }
                         </TableCell>
                         <TableCell>
-                          R$ {parseFloat(comanda.finalValue || comanda.totalValue).toFixed(2)}
+                          R$ {parseFloat(comanda.finalValue || comanda.totalValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                         </TableCell>
                         <TableCell>
                           {getStatusBadge(comanda.status)}
@@ -450,7 +450,7 @@ const Print = () => {
                     R$ {filteredComandas
                       .filter(c => c.status === 'fechada')
                       .reduce((sum, c) => sum + parseFloat(c.finalValue || c.totalValue), 0)
-                      .toFixed(2)
+                      .toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})
                     }
                   </div>
                   <div className="text-sm text-muted-foreground">Faturamento Total</div>
@@ -468,7 +468,7 @@ const Print = () => {
                     R$ {(() => {
                       const fechadas = filteredComandas.filter(c => c.status === 'fechada');
                       const total = fechadas.reduce((sum, c) => sum + parseFloat(c.finalValue || c.totalValue), 0);
-                      return fechadas.length > 0 ? (total / fechadas.length).toFixed(2) : '0.00';
+                      return fechadas.length > 0 ? (total / fechadas.length).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '0.00';
                     })()}
                   </div>
                   <div className="text-sm text-muted-foreground">Ticket Médio</div>

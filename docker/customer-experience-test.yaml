@@ -1,0 +1,27 @@
+# Use only with -p pdv-changes-test and PDV_LOCAL_PORT=8090, never real data.
+services:
+  prepare:
+    image: sistemapdv-backend:changes-test
+  provision:
+    image: sistemapdv-backend:changes-test
+  backend:
+    image: sistemapdv-backend:changes-test
+    environment:
+      SMTP_HOST: smtp-test
+      SMTP_PORT: 465
+      SMTP_SECURE: 'true'
+      SMTP_USER: ''
+      SMTP_PASSWORD: ''
+      MAIL_FROM: pdv@example.com
+      APP_PUBLIC_URL: http://localhost:8090
+      NODE_EXTRA_CA_CERTS: /smtp/cert.pem
+    volumes:
+      - ./work/smtp/cert.pem:/smtp/cert.pem:ro
+  frontend:
+    image: sistemapdv-frontend:changes-test
+  smtp-test:
+    image: node:24-bookworm-slim
+    command: [node, /test/smtp.cjs]
+    volumes:
+      - ./scripts/testing/smtp.cjs:/test/smtp.cjs:ro
+      - ./work/smtp:/smtp

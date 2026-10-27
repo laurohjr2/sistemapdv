@@ -2,6 +2,8 @@ const { DataTypes } = require('sequelize');
 module.exports = function defineModel(sequelize) {
 
 const Comanda = sequelize.define('Comanda', {
+  customerId: {type:DataTypes.UUID,allowNull:true},
+  payments: {type:DataTypes.JSONB,allowNull:true},
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
@@ -144,7 +146,7 @@ const Comanda = sequelize.define('Comanda', {
         finalDiscount += (total * discountPercentage / 100);
       }
       
-      comanda.finalValue = Math.max(0, total - finalDiscount);
+      comanda.finalValue = Math.max(0, Math.round((total - finalDiscount) * 100) / 100);
     }
   }
 });

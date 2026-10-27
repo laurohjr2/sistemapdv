@@ -31,7 +31,7 @@ app.use(cors({
 }));
 app.use(morgan('combined'));
 app.use('/api',(_req,res,next)=>{res.setHeader('Cache-Control','no-store');next();});
-app.use(express.json({limit:'400kb'}));
+app.use(express.json({limit:'6mb'}));
 app.get('/api/health',async(req,res)=>{try{await central.sequelize.authenticate();res.json({status:'OK'});}catch{res.status(503).json({status:'unavailable'});}});
 app.use('/api/support',require('./src/tenancy/supportRoutes')(central));
 app.use(tenantBoundary);
@@ -43,9 +43,11 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/customers',require('./src/routes/customers'));
 app.use('/api/products', productRoutes);
 app.use('/api/stock', stockRoutes);
 app.use('/api/tables', tableRoutes);
+app.use('/api/comandas',require('./src/routes/comandaCustomer'));
 app.use('/api/comandas', comandaRoutes);
 app.use('/api/queue', require('./src/routes/queue'));
 app.use('/api/waiting-queue', waitingQueueRoutes);
@@ -58,7 +60,7 @@ app.use('/api/printer', require('./src/routes/printer'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  if (err.type === 'entity.too.large') return res.status(413).json({error:'A imagem é muito grande. Use uma logo de até 256 KB.'});
+  if (err.type === 'entity.too.large') return res.status(413).json({error:'A imagem é muito grande. Use uma logo de até 2 MB.'});
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });

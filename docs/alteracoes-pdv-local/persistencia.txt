@@ -1,0 +1,1 @@
+Upgrade persist: 10 verificações aprovadas; dados e parcelas preservados após recriar containers.

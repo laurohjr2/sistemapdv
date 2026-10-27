@@ -21,6 +21,7 @@ const User = sequelize.define('User', {
     allowNull: false,
     field: 'password_hash'
   },
+  platformUserId: {type:DataTypes.UUID,allowNull:true,unique:true},
   active: {type:DataTypes.BOOLEAN,allowNull:false,defaultValue:true},
   email: {type:DataTypes.STRING(150),allowNull:false,defaultValue:''},
   role: {

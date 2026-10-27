@@ -12,7 +12,7 @@ router.post('/open',async(req,res,next)=>{
  const cash=await sequelize.transaction(async transaction=>{
   await sequelize.query("SELECT pg_advisory_xact_lock(882019)",{transaction});
   if(await CashRegister.findOne({where:{is_open:true},transaction}))throw fail('Já existe um caixa aberto');
-  return CashRegister.create({opened_by:req.user.username,opening_amount:amount},{transaction});
+  return CashRegister.create({opened_by:req.master?req.supportUser.username:req.user.username,opening_amount:amount},{transaction});
  });res.status(201).json(cash);
  }catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 });

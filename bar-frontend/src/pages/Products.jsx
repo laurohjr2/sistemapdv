@@ -1,3 +1,4 @@
+import ReportDownload from '../components/ReportDownload';
 import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -254,7 +255,7 @@ const Products = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Produtos</h1>
+          <ReportDownload type="catalog" label="Relatório de produtos"/><h1 className="text-3xl font-bold tracking-tight">Produtos</h1>
           <p className="text-muted-foreground">
             Gerencie o catálogo de produtos do estabelecimento
           </p>
@@ -371,7 +372,7 @@ const Products = () => {
                         <Label htmlFor="costPrice">Preço de Custo (R$)</Label>
                         <Input
                           id="costPrice"
-                          type="number"
+                          currency
                           step="0.01"
                           value={formData.costPrice}
                           onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
@@ -382,7 +383,7 @@ const Products = () => {
                         <Label htmlFor="salePrice">Preço de Venda (R$) *</Label>
                         <Input
                           id="salePrice"
-                          type="number"
+                          currency
                           step="0.01"
                           value={formData.salePrice}
                           onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
@@ -438,7 +439,7 @@ const Products = () => {
                               <Label htmlFor="unitCost">Custo Unitário (R$)</Label>
                               <Input
                                 id="unitCost"
-                                type="number"
+                                currency
                                 step="0.01"
                                 value={formData.unitCost}
                                 onChange={(e) => setFormData({ ...formData, unitCost: e.target.value })}
@@ -677,7 +678,7 @@ const Products = () => {
                           </div>
                         </TableCell>
                         <TableCell>{getCategoryLabel(product.category)}</TableCell>
-                        <TableCell>R$ {parseFloat(product.salePrice || 0).toFixed(2)}</TableCell>
+                        <TableCell>R$ {parseFloat(product.salePrice || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span>
@@ -756,11 +757,11 @@ const Products = () => {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Preço de Custo</Label>
-                  <p className="text-sm">R$ {parseFloat(viewingProduct.costPrice || 0).toFixed(2)}</p>
+                  <p className="text-sm">R$ {parseFloat(viewingProduct.costPrice || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Preço de Venda</Label>
-                  <p className="text-sm">R$ {parseFloat(viewingProduct.salePrice || 0).toFixed(2)}</p>
+                  <p className="text-sm">R$ {parseFloat(viewingProduct.salePrice || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Estoque Atual</Label>

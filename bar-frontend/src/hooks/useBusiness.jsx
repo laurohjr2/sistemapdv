@@ -23,6 +23,7 @@ export function BusinessProvider({children}) {
       .catch(()=>{if(active)setBusinessError('Não foi possível carregar os dados do estabelecimento.');});
     return ()=>{active=false;};
   },[identity,company]);
+  useEffect(()=>{let link=document.querySelector('link[rel="icon"]');if(!link){link=document.createElement('link');link.rel='icon';document.head.appendChild(link);}link.href=business.logo||'/favicon.ico';},[business.logo]);
   useEffect(()=>{document.title=`${business.companyName} — PDV`;},[business.companyName]);
   return <BusinessContext.Provider value={{business,setBusiness,businessError,refreshBusiness}}>{children}</BusinessContext.Provider>;
 }

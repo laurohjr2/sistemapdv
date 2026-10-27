@@ -19,7 +19,7 @@ function validCnpj(value) {
 }
 function validate(body) {
   const result={};
-  for(const [field,max] of Object.entries({companyName:100,legalName:150,cnpj:30,phone:40,email:150,address:250,city:100,state:2,postalCode:10,receiptMessage:200})) {
+  for(const [field,max] of Object.entries({companyName:100,legalName:150,cnpj:30,phone:40,email:150,address:250,city:100,state:2,postalCode:10,receiptMessage:200,pixKey:200})) {
     if (!(field in body)) continue;
     if(typeof body[field]!=='string' || body[field].trim().length>max) throw invalid(`Campo ${field} inválido ou muito longo.`);
     result[field]=body[field].trim();
@@ -38,14 +38,15 @@ function validate(body) {
     result.postalCode=result.postalCode.replace(/[\s-]/g,'');
     if(result.postalCode && !/^\d{8}$/.test(result.postalCode)) throw invalid('CEP deve conter oito números.');
   }
-  if('logo' in body) {
-    if(body.logo===null) result.logo=null;
+  for(const imageField of ['logo','pixQrCode']) {
+  if(imageField in body) {
+    if(body[imageField]===null) result[imageField]=null;
     else {
-      if(typeof body.logo!=='string' || body.logo.length>360000) throw invalid('Logo deve ser PNG ou JPEG com até 256 KB.');
-      const match=/^data:image\/(png|jpeg);base64,([A-Za-z0-9+/]+={0,2})$/.exec(body.logo);
+      if(typeof body[imageField]!=='string' || body[imageField].length>2900000) throw invalid('Logo deve ser PNG ou JPEG com até 2 MB.');
+      const match=/^data:image\/(png|jpeg);base64,([A-Za-z0-9+/]+={0,2})$/.exec(body[imageField]);
       if(!match) throw invalid('Formato da logo inválido. Use PNG ou JPEG.');
       const buffer=Buffer.from(match[2],'base64');
-      if(buffer.length>256*1024 || buffer.toString('base64')!==match[2]) throw invalid('Logo inválida ou maior que 256 KB.');
+      if(buffer.length>2*1024*1024 || buffer.toString('base64')!==match[2]) throw invalid('Logo inválida ou maior que 2 MB.');
       const png=buffer.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]));
       const jpeg=buffer[0]===255 && buffer[1]===216 && buffer[2]===255;
       if((match[1]==='png'&&!png)||(match[1]==='jpeg'&&!jpeg)) throw invalid('O conteúdo da logo não corresponde ao formato.');
@@ -53,8 +54,9 @@ function validate(body) {
         const image=new PDFDocument({autoFirstPage:false}).openImage(buffer);
         if(!image.width || !image.height || image.width>2048 || image.height>2048) throw new Error();
       } catch { throw invalid('Imagem inválida ou acima de 2048 × 2048 pixels.'); }
-      result.logo=body.logo;
+      result[imageField]=body[imageField];
     }
+  }
   }
   return result;
 }
@@ -65,7 +67,7 @@ router.get('/branding',async(req,res,next)=>{
 router.get('/',authenticateToken,async(req,res,next)=>{
   try {res.json(await getSettings());} catch(error) {next(error);}
 });
-router.put('/',authenticateToken,authorizeRoles('admin'),express.json({limit:'400kb'}),async(req,res,next)=>{
+router.put('/',authenticateToken,authorizeRoles('admin'),express.json({limit:'6mb'}),async(req,res,next)=>{
   try {
     if(!req.body || Array.isArray(req.body)) throw invalid('Cadastro inválido.');
     const values=validate(req.body);

@@ -130,7 +130,7 @@ const Users = () => {
   };
 
   const handleDelete = async (userId) => {
-    if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
+    if (!confirm('Tem certeza que deseja inativar este usuário (o histórico será preservado)?')) return;
 
     setLoading(true);
     try {
@@ -351,14 +351,14 @@ const Users = () => {
                         </TableCell>
                         <TableCell>
                           <Badge variant={user.active ? 'default' : 'secondary'}>
-                            {user.active ? 'Ativo' : 'Inativo'}
+                            {user.active && !user.deleted_at ? 'Ativo' : 'Inativo — editar para reativar'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end space-x-2">
                             <Button variant="outline" size="sm" onClick={() => handleEdit(user)}><Edit className="h-4 w-4" /></Button>
                             <Button variant="outline" size="sm" onClick={() => handleChangePassword(user)}><Key className="h-4 w-4" /></Button>
-                            <Button variant="outline" size="sm" onClick={() => handleDelete(user.id)}><Trash2 className="h-4 w-4" /></Button>
+                            <Button variant="outline" size="sm" aria-label="Inativar usuário" title="Inativar usuário" disabled={!user.active} onClick={() => handleDelete(user.id)}><Trash2 className="h-4 w-4" /></Button>
                           </div>
                         </TableCell>
                       </TableRow>

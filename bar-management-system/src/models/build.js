@@ -11,8 +11,12 @@ const CashRegister = require('./CashRegister')(sequelize);
 const Sale = require('./Sale')(sequelize);
 const SaleItem = require('./SaleItem')(sequelize);
 const Ticket = require('./Ticket')(sequelize);
+const Customer = require('./Customer')(sequelize);
+const PasswordReset = require('./PasswordReset')(sequelize);
 const BusinessSettings = require('./BusinessSettings')(sequelize);
 
+Sale.belongsTo(Customer,{foreignKey:'customerId',as:'customer'});
+Comanda.belongsTo(Customer,{foreignKey:'customerId',as:'customer'});
 // Define associations
 User.hasMany(StockMovement, { foreignKey: 'userId', as: 'stockMovements' });
 StockMovement.belongsTo(User, { foreignKey: 'userId', as: 'user' });
@@ -77,7 +81,7 @@ return {
   Sale,
   SaleItem,
   Ticket,
-  BusinessSettings
+  BusinessSettings, Customer, PasswordReset
 };
 
 

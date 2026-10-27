@@ -17,6 +17,8 @@ import Reports from './pages/Reports';
 import Print from './pages/Print';
 import './App.css';
 import Settings from './pages/Settings';
+import Customers from './pages/Customers';
+import Recovery from './pages/Recovery';
 import Support from './pages/Support';
 import { BusinessProvider } from './hooks/useBusiness';
 
@@ -27,6 +29,8 @@ function App() {
       <Toaster richColors />
       <Router>
         <Routes>
+          <Route path="/reset-password" element={<Recovery />} />
+          <Route path="/forgot-password" element={<Recovery />} />
           <Route path="/support" element={<Support />} />
           <Route path="/login" element={<Login />} />
           <Route
@@ -117,6 +121,7 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route path="customers" element={<Customers />} />
             <Route path="settings" element={<ProtectedRoute requiredRoles={['admin', 'gerente']}><Settings /></ProtectedRoute>} />
             <Route path="kitchen" element={<ProtectedRoute requiredRoles={['garcom', 'gerente', 'admin']}><KitchenQueue /></ProtectedRoute>} />
           </Route>

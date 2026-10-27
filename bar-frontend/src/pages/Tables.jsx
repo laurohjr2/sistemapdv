@@ -1,5 +1,3 @@
-import { useBusiness } from '../hooks/useBusiness';
-import { receiptHeader, escapeHtml } from '../lib/receipt';
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -12,17 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Plus, Edit, Trash2, Users, DollarSign, Clock, CheckCircle, XCircle, Receipt, Play, Square } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
+import TableAccount from '../components/TableAccount';
+import WaitingQueue from './WaitingQueue';
 
 const Tables = () => {
-  const {business} = useBusiness();
+  const [accountTable,setAccountTable]=useState(null);
+  const [showQueue,setShowQueue]=useState(false);
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
-  const [receiptData, setReceiptData] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('');
   const [formData, setFormData] = useState({
     tableNumber: '',
     capacity: '',
@@ -33,9 +31,10 @@ const Tables = () => {
     fetchTables();
   }, []);
 
+  useEffect(()=>{const seen=new Set();let active=true;const poll=async()=>{try{const {data}=await api.get('/tables');if(!active)return;setTables(data);for(const table of data)for(const c of table.comandas||[])for(const item of c.items||[])if(item.preparationStatus==='pronto'&&!seen.has(item.id)){seen.add(item.id);toast.success(`${item.product?.name||'Pedido'} pronto — Mesa ${table.tableNumber}`,{duration:10000});}}catch{ /* Mantém a tela, próxima consulta tentará novamente. */ }};const timer=setInterval(poll,10000);return()=>{active=false;clearInterval(timer);};},[]);
   const fetchTables = async () => {
     try {
-      setLoading(true);
+
       const response = await api.get('/tables');
       setTables(response.data);
     } catch (error) {
@@ -99,50 +98,6 @@ const Tables = () => {
     }
   };
 
-  const handleOpenComanda = async (tableId) => {
-    try {
-      await api.post(`/tables/${tableId}/open-comanda`);
-      toast.success('Comanda aberta com sucesso!');
-      fetchTables();
-    } catch (error) {
-      console.error('Erro ao abrir comanda:', error);
-      toast.error(error.response?.data?.error || 'Erro ao abrir comanda');
-    }
-  };
-
-  const handleCloseComanda = async (tableId) => {
-    if (!paymentMethod) {
-      toast.error('Selecione o método de pagamento');
-      return;
-    }
-
-    try {
-      const response = await api.post(`/tables/${tableId}/close-comanda`, {
-        paymentMethod
-      });
-      
-      toast.success('Comanda fechada com sucesso!');
-      setReceiptData(response.data.receipt);
-      setIsReceiptDialogOpen(true);
-      setPaymentMethod('');
-      fetchTables();
-    } catch (error) {
-      console.error('Erro ao fechar comanda:', error);
-      toast.error(error.response?.data?.error || 'Erro ao fechar comanda');
-    }
-  };
-
-  const handleViewReceipt = async (tableId) => {
-    try {
-      const response = await api.get(`/tables/${tableId}/receipt`);
-      setReceiptData(response.data);
-      setIsReceiptDialogOpen(true);
-    } catch (error) {
-      console.error('Erro ao buscar comprovante:', error);
-      toast.error(error.response?.data?.error || 'Erro ao buscar comprovante');
-    }
-  };
-
   const openEditDialog = (table) => {
     setSelectedTable(table);
     setFormData({
@@ -171,70 +126,6 @@ const Tables = () => {
     );
   };
 
-  const printReceipt = () => {
-    if (!receiptData) return;
-    
-    const printWindow = window.open('', '_blank');
-    const printContent = `
-      <html>
-        <head>
-          <title>Comprovante - Mesa ${receiptData.tableNumber}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            .table th { background-color: #f2f2f2; }
-            .total { font-weight: bold; font-size: 1.2em; margin-top: 20px; }
-            .footer { margin-top: 30px; text-align: center; font-size: 0.9em; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            ${receiptHeader(business)}
-            <h2>Comprovante - Mesa ${receiptData.tableNumber}</h2>
-            <p>Data: ${new Date(receiptData.closedAt || receiptData.openedAt).toLocaleString('pt-BR')}</p>
-          </div>
-          
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Qtd</th>
-                <th>Preço Unit.</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${receiptData.items?.map(item => `
-                <tr>
-                  <td>${item.productName || item.product?.name}</td>
-                  <td>${item.quantity}</td>
-                  <td>R$ ${parseFloat(item.priceAtSale).toFixed(2)}</td>
-                  <td>R$ ${parseFloat(item.totalItemValue).toFixed(2)}</td>
-                </tr>
-              `).join('') || ''}
-            </tbody>
-          </table>
-          
-          <div class="total">
-            Total: R$ ${parseFloat(receiptData.totalValue).toFixed(2)}
-          </div>
-          
-          ${receiptData.paymentMethod ? `<p>Forma de Pagamento: ${receiptData.paymentMethod}</p>` : ''}
-          
-          <div class="footer">
-            <p>${escapeHtml(business.receiptMessage)}</p>
-          </div>
-        </body>
-      </html>
-    `;
-    
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.print();
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -245,6 +136,9 @@ const Tables = () => {
 
   return (
     <div className="space-y-6">
+      {accountTable&&<TableAccount table={accountTable} onClose={()=>setAccountTable(null)} onUpdate={fetchTables}/>}
+      <Button variant="outline" onClick={()=>setShowQueue(!showQueue)}>{showQueue?'Ocultar fila de espera':'Fila de espera'}</Button>
+      {showQueue&&<WaitingQueue/>}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Mesas</h1>
@@ -373,10 +267,10 @@ const Tables = () => {
                     {table.comandas && table.comandas.length > 0 ? (
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">
-                          {table.comandas.length} comanda(s)
+                          {table.comandas[0].customerName||'Cliente não informado'} · {table.comandas.length} comanda(s)
                         </Badge>
                         <span className="text-sm text-muted-foreground">
-                          R$ {table.comandas.reduce((total, comanda) => total + (parseFloat(comanda.totalValue) || 0), 0).toFixed(2)}
+                          R$ {table.comandas.reduce((total, comanda) => total + (parseFloat(comanda.totalValue) || 0), 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                         </span>
                       </div>
                     ) : (
@@ -389,7 +283,7 @@ const Tables = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleOpenComanda(table.id)}
+                          onClick={() => setAccountTable(table)}
                         >
                           <Play className="h-4 w-4 mr-1" />
                           Abrir Comanda
@@ -401,38 +295,13 @@ const Tables = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleViewReceipt(table.id)}
+                            onClick={() => setAccountTable(table)}
                           >
                             <Receipt className="h-4 w-4 mr-1" />
                             Ver Conta
                           </Button>
                           
-                          <div className="flex items-center gap-1">
-                            <Select
-                              value={paymentMethod}
-                              onValueChange={setPaymentMethod}
-                            >
-                              <SelectTrigger className="w-[120px]">
-                                <SelectValue placeholder="Pagamento" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                                <SelectItem value="cartao_credito">Cartão Crédito</SelectItem>
-                                <SelectItem value="cartao_debito">Cartão Débito</SelectItem>
-                                <SelectItem value="pix">PIX</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={() => handleCloseComanda(table.id)}
-                              disabled={!paymentMethod}
-                            >
-                              <Square className="h-4 w-4 mr-1" />
-                              Fechar
-                            </Button>
-                          </div>
+
                         </>
                       )}
                       
@@ -523,77 +392,7 @@ const Tables = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de Comprovante */}
-      <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Comprovante - Mesa {receiptData?.tableNumber}</DialogTitle>
-            <DialogDescription>
-              Detalhes da conta da mesa
-            </DialogDescription>
-          </DialogHeader>
-          
-          {receiptData && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <strong>Mesa:</strong> {receiptData.tableNumber}
-                </div>
-                <div>
-                  <strong>Data:</strong> {new Date(receiptData.closedAt || receiptData.openedAt).toLocaleString('pt-BR')}
-                </div>
-                {receiptData.openedBy && (
-                  <div>
-                    <strong>Atendente:</strong> {receiptData.openedBy}
-                  </div>
-                )}
-                {receiptData.paymentMethod && (
-                  <div>
-                    <strong>Pagamento:</strong> {receiptData.paymentMethod}
-                  </div>
-                )}
-              </div>
-              
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Qtd</TableHead>
-                    <TableHead>Preço Unit.</TableHead>
-                    <TableHead>Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {receiptData.items?.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{item.productName || item.product?.name}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>R$ {parseFloat(item.priceAtSale).toFixed(2)}</TableCell>
-                      <TableCell>R$ {parseFloat(item.totalItemValue).toFixed(2)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              
-              <div className="text-right">
-                <div className="text-lg font-bold">
-                  Total: R$ {parseFloat(receiptData.totalValue).toFixed(2)}
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button onClick={printReceipt}>
-              <Receipt className="mr-2 h-4 w-4" />
-              Imprimir
-            </Button>
-            <Button variant="outline" onClick={() => setIsReceiptDialogOpen(false)}>
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 };

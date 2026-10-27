@@ -6,7 +6,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Alert, AlertDescription } from '../components/ui/alert';
-import { Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import '../App.css';
 import BusinessBrand from '../components/BusinessBrand';
 
@@ -17,6 +17,7 @@ const Login = () => {
     username: '',
     password: '',
   });
+  const [showPassword,setShowPassword]=useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -85,13 +86,14 @@ const Login = () => {
               <Input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword?'text':'password'}
                 value={formData.password}
                 onChange={handleChange}
                 required
                 disabled={loading}
                 placeholder="Digite sua senha"
               />
+              <Button type="button" variant="ghost" aria-label={showPassword?'Ocultar senha':'Mostrar senha'} aria-pressed={showPassword} onClick={()=>setShowPassword(!showPassword)}>{showPassword?<EyeOff size={18}/>:<Eye size={18}/>}</Button>
             </div>
             
             <Button type="submit" className="w-full" disabled={loading}>
@@ -99,6 +101,7 @@ const Login = () => {
               Entrar
             </Button>
           </form>
+          <Link to="/forgot-password" className="mt-4 block text-center text-sm underline">Esqueci minha senha</Link>
           <Link to="/support" className="mt-4 block text-center text-sm underline">Acesso do suporte</Link>
         </CardContent>
       </Card>
