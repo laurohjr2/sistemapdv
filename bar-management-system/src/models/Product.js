@@ -19,16 +19,9 @@ const Product = sequelize.define('Product', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  itemType:{type:DataTypes.STRING(12),allowNull:false,defaultValue:'product'},
   category: {
-    type: DataTypes.ENUM(
-      'bebidas_alcoolicas', 
-      'bebidas_nao_alcoolicas', 
-      'porcoes', 
-      'comidas', 
-      'petiscos', 
-      'sobremesas',
-      'outros'
-    ),
+    type:DataTypes.STRING(80),
     allowNull: false,
     defaultValue: 'outros'
   },
@@ -40,7 +33,7 @@ const Product = sequelize.define('Product', {
     }
   },
   unitOfMeasure: {
-    type: DataTypes.ENUM('litro', 'unidade', 'kg', 'gramas', 'ml'),
+    type: DataTypes.ENUM('litro', 'unidade', 'kg', 'gramas', 'ml', 'hora', 'servico', 'metro', 'caixa', 'par'),
     allowNull: false,
     defaultValue: 'unidade',
     field: 'unit_of_measure'

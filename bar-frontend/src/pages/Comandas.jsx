@@ -129,7 +129,7 @@ const Comandas = () => {
         return;
       }
 
-      if (parseFloat(addItemForm.quantity) > Number(product.currentStock)) {
+      if (product.itemType!=='service'&&parseFloat(addItemForm.quantity) > Number(product.currentStock)) {
         toast.error('Quantidade solicitada maior que o estoque disponível');
         return;
       }

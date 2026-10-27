@@ -14,7 +14,7 @@ export default function CustomerSelect({ value, onChange }) {
       Cliente cadastrado
       <select
         className="border rounded p-2 w-full"
-        value={value || ""}
+        aria-label="Cliente cadastrado" value={value || ""}
         onChange={(e) =>
           onChange(
             e.target.value,

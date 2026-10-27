@@ -4,75 +4,16 @@ const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
 
 // Importar modelos necessários
-const { Sale, SaleItem, Product, StockMovement, CashRegister, Ticket, Customer } = require('../models');
+const { Sale, SaleItem, Product, StockMovement, CashRegister, Ticket } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 
 const { sequelize } = require('../models');
 const fail = (message, status = 400) => Object.assign(new Error(message), { status });
 
-// Uma transação mantém venda, itens e estoque consistentes em caso de falha.
-router.post('/', authenticateToken, async (req, res) => {
-  try {
-    const { items, payment_method, cash_register_id } = req.body;
-    if (!Array.isArray(items) || !items.length) throw fail('Itens são obrigatórios');
-    if (!['dinheiro', 'cartao_credito', 'cartao_debito', 'pix'].includes(payment_method)) {
-      throw fail('Método de pagamento inválido');
-    }
-    if (!cash_register_id) throw fail('Você precisa abrir um caixa para vender');
-    const discount=Number(req.body.discount_amount||0);
-    if(!Number.isFinite(discount)||discount<0||Math.abs(discount*100-Math.round(discount*100))>1e-6)throw fail('Desconto inválido');
-    if(discount&&!['admin','gerente'].includes(req.user.role))throw fail('Somente gerente e administrador podem dar descontos',403);
-    const quantities = new Map();
-    for (const item of items) {
-      const quantity = Number(item.quantity);
-      if (!item.product_id || !Number.isFinite(quantity) || quantity <= 0 ||
-          Math.abs(quantity * 1000 - Math.round(quantity * 1000)) > 0.000001) {
-        throw fail('Produto e quantidade positiva com até três casas decimais são obrigatórios');
-      }
-      quantities.set(item.product_id, (quantities.get(item.product_id) || 0) + quantity);
-    }
-    const sale = await sequelize.transaction(async transaction => {
-      const cashRegister = await CashRegister.findByPk(cash_register_id, {
-        transaction, lock: transaction.LOCK.UPDATE
-      });
-      if (!cashRegister?.is_open) throw fail('Você precisa abrir um caixa para vender');
-      const customer=req.body.customerId?await Customer.findByPk(req.body.customerId,{transaction}):null;
-      if(req.body.customerId&&!customer?.active)throw fail('Cliente não encontrado ou inativo');
-      const lines = [];
-      let totalCents = 0;
-      // Ordem fixa evita impasses entre vendas com produtos em ordem diferente.
-      for (const [productId, quantity] of [...quantities].sort(([a], [b]) => a.localeCompare(b))) {
-        const product = await Product.findByPk(productId, { transaction, lock: transaction.LOCK.UPDATE });
-        if (!product?.active) throw fail('Produto não encontrado ou inativo');
-        if (Number(product.currentStock) < quantity) throw fail(`Estoque insuficiente para ${product.name}`);
-        const cents = Math.round(Number(product.salePrice) * quantity * 100);
-        totalCents += cents;
-        lines.push({ product, quantity, cents });
-      }
-      if(Math.round(discount*100)>totalCents)throw fail('Desconto excede o total');
-      totalCents-=Math.round(discount*100);
-      const payments=require('../services/payments').settlement(req.body.payments,payment_method,totalCents/100);
-      const sale = await Sale.create({
-        payments,customerId:customer?.id||null,discount_amount:discount,
-        user_id: req.user.id, cash_register_id, payment_method,
-        total_amount: totalCents / 100, status: 'completed'
-      }, { transaction });
-      for (const { product, quantity, cents } of lines) {
-        await SaleItem.create({ sale_id: sale.id, product_id: product.id,
-          quantity, unit_price: product.salePrice, total_price: cents / 100 }, { transaction });
-        await product.update({ currentStock: Number(product.currentStock) - quantity }, { transaction });
-        await StockMovement.create({ productId: product.id, userId: req.user.id,
-          type: 'saida', quantity, reason: 'sale', notes: `Venda #${sale.id}` }, { transaction });
-      }
-      return sale;
-    });
-    await logAction(req.user.id, 'sale_created', { saleId: sale.id, totalAmount: sale.total_amount });
-    res.status(201).json(sale);
-  } catch (error) {
-    console.error('Erro ao criar venda:', error.message);
-    res.status(error.status || 500).json({ error: error.status ? error.message : 'Erro interno do servidor' });
-  }
-});
+router.post('/',authenticateToken,require('../services/commercialValidation').handler(async(req,res)=>{
+ if(req.body.sourceQuoteId){const {effectiveModules}=require('../config/businessProfiles');if(!effectiveModules(await require('../services/businessSettingsService').getSettings()).quotes)throw fail('Módulo Orçamentos desativado',403);}
+ res.status(201).json(await require('../services/saleOperations').create({body:req.body,user:req.user}));
+}));
 
 // Listar vendas
 router.get('/', authenticateToken, async (req, res) => {
@@ -160,6 +101,7 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
       if (sale.status === 'cancelled') throw fail('Venda já foi cancelada');
       const items = await SaleItem.findAll({ where: { sale_id: sale.id }, order: [['product_id', 'ASC']], transaction });
       for (const item of items) {
+        if(!item.stockTracked)continue;
         const product = await Product.findByPk(item.product_id, { transaction, lock: transaction.LOCK.UPDATE });
         await product.update({ currentStock: Number(product.currentStock) + Number(item.quantity) }, { transaction });
         await StockMovement.create({ productId: product.id, userId: req.user.id,

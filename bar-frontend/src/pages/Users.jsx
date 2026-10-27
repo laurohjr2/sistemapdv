@@ -199,7 +199,7 @@ const Users = () => {
     switch (role) {
       case 'admin': return 'Administrador';
       case 'gerente': return 'Gerente';
-      case 'garcom': return 'Garçom';
+      case 'garcom': return 'Atendente';
       default: return role;
     }
   };
@@ -255,7 +255,7 @@ const Users = () => {
                 <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="garcom">Garçom</SelectItem>
+                    <SelectItem value="garcom">Atendente</SelectItem>
                     <SelectItem value="gerente">Gerente</SelectItem>
                     <SelectItem value="admin">Administrador</SelectItem>
                   </SelectContent>

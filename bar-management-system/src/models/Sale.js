@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize');
 module.exports = function defineModel(sequelize) {
 
 const Sale = sequelize.define('Sale', {
+  sourceQuoteId:{type:DataTypes.UUID,allowNull:true,unique:true},
   customerId: {type:DataTypes.UUID,allowNull:true},
   payments: {type:DataTypes.JSONB,allowNull:true},
   id: {

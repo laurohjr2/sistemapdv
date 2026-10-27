@@ -8,6 +8,7 @@ const changeStock = mode => async(req,res,next)=>{
   const result=await sequelize.transaction(async transaction=>{
    const product=await Product.findByPk(req.body.productId,{transaction,lock:transaction.LOCK.UPDATE});
    if(!product)throw Object.assign(new Error('Produto não encontrado'),{status:404});
+   if(product.itemType==='service')throw Object.assign(new Error('Serviços não movimentam estoque'),{status:400});
    const oldStock=Number(product.currentStock),quantity=Number(mode==='adjust'?req.body.newQuantity:req.body.quantity);
    if(!Number.isFinite(quantity)||quantity<(mode==='adjust'?0:0.001)||Math.abs(quantity*1000-Math.round(quantity*1000))>1e-6)throw Object.assign(new Error('Quantidade inválida'),{status:400});
    const newStock=mode==='adjust'?quantity:oldStock+(mode==='add'?quantity:-quantity),difference=newStock-oldStock;
@@ -85,7 +86,7 @@ const getLowStockProducts = async (req, res) => {
   try {
     const products = await Product.findAll({
       where: {
-        active: true,
+        active: true,itemType:'product',
         [Op.and]: [
           { currentStock: { [Op.lte]: { [Op.col]: 'min_stock_alert' } } }
         ]
@@ -104,7 +105,7 @@ const getStockReport = async (req, res) => {
   try {
     const { category } = req.query;
     
-    const whereClause = { active: true };
+    const whereClause = { active: true,itemType:'product' };
     if (category) whereClause.category = category;
 
     const products = await Product.findAll({
@@ -200,11 +201,11 @@ const getStockHistory = async (req, res) => {
 
 const getStockSummary = async (req, res) => {
   try {
-    const totalProducts = await Product.count({ where: { active: true } });
+    const totalProducts = await Product.count({ where: { active: true,itemType:'product' } });
 
     const lowStockProducts = await Product.count({
       where: {
-        active: true,
+        active: true,itemType:'product',
         [Op.and]: [
           { currentStock: { [Op.lte]: { [Op.col]: 'min_stock_alert' } } }
         ]
@@ -213,12 +214,12 @@ const getStockSummary = async (req, res) => {
 
     const outOfStockProducts = await Product.count({
       where: {
-        active: true,
+        active: true,itemType:'product',
         currentStock: { [Op.lte]: 0 }
       }
     });
 
-    const valuation = await Product.findAll({attributes:[[sequelize.fn('SUM',sequelize.literal('"current_stock" * "cost_price"')),'total']],where:{active:true},raw:true});
+    const valuation = await Product.findAll({attributes:[[sequelize.fn('SUM',sequelize.literal('"current_stock" * "cost_price"')),'total']],where:{active:true,itemType:'product'},raw:true});
     const totalStockValue = Number(valuation[0]?.total || 0);
 
     const recentMovements = await StockMovement.count({

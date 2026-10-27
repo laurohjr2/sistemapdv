@@ -6,11 +6,13 @@ import {Button} from '../components/ui/button';
 import {Input} from '../components/ui/input';
 import {Label} from '../components/ui/label';
 import {Card,CardContent,CardHeader,CardTitle,CardDescription} from '../components/ui/card';
-const empty={companyName:'',legalName:'',cnpj:'',phone:'',email:'',address:'',city:'',state:'',postalCode:'',receiptMessage:'',logo:null,pixKey:'',pixQrCode:null};
+const empty={companyName:'',legalName:'',cnpj:'',phone:'',email:'',address:'',city:'',state:'',postalCode:'',receiptMessage:'',logo:null,pixKey:'',pixQrCode:null,businessProfile:'bar_restaurante',modules:null};
 export default function Settings() {
   const {user}=useAuth();
   const {setBusiness}=useBusiness();
   const [form,setForm]=useState(empty);
+  const [profiles,setProfiles]=useState([]);
+  const [moduleNames,setModuleNames]=useState({});
   const [clientInfo,setClientInfo]=useState(null);
   const [loading,setLoading]=useState(true);
   const [saving,setSaving]=useState(false);
@@ -19,7 +21,7 @@ export default function Settings() {
   const editable=user?.role==='admin';
   async function load(){
     setLoading(true);setError('');
-    try{const {data}=await api.get('/settings');setForm({...empty,...data});if(user?.support)setClientInfo((await api.get('/support/company-info')).data);}
+    try{const [settings,meta]=await Promise.all([api.get('/settings'),api.get('/settings/profiles')]);const data=settings.data;setProfiles(meta.data.profiles);setModuleNames(meta.data.moduleNames);setForm({...empty,...data,modules:data.modules||meta.data.profiles.find(p=>p.id===data.businessProfile)?.modules});if(user?.support)setClientInfo((await api.get('/support/company-info')).data);}
     catch{setError('Não foi possível carregar as configurações. Tente novamente.');}
     finally{setLoading(false);}
   }
@@ -57,6 +59,7 @@ export default function Settings() {
     {user?.support && clientInfo && <Card><CardHeader><CardTitle>Identificação do cliente — Suporte/Master</CardTitle></CardHeader><CardContent><Label>ID do cliente</Label><p className="mt-2 break-all font-mono" data-testid="support-client-id">{clientInfo.clientId}</p><p className="mt-2 text-sm text-muted-foreground">Visualização exclusiva ao suporte e à conta Master/Admin.</p></CardContent></Card>}
     <form onSubmit={save} className="space-y-6">
       <fieldset disabled={!editable||saving} className="space-y-6">
+        <Card><CardHeader><CardTitle>Perfil do negócio e módulos</CardTitle><CardDescription>Escolha o segmento e ajuste os recursos usados pela empresa. A alteração preserva os cadastros e o histórico.</CardDescription></CardHeader><CardContent className="space-y-4"><label className="block">Perfil do negócio<select className="commerce-select" value={form.businessProfile} onChange={e=>{const profile=profiles.find(p=>p.id===e.target.value);setForm({...form,businessProfile:profile.id,modules:profile.modules});setSuccess('');}}>{profiles.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><p className="text-sm text-muted-foreground">{profiles.find(p=>p.id===form.businessProfile)?.description}</p><div className="grid sm:grid-cols-2 gap-3">{Object.entries(moduleNames).map(([key,label])=><label key={key} className="flex gap-2 items-center border rounded-lg p-3"><input type="checkbox" checked={Boolean(form.modules?.[key])} disabled={key==='finance'&&form.modules?.purchasing||key==='tables'&&form.modules?.kitchen} onChange={e=>setForm({...form,modules:{...form.modules,[key]:e.target.checked}})}/>{label}</label>)}</div><p className="text-xs text-muted-foreground">Compras utiliza contas a pagar; cozinha utiliza comandas. Finalize os atendimentos e compromissos pendentes antes de desativar módulos.</p></CardContent></Card>
         <Card><CardHeader><CardTitle>Identidade da empresa</CardTitle><CardDescription>O nome e a logo aparecem no sistema e nos comprovantes.</CardDescription></CardHeader><CardContent className="space-y-5">
           <div className="flex flex-wrap items-center gap-5">
             <div className="flex h-24 w-24 items-center justify-center rounded-lg border bg-muted">{form.logo?<img src={form.logo} alt="Prévia da logo" className="max-h-24 max-w-24 object-contain"/>:<span className="text-3xl font-bold">{form.companyName.slice(0,1).toUpperCase()||'P'}</span>}</div>

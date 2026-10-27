@@ -5,7 +5,8 @@ const { Op } = require('sequelize');
 
 function validateFields(body) {
  if(body.unitOfMeasure!==undefined&&!Product.rawAttributes.unitOfMeasure.values.includes(body.unitOfMeasure))return 'Unidade de medida inválida';
- if(body.category!==undefined&&!Product.rawAttributes.category.values.includes(body.category))return 'Categoria inválida';
+ if(body.category!==undefined&&(typeof body.category!=='string'||!body.category.trim()||body.category.length>80))return 'Categoria inválida';
+ if(body.itemType!==undefined&&!['product','service'].includes(body.itemType))return 'Tipo de item inválido';
  for(const key of ['costPrice','salePrice','minStockAlert'])if(body[key]!==undefined&&(!Number.isFinite(Number(body[key]))||Number(body[key])<0))return 'Preço ou estoque mínimo inválido';
  return null;
 }
@@ -37,7 +38,7 @@ const getAllProducts = async (req, res) => {
     let filteredProducts = products;
     if (lowStock === 'true') {
       filteredProducts = products.filter(product => 
-        product.currentStock <= product.minStockAlert
+        product.itemType!=='service'&&Number(product.currentStock) <= Number(product.minStockAlert)
       );
     }
 
@@ -105,6 +106,7 @@ const createProduct = async (req, res) => {
     }
 
     const product = await Product.create({
+      itemType:req.body.itemType||'product',
       name,
       description,
       category,
@@ -112,7 +114,7 @@ const createProduct = async (req, res) => {
       unitOfMeasure,
       costPrice,
       salePrice,
-      minStockAlert: minStockAlert || 0,
+      minStockAlert: req.body.itemType==='service'?0:minStockAlert || 0,
       barcode: barcode?.trim() || null,
       active: active !== undefined ? active : true,
       preparationTime,
@@ -191,6 +193,7 @@ const updateProduct = async (req, res) => {
       }
     }
 
+    if(req.body.itemType&&req.body.itemType!==product.itemType)return res.status(400).json({error:'O tipo do item é definido no cadastro para preservar o histórico. Inative e cadastre outro item.'});
     const updateData = {};
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
@@ -234,15 +237,15 @@ const deleteProduct = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    await logAction(req.user.id, 'product_deleted', {
+    await logAction(req.user.id, 'product_inactivated', {
       productId: product.id,
       name: product.name,
       category: product.category
     });
 
-    await product.destroy();
+    await product.update({active:false});
 
-    res.json({ message: 'Product deleted successfully' });
+    res.json({ message: 'Item inativado. O histórico foi preservado.' });
   } catch (error) {
     console.error('Delete product error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -261,7 +264,13 @@ const getCategories = async (req, res) => {
       { value: 'outros', label: 'Outros' }
     ];
 
-    res.json(categories);
+    const extra=['pizzas','bordas','massas','pecas','mao_de_obra','ferramentas','alimentos','higiene','limpeza','servicos'];
+    const existing=await Product.findAll({attributes:['category'],group:['category'],raw:true});
+    const known=new Set(categories.map(c=>c.value));for(const value of [...extra,...existing.map(p=>p.category)])if(!known.has(value)){categories.push({value,label:value.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase())});known.add(value);}
+    const profile=(await require('../services/businessSettingsService').getSettings()).businessProfile;
+    const preferred={pizzaria:['pizzas','bordas','massas','bebidas_nao_alcoolicas','sobremesas','outros'],oficina:['mao_de_obra','pecas','ferramentas','outros'],autopecas:['pecas','ferramentas','lubrificantes','acessorios','outros'],mercado:['alimentos','bebidas_nao_alcoolicas','limpeza','higiene','outros'],comercio:['mercadorias','servicos','outros']}[profile]||['bebidas_alcoolicas','bebidas_nao_alcoolicas','porcoes','comidas','petiscos','sobremesas','outros'];
+    const values=[...new Set([...preferred,...existing.map(p=>p.category)])];
+    res.json(values.map(value=>categories.find(c=>c.value===value)||{value,label:value.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase())}));
   } catch (error) {
     console.error('Get categories error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -291,7 +300,7 @@ const getLowStockProducts = async (req, res) => {
   try {
     const products = await Product.findAll({
       where: {
-        active: true,
+        active: true,itemType:'product',
         [Op.and]: [
           { currentStock: { [Op.lte]: { [Op.col]: 'min_stock_alert' } } }
         ]

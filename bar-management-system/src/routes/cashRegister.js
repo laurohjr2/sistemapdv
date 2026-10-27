@@ -22,13 +22,14 @@ router.post('/close',async(req,res,next)=>{
  const result=await sequelize.transaction(async transaction=>{
   const cash=await CashRegister.findOne({where:{is_open:true},transaction,lock:transaction.LOCK.UPDATE});if(!cash)throw fail('Nenhum caixa aberto');
   const totals=summary(await revenue({cashRegisterId:cash.id,transaction}));
-  const expected=money(Number(cash.opening_amount)+totals.cashRevenue),difference=money(amount-expected);
+  const moves=await require('../services/commercialOperations').cashTotals(cash.id,transaction);
+  const expected=money(Number(cash.opening_amount)+totals.cashRevenue+moves.financialCashIn-moves.financialCashOut),difference=money(amount-expected);
   await cash.update({closing_amount:amount,closed_at:new Date(),is_open:false,total_sales:totals.totalRevenue,difference},{transaction});
-  return {opening_amount:Number(cash.opening_amount),total_sales:totals.totalRevenue,by_payment:totals.byPayment,expected_amount:expected,closing_amount:amount,difference};
+  return {...moves,opening_amount:Number(cash.opening_amount),total_sales:totals.totalRevenue,by_payment:totals.byPayment,expected_amount:expected,closing_amount:amount,difference};
  });res.json(result);
  }catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 });
-router.get('/report/:id',async(req,res,next)=>{try{const cash=await CashRegister.findByPk(req.params.id);if(!cash)return res.status(404).json({error:'Caixa não encontrado'});res.json({...cash.toJSON(),...summary(await revenue({cashRegisterId:cash.id}))});}catch(e){next(e)}});
+router.get('/report/:id',async(req,res,next)=>{try{const cash=await CashRegister.findByPk(req.params.id);if(!cash)return res.status(404).json({error:'Caixa não encontrado'});const totals=summary(await revenue({cashRegisterId:cash.id})),moves=await require('../services/commercialOperations').cashTotals(cash.id);res.json({...cash.toJSON(),...totals,...moves,expected_amount:money(Number(cash.opening_amount)+totals.cashRevenue+moves.financialCashIn-moves.financialCashOut)});}catch(e){next(e)}});
 return router;
 
 }

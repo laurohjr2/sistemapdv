@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize');
 module.exports = function defineModel(sequelize) {
 
 const ComandaItem = sequelize.define('ComandaItem', {
+  stockTracked:{type:DataTypes.BOOLEAN,allowNull:false,defaultValue:true},
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,

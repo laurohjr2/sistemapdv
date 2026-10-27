@@ -1,4 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {useAuth} from './hooks/useAuth';
+import About from './pages/About';
 import { AuthProvider } from './hooks/useAuth.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
@@ -17,11 +19,17 @@ import Reports from './pages/Reports';
 import Print from './pages/Print';
 import './App.css';
 import Settings from './pages/Settings';
+import Quotes from './pages/Quotes';
+import Suppliers from './pages/Suppliers';
+import Purchases from './pages/Purchases';
+import Finance from './pages/Finance';
+import BusinessModuleRoute from './components/BusinessModuleRoute';
 import Customers from './pages/Customers';
 import Recovery from './pages/Recovery';
 import Support from './pages/Support';
 import { BusinessProvider } from './hooks/useBusiness';
 
+function Home(){const {user}=useAuth();return user?.role==='garcom'?<Navigate to="/sales" replace/>:<Dashboard/>;}
 function App() {
   return (
     <AuthProvider>
@@ -44,9 +52,7 @@ function App() {
             <Route 
               index 
               element={
-                <ProtectedRoute requiredRoles={['gerente', 'admin']}>
-                  <Dashboard />
-                </ProtectedRoute>
+                <Home/>
               } 
             />
             <Route 
@@ -69,7 +75,7 @@ function App() {
               path="tables" 
               element={
                 <ProtectedRoute requiredRoles={['garcom', 'gerente', 'admin']}>
-                  <Tables />
+                  <BusinessModuleRoute module="tables"><Tables /></BusinessModuleRoute>
                 </ProtectedRoute>
               } 
             />
@@ -85,7 +91,7 @@ function App() {
               path="comandas" 
               element={
                 <ProtectedRoute requiredRoles={['garcom', 'gerente', 'admin']}>
-                  <Comandas />
+                  <BusinessModuleRoute module="tables"><Comandas /></BusinessModuleRoute>
                 </ProtectedRoute>
               } 
             />
@@ -93,7 +99,7 @@ function App() {
               path="queue" 
               element={
                 <ProtectedRoute requiredRoles={['garcom', 'gerente', 'admin']}>
-                  <Queue />
+                  <BusinessModuleRoute module="tables"><Queue /></BusinessModuleRoute>
                 </ProtectedRoute>
               } 
             />
@@ -121,9 +127,13 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            <Route path="customers" element={<Customers />} />
+            <Route path="quotes" element={<BusinessModuleRoute module="quotes"><Quotes/></BusinessModuleRoute>}/>
+            <Route path="suppliers" element={<ProtectedRoute requiredRoles={['admin','gerente']}><BusinessModuleRoute module="purchasing"><Suppliers/></BusinessModuleRoute></ProtectedRoute>}/>
+            <Route path="purchases" element={<ProtectedRoute requiredRoles={['admin','gerente']}><BusinessModuleRoute module="purchasing"><Purchases/></BusinessModuleRoute></ProtectedRoute>}/>
+            <Route path="finance" element={<ProtectedRoute requiredRoles={['admin','gerente']}><BusinessModuleRoute module="finance"><Finance/></BusinessModuleRoute></ProtectedRoute>}/>
+            <Route path="about" element={<About/>}/><Route path="customers" element={<Customers />} />
             <Route path="settings" element={<ProtectedRoute requiredRoles={['admin', 'gerente']}><Settings /></ProtectedRoute>} />
-            <Route path="kitchen" element={<ProtectedRoute requiredRoles={['garcom', 'gerente', 'admin']}><KitchenQueue /></ProtectedRoute>} />
+            <Route path="kitchen" element={<ProtectedRoute requiredRoles={['garcom', 'gerente', 'admin']}><BusinessModuleRoute module="kitchen"><KitchenQueue /></BusinessModuleRoute></ProtectedRoute>} />
           </Route>
         </Routes>
       </Router>

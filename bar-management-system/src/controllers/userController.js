@@ -42,6 +42,7 @@ const updateUser = async (req, res) => {
     }
 
     if(user.platformUserId)return res.status(403).json({error:'Conta da plataforma é gerenciada exclusivamente pelo fornecedor'});
+    if(username&&['master.local','support.local'].includes(username.trim().toLowerCase()))return res.status(400).json({error:'Nome reservado ao acesso do fornecedor'});
     const updateData = {};
     if (username) updateData.username = username;
     if (role) updateData.role = role;

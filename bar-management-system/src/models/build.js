@@ -13,8 +13,16 @@ const SaleItem = require('./SaleItem')(sequelize);
 const Ticket = require('./Ticket')(sequelize);
 const Customer = require('./Customer')(sequelize);
 const PasswordReset = require('./PasswordReset')(sequelize);
+const Supplier=require('./Supplier')(sequelize);
+const Quote=require('./Quote')(sequelize);
+const PurchaseOrder=require('./PurchaseOrder')(sequelize);
+const PurchaseReceipt=require('./PurchaseReceipt')(sequelize);
+const FinancialEntry=require('./FinancialEntry')(sequelize);
+const FinancialPayment=require('./FinancialPayment')(sequelize);
+const CashMovement=require('./CashMovement')(sequelize);
 const BusinessSettings = require('./BusinessSettings')(sequelize);
 
+FinancialEntry.hasMany(FinancialPayment,{foreignKey:'entryId',as:'payments'});
 Sale.belongsTo(Customer,{foreignKey:'customerId',as:'customer'});
 Comanda.belongsTo(Customer,{foreignKey:'customerId',as:'customer'});
 // Define associations
@@ -81,7 +89,7 @@ return {
   Sale,
   SaleItem,
   Ticket,
-  BusinessSettings, Customer, PasswordReset
+  BusinessSettings, Customer, PasswordReset, Supplier, Quote, PurchaseOrder, PurchaseReceipt, FinancialEntry, FinancialPayment, CashMovement
 };
 
 

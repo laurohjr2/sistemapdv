@@ -58,6 +58,7 @@ const Sales = () => {
     try {
       const response = await api.get('/cash-register/status');
       setCashRegister(response.data);
+      if(response.data.is_open){const report=await api.get('/cash-register/report/'+response.data.id);setCashRegister({...response.data,...report.data});}
     } catch (error) {
       console.error('Erro ao buscar status do caixa:', error);
     }
@@ -228,7 +229,7 @@ const Sales = () => {
     const existingItem = cart.find(item => item.id === product.id);
     
     if (existingItem) {
-      if (existingItem.quantity < Number(product.currentStock)) {
+      if (product.itemType==='service'||existingItem.quantity < Number(product.currentStock)) {
         setCart(cart.map(item =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
@@ -238,7 +239,7 @@ const Sales = () => {
         setError('Quantidade em estoque insuficiente');
       }
     } else {
-      if (Number(product.currentStock) > 0) {
+      if (product.itemType==='service'||Number(product.currentStock) > 0) {
         setCart([...cart, { ...product, quantity: 1 }]);
       } else {
         setError('Produto sem estoque');
@@ -253,7 +254,7 @@ const Sales = () => {
     }
 
     const product = products.find(p => p.id === productId);
-    if (newQuantity > Number(product.currentStock)) {
+    if (product.itemType!=='service'&&newQuantity > Number(product.currentStock)) {
       setError('Quantidade em estoque insuficiente');
       return;
     }
@@ -596,7 +597,7 @@ const Sales = () => {
               </DialogContent>
             </Dialog>
           ) : (
-            <Dialog open={isCloseCashDialogOpen} onOpenChange={setIsCloseCashDialogOpen}>
+            <Dialog open={isCloseCashDialogOpen} onOpenChange={open=>{setIsCloseCashDialogOpen(open);if(open)fetchCashRegisterStatus();}}>
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Lock className="mr-2 h-4 w-4" />
@@ -627,6 +628,9 @@ const Sales = () => {
                     <div className="text-sm text-muted-foreground">
                       <p>Valor inicial: R$ {Number(cashRegister.opening_amount || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
                       <p>Aberto por: {cashRegister.opened_by}</p>
+                      <p>Entradas financeiras em dinheiro: {Number(cashRegister.financialCashIn||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</p>
+                      <p>Saídas financeiras em dinheiro: {Number(cashRegister.financialCashOut||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</p>
+                      <p className="font-semibold">Saldo esperado em dinheiro: {Number(cashRegister.expected_amount||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</p>
                     </div>
                   )}
                 </div>
@@ -808,12 +812,12 @@ const Sales = () => {
                             <p className="text-sm text-muted-foreground">{product.category}</p>
                             <p className="text-lg font-bold text-primary">R$ {Number(product.salePrice).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
                             <p className="text-xs text-muted-foreground">
-                              Estoque: {Number(product.currentStock)}
+                              {product.itemType==='service'?'Serviço · sem estoque':`Estoque: ${Number(product.currentStock)}`}
                             </p>
                           </div>
                           <Button
                             onClick={() => addToCart(product)}
-                            disabled={Number(product.currentStock) === 0 || !cashRegister?.is_open}
+                            disabled={(product.itemType!=='service'&&Number(product.currentStock) === 0) || !cashRegister?.is_open}
                             size="sm"
                           >
                             <Plus className="h-4 w-4" />

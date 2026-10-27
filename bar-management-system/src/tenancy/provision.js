@@ -11,7 +11,7 @@ async function prepareDatabase(admin,database,role,password,existing=false){
  await admin.query(`REVOKE CONNECT ON DATABASE ${quote(database)} FROM PUBLIC`);
  await admin.query(`GRANT CONNECT ON DATABASE ${quote(database)} TO ${quote(role)}`);
 }
-async function migrate(sequelize){const models=buildModels(sequelize);await sequelize.sync();await require('../migrations/queueSeating')(sequelize);await require('../migrations/auditFixes')(sequelize);await require('../migrations/customerExperience')(sequelize);return models;}
+async function migrate(sequelize){const models=buildModels(sequelize);await sequelize.sync();await require('../migrations/queueSeating')(sequelize);await require('../migrations/auditFixes')(sequelize);await require('../migrations/customerExperience')(sequelize);await require('../migrations/commercialBase')(sequelize);return models;}
 async function grantData(sequelize,role){await sequelize.query(`GRANT USAGE ON SCHEMA public TO ${quote(role)}; GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO ${quote(role)}; GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO ${quote(role)}`);}
 async function initializeUnlocked(){
  if(fs.existsSync(configPath()))return JSON.parse(fs.readFileSync(configPath(),'utf8'));
@@ -47,9 +47,13 @@ async function provisionUnlocked({slug,name,existingDatabase,adminUsername,admin
  tenant=await central.Tenant.create({slug,name,connectionKey:key});return {id:tenant.id,slug,existing:false};
  }finally{await central.sequelize.close();await admin.close()}
 }
+async function migrateAllUnlocked(){
+ const config=await initializeUnlocked(),central=platform(config);let count=0;
+ try{for(const tenant of await central.Tenant.findAll({order:[['slug','ASC']]})){const target=config.connections[tenant.connectionKey];if(!target)throw new Error('Configuração de empresa incompleta');const elevated=connection({...target,username:process.env.DB_USER||'postgres',password:process.env.DB_PASSWORD||'postgres'});try{await migrate(elevated);await grantData(elevated,target.username);count++;}finally{await elevated.close()}}return count;}finally{await central.sequelize.close()}
+}
 async function withPlatformLock(operation){
  const file=configPath()+'.lock';fs.mkdirSync(path.dirname(file),{recursive:true,mode:0o700});
  let fd;try{fd=fs.openSync(file,'wx',0o600);}catch(error){if(error.code==='EEXIST')throw new Error('Outra operação da plataforma está em andamento. Confira o arquivo de lock antes de tentar novamente.');throw error;}
  try{return await operation();}finally{fs.closeSync(fd);fs.unlinkSync(file);}
 }
-module.exports={initializePlatform:()=>withPlatformLock(initializeUnlocked),provisionTenant:options=>withPlatformLock(()=>provisionUnlocked(options)),adminConnection,migrate,grantData,withPlatformLock};
+module.exports={migrateAllTenants:()=>withPlatformLock(migrateAllUnlocked),initializePlatform:()=>withPlatformLock(initializeUnlocked),provisionTenant:options=>withPlatformLock(()=>provisionUnlocked(options)),adminConnection,migrate,grantData,withPlatformLock};

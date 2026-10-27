@@ -2,7 +2,8 @@ function createRouter() {
 const express = require('express');
 const PDFDocument = require('pdfkit');
 const {authenticateToken,authorizeRoles}=require('../middleware/auth');
-const {BusinessSettings}=require('../models');
+const {BusinessSettings,sequelize,Comanda,Quote,PurchaseOrder,FinancialEntry,FinancialPayment}=require('../models');
+const {profiles,moduleNames,effectiveModules}=require('../config/businessProfiles');
 const {getSettings}=require('../services/businessSettingsService');
 const {logAction}=require('../utils/auditLogger');
 const router=express.Router();
@@ -58,23 +59,39 @@ function validate(body) {
     }
   }
   }
+  if('businessProfile' in body){if(!profiles.some(p=>p.id===body.businessProfile))throw invalid('Perfil de negócio inválido');result.businessProfile=body.businessProfile;}
+  if('modules' in body){if(!body.modules||typeof body.modules!=='object'||Array.isArray(body.modules))throw invalid('Módulos inválidos');for(const [key,value] of Object.entries(body.modules))if(!Object.hasOwn(moduleNames,key)||typeof value!=='boolean')throw invalid('Módulos inválidos');result.modules=body.modules;}
   return result;
 }
 // Apenas identidade visual é pública, para personalizar o login.
 router.get('/branding',async(req,res,next)=>{
   try { const {companyName,logo}=await getSettings();res.json({companyName,logo}); } catch(error) {next(error);}
 });
+router.get('/profiles',authenticateToken,(_req,res)=>res.json({profiles,moduleNames}));
 router.get('/',authenticateToken,async(req,res,next)=>{
-  try {res.json(await getSettings());} catch(error) {next(error);}
+  try {const data=await getSettings();res.json({...data,modules:effectiveModules(data),businessProfileName:(profiles.find(p=>p.id===data.businessProfile)||profiles[0]).name});} catch(error) {next(error);}
 });
 router.put('/',authenticateToken,authorizeRoles('admin'),express.json({limit:'6mb'}),async(req,res,next)=>{
   try {
     if(!req.body || Array.isArray(req.body)) throw invalid('Cadastro inválido.');
     const values=validate(req.body);
-    const [settings]=await BusinessSettings.findOrCreate({where:{id:1}});
-    await settings.update(values);
+    const settings=await sequelize.transaction(async transaction=>{
+      await sequelize.query('SELECT pg_advisory_xact_lock(882021)',{transaction});
+      const [record]=await BusinessSettings.findOrCreate({where:{id:1},transaction});
+      const previous=effectiveModules(record.toJSON());
+      if(values.businessProfile&&values.businessProfile!==record.businessProfile&&!values.modules)values.modules=profiles.find(p=>p.id===values.businessProfile).modules;
+      if(values.modules)values.modules={...previous,...values.modules};
+      const next=effectiveModules({...record.toJSON(),...values});
+      if(next.kitchen&&!next.tables)throw invalid('Cozinha precisa do módulo Mesas e comandas ativo.');
+      if(next.purchasing&&!next.finance)throw invalid('Compras precisa do financeiro ativo para registrar as contas a pagar.');
+      if((previous.tables&&!next.tables||previous.kitchen&&!next.kitchen)&&await Comanda.count({where:{status:'aberta'},transaction}))throw invalid('Finalize as comandas abertas antes de desativar mesas ou cozinha.');
+      if(previous.quotes&&!next.quotes&&await Quote.count({where:{status:['draft','sent','approved']},transaction}))throw invalid('Conclua ou cancele os orçamentos em andamento antes de desativar o módulo.');
+      if(previous.purchasing&&!next.purchasing&&await PurchaseOrder.count({where:{status:['ordered','partial']},transaction}))throw invalid('Conclua os pedidos de compra em andamento antes de desativar o módulo.');
+      if(previous.finance&&!next.finance){for(const entry of await FinancialEntry.findAll({where:{cancelled:false},transaction})){const paid=await FinancialPayment.sum('amount',{where:{entryId:entry.id},transaction})||0;if(Math.round(Number(entry.amount)*100)>Math.round(Number(paid)*100))throw invalid('Quite as contas pendentes antes de desativar o financeiro.');}}
+      return record.update(values,{transaction});
+    });
     await logAction(req.user.id,'business_settings_updated',{fields:Object.keys(values)});
-    res.json(settings);
+    res.json({...settings.toJSON(),modules:effectiveModules(settings.toJSON()),businessProfileName:profiles.find(p=>p.id===settings.businessProfile)?.name||profiles[0].name});
   } catch(error) {
     if(error.status===400) return res.status(400).json({error:error.message});
     next(error);

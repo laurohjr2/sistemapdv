@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize');
 module.exports = function defineModel(sequelize) {
 
 const SaleItem = sequelize.define('SaleItem', {
+  stockTracked:{type:DataTypes.BOOLEAN,allowNull:false,defaultValue:true},
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,

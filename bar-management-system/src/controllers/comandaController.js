@@ -248,7 +248,7 @@ const cancelComanda = async(req,res,next)=>{
    const c=await Comanda.findByPk(req.params.id,{transaction,lock:transaction.LOCK.UPDATE});
    if(!c||c.status!=='aberta')throw operations.fail('Apenas comandas abertas podem ser canceladas');
    const items=await ComandaItem.findAll({where:{comandaId:c.id},order:[['productId','ASC']],transaction});
-   for(const item of items){const p=await Product.findByPk(item.productId,{transaction,lock:transaction.LOCK.UPDATE});await p.update({currentStock:Number(p.currentStock)+Number(item.quantity)},{transaction});await StockMovement.create({productId:p.id,userId:req.user.id,sourceComandaId:c.id,type:'entrada',quantity:item.quantity,reason:'return',notes:`Cancelamento da comanda ${c.id}`},{transaction});}
+   for(const item of items){if(!item.stockTracked)continue;const p=await Product.findByPk(item.productId,{transaction,lock:transaction.LOCK.UPDATE});await p.update({currentStock:Number(p.currentStock)+Number(item.quantity)},{transaction});await StockMovement.create({productId:p.id,userId:req.user.id,sourceComandaId:c.id,type:'entrada',quantity:item.quantity,reason:'return',notes:`Cancelamento da comanda ${c.id}`},{transaction});}
    await c.update({status:'cancelada',closedAt:new Date(),closedByUserId:req.user.id,notes:req.body.reason||'Comanda cancelada'},{transaction});
    if(c.tableId)await Table.update({status:'disponivel'},{where:{id:c.tableId},transaction});return c;
   });

@@ -39,6 +39,7 @@ async function main() {
     try {
       await require('../bar-management-system/src/tenancy/platform').migrateCentral(central);
       await provisionTenant({ slug: 'demo', name: 'Minha empresa', adminUsername: 'admin.local', adminPassword: read('admin-password') });
+      await require('../bar-management-system/src/tenancy/provision').migrateAllTenants();
       await central.SupportUser.findOrCreate({where:{username:'master.local'},defaults:{passwordHash:await require('../bar-management-system/node_modules/bcryptjs').hash(read('master-password'),12),isMaster:true}});
       await central.SupportUser.findOrCreate({ where: { username: 'support.local' }, defaults: { passwordHash: await require('../bar-management-system/node_modules/bcryptjs').hash(read('support-password'), 12) } });
     } finally { await central.sequelize.close(); }

@@ -1,18 +1,33 @@
 async function authenticateToken(req, res, next) {
   if (req.supportUser?.isMaster) {
     try {
-      const { User } = require("../models");
-      const crypto = require("node:crypto");
-      const [actor] = await User.findOrCreate({
-        where: { platformUserId: req.supportUser.id },
-        defaults: {
-          id: req.supportUser.id,
-          username: "master." + req.supportUser.id,
-          passwordHash: crypto.randomBytes(32).toString("hex"),
-          role: "admin",
-          active: true,
-        },
-      });
+      const { User, sequelize } = require("../models");
+      const where = { platformUserId: req.supportUser.id };
+      let actor = await User.findOne({ where });
+      if (!actor)
+        actor = await sequelize.transaction(async (transaction) => {
+          await sequelize.query(
+            "SELECT pg_advisory_xact_lock(hashtextextended(:actor, 0))",
+            {
+              replacements: { actor: "platform-user:" + req.supportUser.id },
+              transaction,
+            },
+          );
+          const [record] = await User.findOrCreate({
+            where,
+            defaults: {
+              id: req.supportUser.id,
+              username: "master." + req.supportUser.id,
+              passwordHash: require("node:crypto")
+                .randomBytes(32)
+                .toString("hex"),
+              role: "admin",
+              active: true,
+            },
+            transaction,
+          });
+          return record;
+        });
       req.user = actor;
       req.master = true;
       if (!["GET", "HEAD"].includes(req.method))

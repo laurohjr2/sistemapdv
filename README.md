@@ -48,3 +48,7 @@ A separação por empresa foi implementada: banco central, banco/credenciais exc
 ## Alterações de operação do PDV local
 
 Consulte a [lista de alterações, atualização com backup, conta Master/Admin e configuração de recuperação de senha](docs/alteracoes-pdv-local/README.md).
+
+## Perfis e gestão comercial (0.3.0)
+
+Perfis para bar/restaurante, pizzaria, oficina, autopeças, mercado e comércio; produtos e serviços, orçamentos, fornecedores, compras e contas a pagar/receber. Consulte a [entrega, limites por segmento e atualização guiada no Windows](docs/gestao-comercial/README.md).

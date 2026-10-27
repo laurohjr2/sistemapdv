@@ -17,6 +17,7 @@ const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+router.use((req,res,next)=>['GET','HEAD'].includes(req.method)?next():require('../middleware/businessModule')('tables')(req,res,next));
 
 // Routes accessible by all authenticated users
 router.get('/', getAllComandas);

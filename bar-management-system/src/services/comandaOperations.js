@@ -12,15 +12,16 @@ async function changeItem({comandaId,itemId,productId,amount,notes,userId,remove
   const product=await Product.findByPk(item?.productId||productId,{transaction,lock:transaction.LOCK.UPDATE});
   if(!product||(!product.active&&!remove))throw fail('Produto não encontrado ou inativo');
   const next=remove?0:quantity(amount),old=Number(item?.quantity||0),difference=next-old;
-  if(difference>Number(product.currentStock))throw fail('Estoque insuficiente');
+  const stockTracked=item?item.stockTracked:product.itemType!=='service';
+  if(stockTracked&&difference>Number(product.currentStock))throw fail('Estoque insuficiente');
   const price=Number(item?.priceAtSale??product.salePrice);
   const itemTotal=Math.round(next*price*100)/100,previousTotal=Number(item?.totalItemValue||0);
-  await product.update({currentStock:Number(product.currentStock)-difference},{transaction});
-  if(difference)await StockMovement.create({productId:product.id,userId,sourceComandaId:comandaId,type:difference>0?'saida':'entrada',quantity:Math.abs(difference),reason:difference>0?'sale':'return',notes:`Comanda ${comandaId}`},{transaction});
+  if(stockTracked)await product.update({currentStock:Number(product.currentStock)-difference},{transaction});
+  if(stockTracked&&difference)await StockMovement.create({productId:product.id,userId,sourceComandaId:comandaId,type:difference>0?'saida':'entrada',quantity:Math.abs(difference),reason:difference>0?'sale':'return',notes:`Comanda ${comandaId}`},{transaction});
   await comanda.update({totalValue:Math.max(0,Number(comanda.totalValue)-previousTotal+itemTotal)},{transaction});
   if(remove){await item.destroy({transaction});return null;}
   if(item)return item.update({quantity:next,totalItemValue:itemTotal,notes:notes??item.notes},{transaction});
-  return ComandaItem.create({comandaId,productId:product.id,quantity:next,priceAtSale:price,totalItemValue:itemTotal,notes},{transaction});
+  return ComandaItem.create({stockTracked,preparationStatus:stockTracked?'pendente':'entregue',comandaId,productId:product.id,quantity:next,priceAtSale:price,totalItemValue:itemTotal,notes},{transaction});
  });
 }
 async function close({id,tableId,userId,role,payments,paymentMethod,paymentStatus='pago',discountValue=0,discountPercentage=0,notes}){

@@ -177,7 +177,7 @@ export default function TableAccount({ table, onClose, onUpdate }) {
         if (!open && !busy) onClose();
       }}
     >
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             Mesa {table.tableNumber} — {comanda ? "Comanda" : "Abrir mesa"}

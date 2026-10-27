@@ -15,6 +15,8 @@ return sequelize.define('BusinessSettings', {
   receiptMessage: {type:DataTypes.STRING(200),allowNull:false,defaultValue:'Obrigado pela preferência!'},
   pixKey: {type:DataTypes.STRING(200),allowNull:false,defaultValue:''},
   pixQrCode: {type:DataTypes.TEXT,allowNull:true},
+  businessProfile:{type:DataTypes.STRING(30),allowNull:false,defaultValue:'bar_restaurante'},
+  modules:{type:DataTypes.JSONB,allowNull:true},
   logo: {type:DataTypes.TEXT,allowNull:true}
 }, {tableName:'business_settings',timestamps:true});
 

@@ -13,7 +13,7 @@ services:
       SMTP_USER: ''
       SMTP_PASSWORD: ''
       MAIL_FROM: pdv@example.com
-      APP_PUBLIC_URL: http://localhost:8090
+      APP_PUBLIC_URL: ${PDV_TEST_ORIGIN:-http://localhost:8090}
       NODE_EXTRA_CA_CERTS: /smtp/cert.pem
     volumes:
       - ./work/smtp/cert.pem:/smtp/cert.pem:ro

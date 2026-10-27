@@ -29,6 +29,8 @@ Base: `c5a34ac`, branch `feat/pdv-base-fila-mesas`. A instalação continua usan
 | Relatório no Estoque | Botão para gerar PDF com a posição de estoque. |
 | Relatório nos Produtos | Botão para gerar PDF com cadastro, preços e estoque, incluindo produtos sem vendas. |
 
+A versão 0.3.0 acrescenta perfis e gestão comercial. Prefira o [atualizador guiado com backup e conferência de versão](../gestao-comercial/README.md#atualização-no-windows).
+
 ## Atualizar no Windows preservando os dados
 
 Não precisa parar o Docker Desktop. Para atualizar, reserve um momento sem operação no caixa e faça backup dos três conjuntos de dados: bancos, configuração da plataforma e segredos. Não copie apenas o banco da empresa.

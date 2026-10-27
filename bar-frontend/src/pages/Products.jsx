@@ -1,3 +1,4 @@
+import {useBusiness} from '../hooks/useBusiness';
 import ReportDownload from '../components/ReportDownload';
 import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
@@ -16,6 +17,8 @@ import { toast } from 'sonner';
 import api from '../lib/api';
 
 const Products = () => {
+  const {business}=useBusiness();
+  const foodProfile=['bar_restaurante','pizzaria','mercado'].includes(business.businessProfile||'bar_restaurante');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,7 +30,9 @@ const Products = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [viewingProduct, setViewingProduct] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
+  const [customCategory,setCustomCategory]=useState('');
   const [formData, setFormData] = useState({
+    itemType:'product',
     name: '',
     description: '',
     category: '',
@@ -84,6 +89,7 @@ const Products = () => {
 
     try {
       const productData = {
+        itemType:formData.itemType,
         name: formData.name,
         description: formData.description,
         category: formData.category,
@@ -108,10 +114,10 @@ const Products = () => {
         response = await api.post('/products', productData);
         
         // Se há estoque inicial, adicionar ao estoque
-        if (formData.initialStock && parseFloat(formData.initialStock) > 0) {
+        if (formData.itemType!=='service' && formData.initialStock && parseFloat(formData.initialStock) > 0) {
           try {
             await api.post('/stock/add', {
-              productId: response.data.id,
+              productId: response.data.product.id,
               quantity: parseFloat(formData.initialStock),
               unitCost: formData.unitCost ? parseFloat(formData.unitCost) : undefined,
               notes: formData.stockNotes || 'Estoque inicial do produto',
@@ -142,6 +148,7 @@ const Products = () => {
   const handleEdit = (product) => {
     setEditingProduct(product);
     setFormData({
+      itemType:product.itemType||'product',
       name: product.name,
       description: product.description || '',
       category: product.category || '',
@@ -172,13 +179,13 @@ const Products = () => {
   };
 
   const handleDelete = async (productId) => {
-    if (!window.confirm('Tem certeza que deseja excluir este produto?')) {
+    if (!window.confirm('Inativar este item? O histórico será preservado e você poderá reativá-lo pela edição.')) {
       return;
     }
 
     try {
       await api.delete(`/products/${productId}`);
-      toast.success('Produto excluído com sucesso!');
+      toast.success('Item inativado. O histórico foi preservado.');
       fetchProducts();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Erro ao excluir produto');
@@ -187,8 +194,10 @@ const Products = () => {
   };
 
   const resetForm = () => {
+    setCustomCategory('');
     setFormData({
-      name: '',
+      itemType:'product',
+    name: '',
       description: '',
       category: '',
       subcategory: '',
@@ -212,6 +221,7 @@ const Products = () => {
   };
 
   const getStockStatusBadge = (product) => {
+    if(product.itemType==='service')return <Badge variant="secondary">Serviço · sem estoque</Badge>;
     const current = parseFloat(product.currentStock || 0);
     const min = parseFloat(product.minStockAlert || 0);
     
@@ -239,7 +249,7 @@ const Products = () => {
     const matchesTab = activeTab === 'all' || 
                       (activeTab === 'active' && product.active) ||
                       (activeTab === 'inactive' && !product.active) ||
-                      (activeTab === 'low_stock' && parseFloat(product.currentStock || 0) <= parseFloat(product.minStockAlert || 0));
+                      (activeTab === 'low_stock' && product.itemType!=='service'&&parseFloat(product.currentStock || 0) <= parseFloat(product.minStockAlert || 0));
     
     return matchesSearch && matchesCategory && matchesTab;
   });
@@ -248,14 +258,14 @@ const Products = () => {
     total: products.length,
     active: products.filter(p => p.active).length,
     inactive: products.filter(p => !p.active).length,
-    lowStock: products.filter(p => parseFloat(p.currentStock || 0) <= parseFloat(p.minStockAlert || 0)).length
+    lowStock: products.filter(p => p.itemType!=='service'&&parseFloat(p.currentStock || 0) <= parseFloat(p.minStockAlert || 0)).length
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <ReportDownload type="catalog" label="Relatório de produtos"/><h1 className="text-3xl font-bold tracking-tight">Produtos</h1>
+          <ReportDownload type="catalog" label="Relatório de produtos"/><h1 className="text-3xl font-bold tracking-tight">Produtos e serviços</h1>
           <p className="text-muted-foreground">
             Gerencie o catálogo de produtos do estabelecimento
           </p>
@@ -268,7 +278,7 @@ const Products = () => {
               Novo Produto
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingProduct ? 'Editar Produto' : 'Novo Produto'}
@@ -289,14 +299,15 @@ const Products = () => {
                 <Tabs defaultValue="basic" className="w-full">
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="basic">Informações Básicas</TabsTrigger>
-                    <TabsTrigger value="pricing">Preços e Estoque</TabsTrigger>
+                    <TabsTrigger value="pricing">{formData.itemType==='service'?'Preços':'Preços e estoque'}</TabsTrigger>
                     <TabsTrigger value="details">Detalhes</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="basic" className="space-y-4">
+                    <label className="block">Tipo do item<select className="commerce-select" disabled={Boolean(editingProduct)} value={formData.itemType} onChange={e=>setFormData({...formData,itemType:e.target.value,initialStock:'',minStockAlert:'',unitOfMeasure:e.target.value==='service'?'servico':'unidade'})}><option value="product">Produto — movimenta estoque</option><option value="service">Serviço — sem estoque</option></select></label>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Nome do Produto *</Label>
+                        <Label htmlFor="name">Nome do item *</Label>
                         <Input
                           id="name"
                           value={formData.name}
@@ -307,21 +318,8 @@ const Products = () => {
                       
                       <div className="space-y-2">
                         <Label htmlFor="category">Categoria</Label>
-                        <Select
-                          value={formData.category}
-                          onValueChange={(value) => setFormData({ ...formData, category: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione uma categoria" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category.value} value={String(category.value)}>
-                                {category.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="flex gap-2"><Input aria-label="Nova categoria" placeholder="Criar categoria" maxLength={80} value={customCategory} onChange={e=>setCustomCategory(e.target.value)}/><Button type="button" variant="outline" disabled={!customCategory.trim()} onClick={()=>{const value=customCategory.trim();if(!categories.some(c=>c.value===value))setCategories([...categories,{value,label:value}]);setFormData({...formData,category:value});setCustomCategory('');}}>Adicionar</Button></div>
+                        <select id="category" className="commerce-select" required value={formData.category} onChange={e=>setFormData({...formData,category:e.target.value})}><option value="">Selecione uma categoria</option>{categories.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}</select>
                       </div>
                     </div>
 
@@ -359,7 +357,7 @@ const Products = () => {
                             <SelectItem value="kg">Quilograma</SelectItem>
                             <SelectItem value="gramas">Grama</SelectItem>
                             <SelectItem value="litro">Litro</SelectItem>
-                            <SelectItem value="ml">Mililitro</SelectItem>
+                            <SelectItem value="hora">Hora</SelectItem><SelectItem value="servico">Serviço</SelectItem><SelectItem value="metro">Metro</SelectItem><SelectItem value="caixa">Caixa</SelectItem><SelectItem value="par">Par</SelectItem><SelectItem value="ml">Mililitro</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -414,7 +412,7 @@ const Products = () => {
                       </div>
                     </div>
 
-                    {!editingProduct && (
+                    {!editingProduct && formData.itemType!=='service' && (
                       <>
                         <div className="border-t pt-4">
                           <h4 className="text-sm font-medium mb-3 flex items-center">
@@ -486,7 +484,7 @@ const Products = () => {
                   
                   <TabsContent value="details" className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
+                      {foodProfile&&formData.itemType!=='service'&&<div className="space-y-2">
                         <Label htmlFor="preparationTime">Tempo de Preparo (min)</Label>
                         <Input
                           id="preparationTime"
@@ -494,7 +492,7 @@ const Products = () => {
                           value={formData.preparationTime}
                           onChange={(e) => setFormData({ ...formData, preparationTime: e.target.value })}
                         />
-                      </div>
+                      </div>}
                       
                       <div className="space-y-2">
                         <Label>Status</Label>
@@ -513,6 +511,7 @@ const Products = () => {
                       </div>
                     </div>
 
+                    {foodProfile&&formData.itemType!=='service'&&<>
                     <div className="space-y-2">
                       <Label htmlFor="ingredients">Ingredientes</Label>
                       <Textarea
@@ -542,6 +541,7 @@ const Products = () => {
                         rows={3}
                       />
                     </div>
+                    </>}
                   </TabsContent>
                 </Tabs>
               </div>
@@ -681,9 +681,9 @@ const Products = () => {
                         <TableCell>R$ {parseFloat(product.salePrice || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <span>
+                            {product.itemType!=='service'&&<span>
                               {parseFloat(product.currentStock || 0).toFixed(3)} {product.unitOfMeasure}
-                            </span>
+                            </span>}
                             {getStockStatusBadge(product)}
                           </div>
                         </TableCell>
@@ -729,7 +729,7 @@ const Products = () => {
 
       {/* Dialog de Visualização */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Detalhes do Produto</DialogTitle>
           </DialogHeader>

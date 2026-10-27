@@ -30,6 +30,7 @@ const Login = () => {
     setLoading(true);
     setError('');
 
+    if(['master.local','support.local'].includes(formData.username.trim().toLowerCase())){setError('Esta é uma conta do fornecedor. Use o acesso Master / suporte abaixo.');setLoading(false);return;}
     const result = await login(formData);
     
     if (!result.success) {
@@ -52,7 +53,7 @@ const Login = () => {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold"><BusinessBrand /></CardTitle>
           <CardDescription>
-            Faça login para acessar o sistema de gerenciamento
+            Acesso da empresa — operador, gerente ou administrador
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -102,7 +103,7 @@ const Login = () => {
             </Button>
           </form>
           <Link to="/forgot-password" className="mt-4 block text-center text-sm underline">Esqueci minha senha</Link>
-          <Link to="/support" className="mt-4 block text-center text-sm underline">Acesso do suporte</Link>
+          <Link to="/support" className="mt-4 block text-center text-sm underline">Acesso do fornecedor — Master / suporte</Link>
         </CardContent>
       </Card>
     </div>
