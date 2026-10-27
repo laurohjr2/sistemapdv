@@ -107,22 +107,17 @@ const generateComandaReceipt = async (req, res) => {
 
     // Itens da comanda
     let currentY = doc.y;
-    comanda.items.forEach((item, index) => {
-      const itemY = currentY + (index * 20);
-      
-      // Nome do produto (quebrar linha se necessário)
-      const productName = item.product.name.length > 25 
-        ? item.product.name.substring(0, 25) + '...' 
-        : item.product.name;
-      
-      doc.text(productName, 50, itemY);
-      doc.text(item.quantity.toString(), 200, itemY);
-      doc.text(`R$ ${parseFloat(item.priceAtSale).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`, 250, itemY);
-      doc.text(`R$ ${parseFloat(item.totalItemValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`, 350, itemY);
+    comanda.items.forEach(item=>{
+      const detail=[item.pizza?.description,item.notes].filter(Boolean).join(' | ');
+      const height=detail?doc.heightOfString(detail,{width:500})+26:24;
+      if(currentY+height>doc.page.height-70){doc.addPage();currentY=50;}
+      doc.text(item.product.name.substring(0,25),50,currentY,{width:145});
+      doc.text(String(item.quantity),200,currentY);
+      doc.text(`R$ ${Number(item.priceAtSale).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`,250,currentY);
+      doc.text(`R$ ${Number(item.totalItemValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`,350,currentY);
+      if(detail){doc.text(detail,50,currentY+18,{width:500});currentY=doc.y+10;}else currentY+=24;
     });
-
-    // Atualizar posição Y
-    doc.y = currentY + (comanda.items.length * 20) + 10;
+    doc.y=currentY+10;
 
     // Linha separadora
     doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();

@@ -1,3 +1,5 @@
+import PizzaSaleKitchen from '../components/pizza/PizzaSaleKitchen';
+import {useBusiness} from '../hooks/useBusiness';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -12,6 +14,7 @@ import { toast } from 'sonner';
 import api from '../lib/api';
 
 const Queue = () => {
+  const {business}=useBusiness();
   const [queueData, setQueueData] = useState({
     items: [],
     groupedItems: { pendente: [], preparando: [], pronto: [] },
@@ -232,6 +235,7 @@ const Queue = () => {
         </div>
       </div>
 
+      {business.modules?.pizza&&<><PizzaSaleKitchen/><h2 className="text-xl font-semibold">Mesas e comandas</h2></>}
       {/* Estatísticas */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -342,7 +346,7 @@ const Queue = () => {
                           onCheckedChange={(checked) => handleItemSelection(item.id, checked)}
                         />
                         <div>
-                          <h4 className="font-medium text-sm">{item.product.name}</h4>
+                          <h4 className="font-medium text-sm">{item.pizza?.description||item.product.name}</h4>{item.notes&&<p className="text-sm font-medium">Observações: {item.notes}</p>}
                           <p className="text-xs text-muted-foreground">
                             {getTableInfo(item.comanda)}
                           </p>
@@ -353,7 +357,7 @@ const Queue = () => {
                     
                     <div className="flex justify-between items-center text-xs text-muted-foreground mb-2">
                       <span>Qtd: {item.quantity}</span>
-                      <span>{getWaitingTime(item.createdAt)}</span>
+                      <span>{getWaitingTime((item.created_at||item.createdAt))}</span>
                     </div>
                     
                     <div className="flex gap-1">
@@ -416,7 +420,7 @@ const Queue = () => {
                           onCheckedChange={(checked) => handleItemSelection(item.id, checked)}
                         />
                         <div>
-                          <h4 className="font-medium text-sm">{item.product.name}</h4>
+                          <h4 className="font-medium text-sm">{item.pizza?.description||item.product.name}</h4>{item.notes&&<p className="text-sm font-medium">Observações: {item.notes}</p>}
                           <p className="text-xs text-muted-foreground">
                             {getTableInfo(item.comanda)}
                           </p>
@@ -427,7 +431,7 @@ const Queue = () => {
                     
                     <div className="flex justify-between items-center text-xs text-muted-foreground mb-2">
                       <span>Qtd: {item.quantity}</span>
-                      <span>{getWaitingTime(item.preparationStartedAt || item.createdAt)}</span>
+                      <span>{getWaitingTime(item.preparationStartedAt || (item.created_at||item.createdAt))}</span>
                     </div>
                     
                     <Button
@@ -473,7 +477,7 @@ const Queue = () => {
                           onCheckedChange={(checked) => handleItemSelection(item.id, checked)}
                         />
                         <div>
-                          <h4 className="font-medium text-sm">{item.product.name}</h4>
+                          <h4 className="font-medium text-sm">{item.pizza?.description||item.product.name}</h4>{item.notes&&<p className="text-sm font-medium">Observações: {item.notes}</p>}
                           <p className="text-xs text-muted-foreground">
                             {getTableInfo(item.comanda)}
                           </p>
@@ -553,7 +557,7 @@ const Queue = () => {
                           />
                         </TableCell>
                         <TableCell className="font-medium">
-                          {item.product.name}
+                          {item.pizza?.description||item.product.name}
                         </TableCell>
                         <TableCell>
                           {getTableInfo(item.comanda)}
@@ -568,7 +572,7 @@ const Queue = () => {
                           {getPriorityBadge(item.priority)}
                         </TableCell>
                         <TableCell>
-                          {getWaitingTime(item.createdAt)}
+                          {getWaitingTime((item.created_at||item.createdAt))}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">

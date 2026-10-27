@@ -297,7 +297,7 @@ fs.mkdirSync(output, { recursive: true });
     await dialog.waitFor({ state: "hidden" });
     checks++;
     await page.goto(rootUrl + "/about");
-    await page.getByText("0.3.0", { exact: true }).nth(1).waitFor();
+    await page.getByText(require("../bar-frontend/src/release.json").version, { exact: true }).nth(1).waitFor();
     assert.equal(await page.getByRole("alert").count(), 0);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(rootUrl + "/settings");

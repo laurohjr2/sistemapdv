@@ -48,7 +48,7 @@ const openComanda = async (req, res) => {
 };
 
 const addItemToComanda = async(req,res,next)=>{
- try {const item=await operations.changeItem({comandaId:req.params.comandaId,productId:req.body.productId,amount:req.body.quantity,notes:req.body.notes,userId:req.user.id});res.status(201).json({item});}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
+ try {const item=await operations.changeItem({comandaId:req.params.comandaId,productId:req.body.productId,amount:req.body.quantity,notes:req.body.notes,pizza:req.body.pizza,expectedUnitPrice:req.body.expectedUnitPrice,userId:req.user.id});res.status(201).json({item});}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}
 };
 const updateItemQuantity = async(req,res,next)=>{
  try {const item=await operations.changeItem({comandaId:req.params.comandaId,itemId:req.params.itemId,amount:req.body.quantity,userId:req.user.id});res.json({item});}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e)}

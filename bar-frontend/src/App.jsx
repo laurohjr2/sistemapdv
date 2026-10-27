@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import {useAuth} from './hooks/useAuth';
+import Pizzeria from './pages/Pizzeria';
 import About from './pages/About';
 import { AuthProvider } from './hooks/useAuth.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -55,6 +56,7 @@ function App() {
                 <Home/>
               } 
             />
+            <Route path="pizzeria" element={<ProtectedRoute requiredRoles={['admin','gerente']}><BusinessModuleRoute module="pizza"><Pizzeria/></BusinessModuleRoute></ProtectedRoute>}/>
             <Route 
               path="products" 
               element={

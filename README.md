@@ -56,3 +56,7 @@ Perfis para bar/restaurante, pizzaria, oficina, autopeças, mercado e comércio;
 ## Backup e recuperação local
 
 [Rotina criptografada, destino externo configurável, agendamento no Windows e restauração em projeto separado](docs/backup-recuperacao/README.md). O destino e o agendamento precisam ser configurados no computador da instalação.
+
+## Pizzaria (0.4.0)
+
+[Tamanhos, sabores, bordas, adicionais, regras de preço e preparo integrados a vendas e mesas](docs/pizzaria/README.md).

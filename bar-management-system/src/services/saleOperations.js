@@ -59,11 +59,51 @@ function factory() {
         : body.items;
       if (!Array.isArray(items) || !items.length || items.length > 200)
         throw fail("Informe de 1 a 200 itens");
-      const quantities = new Map();
+      const pizzaOps = require("./pizzaOperations");
+      const pizzaEnabled =
+        require("../config/businessProfiles").effectiveModules(
+          await require("./businessSettingsService").getSettings(transaction),
+        ).pizza;
+      const baseIds = pizzaEnabled
+        ? await pizzaOps.baseIds(transaction)
+        : new Set();
+      const quantities = new Map(),
+        requested = [];
       for (const item of items) {
-        const id = uuid(item.product_id),
+        const resolved = item.pizza
+          ? await pizzaOps.resolve(item.pizza, transaction)
+          : null;
+        if (
+          resolved &&
+          item.unit_price !== undefined &&
+          cents(item.unit_price, "Preço") !== cents(resolved.unitPrice)
+        )
+          throw fail(
+            "O preço da pizza mudou. Remova e monte novamente para confirmar o valor atual.",
+            409,
+          );
+        const id = resolved ? resolved.productId : uuid(item.product_id),
           q = quantity(item.quantity);
+        if (resolved && (!Number.isInteger(q) || q > 99))
+          throw fail("Informe de 1 a 99 pizzas inteiras por item");
+        if (resolved && item.product_id && item.product_id !== id)
+          throw fail("Produto-base divergente da montagem");
+        if (!quote && !resolved && baseIds.has(id))
+          throw fail("Use Montar pizza para escolher os sabores deste produto");
         quantities.set(id, quantity((quantities.get(id) || 0) + q));
+        requested.push({
+          id,
+          quantity: q,
+          pizza: resolved?.pizza || null,
+          notes: item.notes
+            ? require("./commercialValidation").text(
+                item.notes,
+                "Observações",
+                1000,
+                false,
+              )
+            : null,
+        });
       }
       const customerId = quote ? quote.customerId : body.customerId;
       const customer = customerId
@@ -71,8 +111,7 @@ function factory() {
         : null;
       if (customerId && !customer?.active)
         throw fail("Cliente não encontrado ou inativo");
-      const lines = [];
-      let total = 0;
+      const products = new Map();
       for (const [id, q] of [...quantities].sort(([a], [b]) =>
         a.localeCompare(b),
       )) {
@@ -81,18 +120,36 @@ function factory() {
           lock: transaction.LOCK.UPDATE,
         });
         if (!product?.active) throw fail("Produto não encontrado ou inativo");
-        const quoted = quote?.lines.find((l) => l.productId === id);
+        if (product.itemType !== "service" && Number(product.currentStock) < q)
+          throw fail(`Estoque insuficiente para ${product.name}`);
+        products.set(id, product);
+      }
+      const lines = [];
+      let total = 0;
+      // Aggregate ordinary items as before; distinct pizza assemblies remain separate.
+      const merged = [];
+      for (const row of requested) {
+        const existing =
+          !row.pizza && merged.find((m) => !m.pizza && m.id === row.id);
+        if (existing) existing.quantity += row.quantity;
+        else merged.push({ ...row });
+      }
+      for (const row of merged) {
+        const product = products.get(row.id),
+          quoted = quote?.lines.find((l) => l.productId === row.id);
         if (quoted && quoted.itemType !== product.itemType)
           throw fail(
             "O tipo de um item do orçamento foi alterado. Revise a proposta.",
           );
         const stockTracked = product.itemType !== "service";
-        if (stockTracked && Number(product.currentStock) < q)
-          throw fail(`Estoque insuficiente para ${product.name}`);
-        const unitPrice = quoted ? quoted.unitPrice : Number(product.salePrice),
-          amount = lineCents(q, cents(unitPrice, "Preço", true));
+        const unitPrice = row.pizza
+          ? row.pizza.unitPrice
+          : quoted
+            ? quoted.unitPrice
+            : Number(product.salePrice);
+        const amount = lineCents(row.quantity, cents(unitPrice, "Preço", true));
         total += amount;
-        lines.push({ product, quantity: q, amount, unitPrice, stockTracked });
+        lines.push({ ...row, product, unitPrice, stockTracked, amount });
       }
       if (quote) discount = cents(quote.discount, "Desconto", true);
       if (total > 9999999999 || discount > total)
@@ -127,6 +184,9 @@ function factory() {
             unit_price: line.unitPrice,
             total_price: line.amount / 100,
             stockTracked,
+            pizza: line.pizza,
+            notes: line.notes,
+            preparationStatus: line.pizza ? "pendente" : null,
           },
           { transaction },
         );
@@ -164,6 +224,10 @@ function factory() {
           }),
         },
         { transaction },
+      );
+      sale.setDataValue(
+        "items",
+        await SaleItem.findAll({ where: { sale_id: sale.id }, transaction }),
       );
       return sale;
     });

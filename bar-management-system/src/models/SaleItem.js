@@ -2,6 +2,11 @@ const { DataTypes } = require('sequelize');
 module.exports = function defineModel(sequelize) {
 
 const SaleItem = sequelize.define('SaleItem', {
+  preparationStatus:{type:DataTypes.STRING(12),allowNull:true},
+  preparationStartedAt:{type:DataTypes.DATE,allowNull:true},
+  preparationCompletedAt:{type:DataTypes.DATE,allowNull:true},
+  deliveredAt:{type:DataTypes.DATE,allowNull:true},
+  pizza:{type:DataTypes.JSONB,allowNull:true},
   stockTracked:{type:DataTypes.BOOLEAN,allowNull:false,defaultValue:true},
   id: {
     type: DataTypes.INTEGER,

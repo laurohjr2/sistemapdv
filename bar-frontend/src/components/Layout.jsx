@@ -7,6 +7,7 @@ import { useAuth } from "../hooks/useAuth.jsx";
 import { hasRole } from "../lib/auth";
 import { Button } from "./ui/button";
 import {
+  Pizza,
   FileText,
   Truck,
   ShoppingBag,
@@ -97,6 +98,7 @@ const Layout = () => {
       roles: ["garcom", "gerente", "admin"],
       area: "Cadastros e estoque",
     },
+    {name:"Pizzaria",href:"/pizzeria",icon:Pizza,roles:["gerente","admin"],module:"pizza",area:"Cadastros e estoque"},
     {
       name: "Produtos e serviços",
       href: "/products",

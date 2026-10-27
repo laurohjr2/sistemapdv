@@ -16,7 +16,7 @@ const date = (offset = 0) => {
 };
 (async () => {
   await r("/commerce/quotes", { status: 401 });
-  assert.equal((await r("/version")).version, "0.3.0");
+  assert.equal((await r("/version")).version, require("../bar-frontend/src/release.json").version);
   const admin = (
     await r("/auth/login", {
       method: "POST",

@@ -8,6 +8,7 @@ const createTicket=handler(async(req,res)=>{
  const method=req.body.paymentMethod||'dinheiro';if(!['dinheiro','pix','cartao_credito','cartao_debito'].includes(method))throw fail('Pagamento inválido');
  const ticket=await sequelize.transaction(async transaction=>{
   const cash=await CashRegister.findOne({where:{is_open:true},transaction,lock:transaction.LOCK.UPDATE});if(!cash)throw fail('Abra o caixa antes de emitir tickets');
+  if(require('../config/businessProfiles').effectiveModules(await require('../services/businessSettingsService').getSettings(transaction)).pizza&&(await require('../services/pizzaOperations').baseIds(transaction)).has(req.body.productId))throw fail('Use Montar pizza para vender este produto');
   const product=await Product.findByPk(req.body.productId,{transaction,lock:transaction.LOCK.UPDATE});if(!product?.active||product.itemType==='service'||Number(product.currentStock)<amount)throw fail('Produto indisponível ou estoque insuficiente');
   const price=Number(product.salePrice),total=Math.round(price*amount*100)/100;
   const sale=await Sale.create({user_id:req.user.id,cash_register_id:cash.id,total_amount:total,payment_method:method},{transaction});

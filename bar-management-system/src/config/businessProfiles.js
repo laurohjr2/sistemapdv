@@ -1,4 +1,4 @@
-const common = { quotes: true, purchasing: true, finance: true };
+const common = { pizza:false, quotes: true, purchasing: true, finance: true };
 const profiles = [
   {
     id: "bar_restaurante",
@@ -11,7 +11,7 @@ const profiles = [
     name: "Pizzaria",
     description:
       "Balcão, mesas, cozinha e gestão comercial para pizzarias.",
-    modules: { ...common, tables: true, kitchen: true },
+    modules: { ...common, pizza:true, tables: true, kitchen: true },
   },
   {
     id: "oficina",
@@ -41,6 +41,7 @@ const profiles = [
   },
 ];
 const moduleNames = {
+  pizza:"Pizzaria — montagem e cardápio",
   tables: "Mesas e comandas",
   kitchen: "Cozinha",
   quotes: "Orçamentos",

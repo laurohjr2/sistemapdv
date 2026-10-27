@@ -27,10 +27,13 @@ function factory() {
   async function quoteLines(lines, user, transaction) {
     if (!Array.isArray(lines) || !lines.length || lines.length > 200)
       throw fail("Informe de 1 a 200 itens");
+    const pizzaIds=await require("./pizzaOperations").baseIds(transaction);
+    const pizzaEnabled=require("../config/businessProfiles").effectiveModules(await require("./businessSettingsService").getSettings(transaction)).pizza;
     const seen = new Set(),
       result = [];
     for (const l of lines) {
       const id = uuid(l.productId);
+      if(pizzaEnabled&&pizzaIds.has(id))throw fail("Monte pizzas em Vendas, Mesas ou Comandas; o orçamento de pizzas personalizadas ainda não está disponível");
       if (seen.has(id)) throw fail("Agrupe a quantidade dos itens repetidos");
       seen.add(id);
       const p = await Product.findByPk(id, { transaction });

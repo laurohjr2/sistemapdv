@@ -31,7 +31,7 @@ const Tables = () => {
     fetchTables();
   }, []);
 
-  useEffect(()=>{const seen=new Set();let active=true;const poll=async()=>{try{const {data}=await api.get('/tables');if(!active)return;setTables(data);for(const table of data)for(const c of table.comandas||[])for(const item of c.items||[])if(item.preparationStatus==='pronto'&&!seen.has(item.id)){seen.add(item.id);toast.success(`${item.product?.name||'Pedido'} pronto — Mesa ${table.tableNumber}`,{duration:10000});}}catch{ /* Mantém a tela, próxima consulta tentará novamente. */ }};const timer=setInterval(poll,10000);return()=>{active=false;clearInterval(timer);};},[]);
+  useEffect(()=>{const seen=new Set();let active=true;const poll=async()=>{try{const {data}=await api.get('/tables');if(!active)return;setTables(data);for(const table of data)for(const c of table.comandas||[])for(const item of c.items||[])if(item.preparationStatus==='pronto'&&!seen.has(item.id)){seen.add(item.id);toast.success(`${item.pizza?.description||item.product?.name||'Pedido'} pronto — Mesa ${table.tableNumber}`,{duration:10000});}}catch{ /* Mantém a tela, próxima consulta tentará novamente. */ }};const timer=setInterval(poll,10000);return()=>{active=false;clearInterval(timer);};},[]);
   const fetchTables = async () => {
     try {
 

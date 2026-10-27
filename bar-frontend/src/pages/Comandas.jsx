@@ -1,3 +1,5 @@
+import PizzaBuilder from '../components/pizza/PizzaBuilder';
+import usePizzaCatalog from '../components/pizza/usePizzaCatalog';
 import {useAuth} from '../hooks/useAuth';
 import PixPayment from '../components/PixPayment';
 import { useBusiness } from '../hooks/useBusiness';
@@ -21,10 +23,13 @@ import { useSearchParams } from 'react-router-dom';
 const Comandas = () => {
   const {business} = useBusiness();
   const {user}=useAuth();
+  const {menu:pizzaMenu}=usePizzaCatalog(Boolean(business.modules?.pizza));
+  const pizzaBases=new Set((pizzaMenu?.sizes||[]).filter(s=>s.active).map(s=>s.productId));
   const [searchParams] = useSearchParams();
   const requestedComanda = searchParams.get('comanda');
   const [comandas, setComandas] = useState([]);
   const [openComandas, setOpenComandas] = useState([]);
+  const [pizzaOpen,setPizzaOpen]=useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedComanda, setSelectedComanda] = useState(null);
@@ -258,7 +263,7 @@ const Comandas = () => {
             <tbody>
               ${receiptData.items?.map(item => `
                 <tr>
-                  <td>${item.product?.name}</td>
+                  <td>${escapeHtml(item.pizza?.description||item.product?.name)}</td>
                   <td>${item.quantity}</td>
                   <td>R$ ${parseFloat(item.priceAtSale).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                   <td>R$ ${parseFloat(item.totalItemValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
@@ -638,7 +643,8 @@ const Comandas = () => {
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <Label className="text-sm font-medium">Itens da Comanda</Label>
+                  <Label className="text-sm font-medium">Itens da Comanda</Label>{business.modules?.pizza&&selectedComanda.status==='aberta'&&<Button onClick={()=>setPizzaOpen(true)}>Montar pizza</Button>}
+                  {pizzaOpen&&<PizzaBuilder onClose={()=>setPizzaOpen(false)} onAdd={async data=>{await api.post('/comandas/'+selectedComanda.id+'/items',{productId:data.productId,pizza:data.pizza.selection,quantity:data.quantity,notes:data.notes,expectedUnitPrice:data.unitPrice});setSelectedComanda((await api.get('/comandas/'+selectedComanda.id)).data);fetchComandas();fetchProducts();}}/>}
                   {selectedComanda.status === 'aberta' && (
                     <Button
                       size="sm"
@@ -664,7 +670,7 @@ const Comandas = () => {
                     <TableBody>
                       {selectedComanda.items?.map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell>{item.product?.name}</TableCell>
+                          <TableCell>{item.pizza?.description||item.product?.name}</TableCell>
                           <TableCell>
                             {selectedComanda.status === 'aberta' ? (
                               <div className="flex items-center space-x-2">
@@ -758,7 +764,7 @@ const Comandas = () => {
                     <SelectValue placeholder="Selecione um produto" />
                   </SelectTrigger>
                   <SelectContent>
-                    {products.map((product) => (
+                    {products.filter(p=>!pizzaBases.has(p.id)).map((product) => (
                       <SelectItem key={product.id} value={String(product.id)}>
                         {product.name} - R$ {parseFloat(product.salePrice).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                         (Estoque: {Number(product.currentStock)})

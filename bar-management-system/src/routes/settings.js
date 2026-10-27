@@ -85,6 +85,12 @@ router.put('/',authenticateToken,authorizeRoles('admin'),express.json({limit:'6m
       if(next.kitchen&&!next.tables)throw invalid('Cozinha precisa do módulo Mesas e comandas ativo.');
       if(next.purchasing&&!next.finance)throw invalid('Compras precisa do financeiro ativo para registrar as contas a pagar.');
       if((previous.tables&&!next.tables||previous.kitchen&&!next.kitchen)&&await Comanda.count({where:{status:'aberta'},transaction}))throw invalid('Finalize as comandas abertas antes de desativar mesas ou cozinha.');
+      if((previous.pizza&&!next.pizza)||(previous.kitchen&&!next.kitchen)){
+        const {SaleItem,Sale,ComandaItem}=require('../models'),{Op}=require('sequelize');
+        const pendingSales=await SaleItem.count({where:{pizza:{[Op.ne]:null},preparationStatus:{[Op.in]:['pendente','preparando','pronto']}},include:[{model:Sale,as:'sale',where:{status:'completed'}}],transaction});
+        const pendingTables=previous.pizza&&!next.pizza?await ComandaItem.count({where:{pizza:{[Op.ne]:null}},include:[{model:Comanda,as:'comanda',where:{status:'aberta'}}],transaction}):0;
+        if(pendingSales||pendingTables)throw invalid('Finalize as pizzas em preparo e as comandas com pizzas antes de desativar o módulo.');
+      }
       if(previous.quotes&&!next.quotes&&await Quote.count({where:{status:['draft','sent','approved']},transaction}))throw invalid('Conclua ou cancele os orçamentos em andamento antes de desativar o módulo.');
       if(previous.purchasing&&!next.purchasing&&await PurchaseOrder.count({where:{status:['ordered','partial']},transaction}))throw invalid('Conclua os pedidos de compra em andamento antes de desativar o módulo.');
       if(previous.finance&&!next.finance){for(const entry of await FinancialEntry.findAll({where:{cancelled:false},transaction})){const paid=await FinancialPayment.sum('amount',{where:{entryId:entry.id},transaction})||0;if(Math.round(Number(entry.amount)*100)>Math.round(Number(paid)*100))throw invalid('Quite as contas pendentes antes de desativar o financeiro.');}}

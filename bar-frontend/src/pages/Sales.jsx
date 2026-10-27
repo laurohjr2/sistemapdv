@@ -1,3 +1,5 @@
+import PizzaBuilder from '../components/pizza/PizzaBuilder';
+import usePizzaCatalog from '../components/pizza/usePizzaCatalog';
 import {useAuth} from '../hooks/useAuth';
 import CustomerSelect from '../components/CustomerSelect';
 import PixPayment from '../components/PixPayment';
@@ -23,6 +25,9 @@ const Sales = () => {
   const [customerId,setCustomerId]=useState('');
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
+  const [pizzaOpen,setPizzaOpen]=useState(false);
+  const {menu:pizzaMenu,error:pizzaError}=usePizzaCatalog(Boolean(business.modules?.pizza));
+  const pizzaBases=new Set((pizzaMenu?.sizes||[]).filter(s=>s.active).map(s=>s.productId));
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -226,12 +231,13 @@ const Sales = () => {
 
   const addToCart = (product) => {
     if(!cashRegister?.is_open){setError('Você precisa abrir um caixa para vender');return;}
-    const existingItem = cart.find(item => item.id === product.id);
+    if(pizzaBases.has(product.id)){setPizzaOpen(true);return;}
+    const existingItem = cart.find(item => item.id === product.id&&!item.pizza);
     
     if (existingItem) {
       if (product.itemType==='service'||existingItem.quantity < Number(product.currentStock)) {
         setCart(cart.map(item =>
-          item.id === product.id
+          item.id === product.id&&!item.pizza
             ? { ...item, quantity: item.quantity + 1 }
             : item
         ));
@@ -240,35 +246,30 @@ const Sales = () => {
       }
     } else {
       if (product.itemType==='service'||Number(product.currentStock) > 0) {
-        setCart([...cart, { ...product, quantity: 1 }]);
+        setCart([...cart, { ...product, cartKey:product.id, quantity: 1 }]);
       } else {
         setError('Produto sem estoque');
       }
     }
   };
 
-  const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity === 0) {
-      removeFromCart(productId);
-      return;
-    }
-
-    const product = products.find(p => p.id === productId);
-    if (product.itemType!=='service'&&newQuantity > Number(product.currentStock)) {
-      setError('Quantidade em estoque insuficiente');
-      return;
-    }
-
-    setCart(cart.map(item =>
-      item.id === productId
-        ? { ...item, quantity: newQuantity }
-        : item
-    ));
+  const updateQuantity = (cartKey,newQuantity)=>{
+    if(newQuantity===0){removeFromCart(cartKey);return;}
+    const current=cart.find(i=>(i.cartKey||i.id)===cartKey);
+    const product=products.find(p=>p.id===current?.id);
+    if(!product)return;
+    const others=cart.filter(i=>i.id===product.id&&(i.cartKey||i.id)!==cartKey).reduce((n,i)=>n+i.quantity,0);
+    if((current.pizza&&newQuantity>99)||(product.itemType!=='service'&&newQuantity+others>Number(product.currentStock))){setError('Quantidade em estoque insuficiente ou limite de 99 pizzas por item');return;}
+    setCart(cart.map(i=>(i.cartKey||i.id)===cartKey?{...i,quantity:newQuantity}:i));
   };
-
-  const removeFromCart = (productId) => {
-    setCart(cart.filter(item => item.id !== productId));
-  };
+  const removeFromCart=key=>setCart(cart.filter(i=>(i.cartKey||i.id)!==key));
+  async function addPizza(data){
+    if(!cashRegister?.is_open)throw new Error('Você precisa abrir um caixa para vender');
+    const product=products.find(p=>p.id===data.productId);
+    const existing=cart.filter(i=>i.id===data.productId).reduce((n,i)=>n+i.quantity,0);
+    if(!product||Number(product.currentStock)<existing+data.quantity)throw new Error('Estoque insuficiente do produto-base para esta pizza');
+    setCart([...cart,{...product,id:product.id,cartKey:crypto.randomUUID(),name:data.pizza.description,price:data.unitPrice,pizza:data.pizza.selection,quantity:data.quantity,notes:data.notes}]);
+  }
 
   const clearCart = () => {
     setCart([]);
@@ -309,7 +310,7 @@ const Sales = () => {
         items: cart.map(item => ({
           product_id: item.id,
           quantity: item.quantity,
-          unit_price: item.price
+          unit_price: item.price,pizza:item.pizza,notes:item.notes
         })),
         customerId:customerId||null,discount_amount:Number(discount||0),
         payment_method: paymentMethod,
@@ -322,12 +323,7 @@ const Sales = () => {
       // Preparar dados para impressão da nota
       const receiptData = {
         id: response.data.id,
-        items: cart.map(item => ({
-          name: item.name,
-          quantity: item.quantity,
-          unit_price: item.price,
-          total: item.price * item.quantity
-        })),
+        items: response.data.items.map(item=>({name:item.pizza?.description||cart.find(i=>i.id===item.product_id)?.name||'Produto',notes:item.notes,quantity:Number(item.quantity),unit_price:Number(item.unit_price),total:Number(item.total_price)})),
         total: Number(response.data.total_amount),
         customerId:customerId||null,discount_amount:Number(discount||0),
         payment_method: paymentMethod,
@@ -386,7 +382,7 @@ const Sales = () => {
             <tbody>
               ${receiptData.items.map(item => `
                 <tr>
-                  <td>${item.name}</td>
+                  <td>${escapeHtml(item.name)}${item.notes?`<br>${escapeHtml(item.notes)}`:""}</td>
                   <td>${item.quantity}</td>
                   <td>R$ ${item.unit_price.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                   <td>R$ ${item.total.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
@@ -431,22 +427,25 @@ const Sales = () => {
     }
   };
 
-  const filteredProducts = products.filter(product =>
+  const filteredProducts = products.filter(product => !pizzaBases.has(product.id)).filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {pizzaOpen&&<PizzaBuilder onAdd={addPizza} onClose={()=>setPizzaOpen(false)}/>}
+      {pizzaError&&<p role="alert">{pizzaError}</p>}
+      {business.modules?.pizza&&<Button onClick={()=>{if(!cashRegister?.is_open){setError('Você precisa abrir um caixa para vender');return;}setPizzaOpen(true)}}>Montar pizza</Button>}
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Painel de Vendas</h1>
           <p className="text-muted-foreground">
-            Gerencie vendas e processar pedidos
+            Registre vendas e acompanhe o caixa.
           </p>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 max-w-full">
           {/* Botão Ticket Rápido */}
           <Dialog open={isTicketDialogOpen} onOpenChange={setIsTicketDialogOpen}>
             <DialogTrigger asChild>
@@ -650,7 +649,7 @@ const Sales = () => {
                 Carrinho ({cart.length})
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="grid-cols-1 sm:max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Finalizar Venda</DialogTitle>
                 <DialogDescription>
@@ -678,14 +677,14 @@ const Sales = () => {
                     </TableHeader>
                     <TableBody>
                       {cart.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>{item.name}</TableCell>
+                        <TableRow key={item.cartKey||item.id}>
+                          <TableCell className="whitespace-normal break-words max-w-80">{item.name}{item.notes&&<p className="text-xs text-muted-foreground">{item.notes}</p>}</TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                onClick={() => updateQuantity(item.cartKey||item.id, item.quantity - 1)}
                               >
                                 <Minus className="h-3 w-3" />
                               </Button>
@@ -693,7 +692,7 @@ const Sales = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                onClick={() => updateQuantity(item.cartKey||item.id, item.quantity + 1)}
                               >
                                 <Plus className="h-3 w-3" />
                               </Button>
@@ -705,7 +704,7 @@ const Sales = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => removeFromCart(item.id)}
+                              onClick={() => removeFromCart(item.cartKey||item.id)}
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -728,7 +727,7 @@ const Sales = () => {
                   {['admin','gerente'].includes(user?.role)&&<label>Desconto (R$)<Input currency value={discount} onChange={e=>setDiscount(e.target.value)}/></label>}
                   <Label htmlFor="payment_method">Forma de Pagamento</Label>
                   <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <SelectTrigger>
+                    <SelectTrigger id="payment_method" aria-label="Forma de Pagamento">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -850,7 +849,7 @@ const Sales = () => {
                 ) : (
                   <>
                     {cart.map((item) => (
-                      <div key={item.id} className="flex justify-between items-center p-2 border rounded">
+                      <div key={item.cartKey||item.id} className="flex justify-between items-center p-2 border rounded">
                         <div className="flex-1">
                           <p className="font-medium text-sm">{item.name}</p>
                           <p className="text-xs text-muted-foreground">
@@ -864,7 +863,7 @@ const Sales = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={() => removeFromCart(item.cartKey||item.id)}
                           >
                             <X className="h-3 w-3" />
                           </Button>

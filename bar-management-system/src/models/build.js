@@ -1,4 +1,5 @@
 module.exports = function buildModels(sequelize) {
+const PizzaCatalog=require('./PizzaCatalog')(sequelize);
 const User = require('./User')(sequelize);
 const Product = require('./Product')(sequelize);
 const StockMovement = require('./StockMovement')(sequelize);
@@ -77,6 +78,7 @@ Ticket.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 return {
   sequelize,
+  PizzaCatalog,
   User,
   Product,
   StockMovement,

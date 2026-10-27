@@ -1,6 +1,6 @@
 function createScopedModule() {
 const {BusinessSettings} = require('../models');
-const getSettings = async () => (await BusinessSettings.findByPk(1))?.toJSON() || {
+const getSettings = async (transaction) => (await BusinessSettings.findByPk(1,{transaction}))?.toJSON() || {
   companyName:'Sistema PDV',legalName:'',cnpj:'',phone:'',email:'',address:'',city:'',state:'',postalCode:'',receiptMessage:'Obrigado pela preferência!',logo:null
 };
 async function printHeader(doc) {
