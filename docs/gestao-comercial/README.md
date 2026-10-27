@@ -76,3 +76,5 @@ Os cenários automatizados usam empresas e dados sintéticos em projetos Docker 
 | Qualidade | Build de produção aprovado; ESLint sem erros, com 12 avisos preexistentes. O build mantém aviso de tamanho do pacote JavaScript. |
 
 O script de atualização tem sintaxe compatível com PowerShell 5.1/7; o teste disponível usa PowerShell 7 em Linux, sem homologação em uma máquina Windows física. Impressoras e integrações fiscais/bancárias não foram homologadas nesta entrega.
+
+A rotina de backup e recuperação recebeu uma entrega própria: consulte o [guia atualizado](../backup-recuperacao/README.md). O destino externo será definido posteriormente; a ativação do agendamento depende dessa configuração.

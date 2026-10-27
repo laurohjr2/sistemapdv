@@ -52,3 +52,7 @@ Consulte a [lista de alterações, atualização com backup, conta Master/Admin 
 ## Perfis e gestão comercial (0.3.0)
 
 Perfis para bar/restaurante, pizzaria, oficina, autopeças, mercado e comércio; produtos e serviços, orçamentos, fornecedores, compras e contas a pagar/receber. Consulte a [entrega, limites por segmento e atualização guiada no Windows](docs/gestao-comercial/README.md).
+
+## Backup e recuperação local
+
+[Rotina criptografada, destino externo configurável, agendamento no Windows e restauração em projeto separado](docs/backup-recuperacao/README.md). O destino e o agendamento precisam ser configurados no computador da instalação.

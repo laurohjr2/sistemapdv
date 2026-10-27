@@ -7,3 +7,6 @@ dist/
 .pdv-local/
 
 work/
+
+*.pdvbkp
+*.pdvbkp.partial
