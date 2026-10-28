@@ -238,6 +238,7 @@ export default function WorkshopAgenda() {
                   <select
                     className="commerce-select"
                     required
+                    aria-label="Veículo"
                     value={form.vehicleId}
                     onChange={(e) => set("vehicleId", e.target.value)}
                   >
@@ -256,6 +257,7 @@ export default function WorkshopAgenda() {
                   <select
                     className="commerce-select"
                     required
+                    aria-label="Responsável"
                     value={form.assignedUserId}
                     onChange={(e) => set("assignedUserId", e.target.value)}
                   >
@@ -327,6 +329,7 @@ export default function WorkshopAgenda() {
                   <select
                     required
                     className="commerce-select"
+                    aria-label="Ordem de serviço"
                     value={orderId}
                     onChange={(e) => setOrderId(e.target.value)}
                   >

@@ -90,3 +90,5 @@ Importação seletiva de produtos e serviços pré-cadastrados para sete perfis,
 - [Mark 0.11.0 — Combos e adicionais](docs/combos-adicionais/README.md)
 
 - [Mark 0.12.0 — Oficina: fotos e assinaturas](docs/oficina/evidencias.md)
+
+Novidades e roteiro de validação: [lote Mark 0.13.0 a 0.17.0](docs/atualizacoes/mark-0.13-a-0.17.md).

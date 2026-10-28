@@ -36,3 +36,5 @@ Incluir entregas: consultar/alterar contato e endereço, imprimir dados do desti
 Incluir combos: editar/inativar catálogo promocional, lançar conjuntos/adicionais e remover o grupo completo. Distinguir a promoção cadastrada por gerente de um desconto livre dado pelo operador, mantendo a autorização para reposição de insumos.
 
 Incluir evidências da oficina: consultar/baixar fotos, anexar como responsável atribuído, arquivar sem apagar, registrar/cancelar registro de assinatura e imprimir anexos. Preservar a separação entre registro desenhado, autorização da OS e recebimento financeiro.
+
+Incluir as Marks 0.13 a 0.17 na revisão: agenda (consultar/agendar/reagendar/chegada/ausência/vínculo com OS), garantia/retorno (emitir/cancelar registro/analisar/aceitar/recusar/imprimir), catálogo CSV (preparar/conferir/confirmar), fidelidade (definir condição, ver histórico, aplicar desconto e exportar) e emissão/revogação de código técnico. Emissão de acesso temporário permanece exclusiva da conta Master, sem delegação implícita aos administradores dos clientes. A sessão por código continua somente consulta.

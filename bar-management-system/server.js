@@ -35,6 +35,7 @@ app.use(express.json({limit:'6mb'}));
 app.get('/api/health',async(req,res)=>{try{await central.sequelize.authenticate();res.json({status:'OK'});}catch{res.status(503).json({status:'unavailable'});}});
 app.get('/api/version',(_req,res)=>res.json(require('./src/config/release.json')));
 app.use('/api/support',require('./src/tenancy/supportRoutes')(central));
+app.use('/api/support',require('./src/tenancy/supportAccessRoutes')(central));
 app.use(tenantBoundary);
 app.post('/api/support/session/end',async(req,res,next)=>{try{if(!req.supportSession)return res.sendStatus(403);await req.supportSession.update({revoked:true});await central.SupportAudit.create({supportUserId:req.supportUser.id,tenantId:req.tenant.id,action:'support_session_closed'});res.sendStatus(204);}catch(e){next(e)}});
 app.get('/api/support/company-info',async(req,res,next)=>{try{if(!req.supportUser)return res.sendStatus(403);await central.SupportAudit.create({supportUserId:req.supportUser.id,tenantId:req.tenant.id,action:'support_company_id_viewed'});res.json({clientId:req.tenant.id,company:req.tenant.slug});}catch(e){next(e)}});

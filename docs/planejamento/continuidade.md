@@ -10,7 +10,7 @@ O proprietário autorizou concluir balanças/etiquetas e prosseguir às próxima
 4. Oficina: Mark 0.12.0 entregue e validada em ambiente sintético — fotos do checklist e assinatura desenhada de aceite/recebimento, com histórico e PDF. Mark 0.13.0 entregue e validada em ambiente sintético — agenda, conflitos por veículo/responsável, chegada, ausência, cancelamento, vínculo com OS e histórico. Mark 0.14.0 entregue e validada em ambiente sintético — condições de garantia, análise de retorno, vínculo com outra OS, histórico e PDF.
 5. Entregue e validada em ambiente sintético — Mark 0.15.0: importação CSV de catálogo de autopeças, mapeamento, prévia persistida, validação de duplicidades e cadastro inativo com estoque zero. Aplicações somente da fonte informada, sem inventar compatibilidades.
 6. Entregue e validada em ambiente sintético — Mark 0.16.0: fidelidade por cliente, percentual/validade, aplicação conferida pela gerência nas vendas diretas, histórico de condições e benefícios, cancelamentos identificados e PDF. Cashback/pontos e aplicação em comandas permanecem evolução futura.
-7. Suporte: geração de senhas e acessos temporários com validade/auditoria.
+7. Entregue e validada em ambiente sintético — Mark 0.17.0: códigos temporários de uso único, emitidos pelo Master para suporte somente leitura, restritos à empresa/operador, com validade, revogação e auditoria.
 8. Integrações externas: confirmação de Pix/emissão fiscal exigem provedor, credenciais e ambiente de homologação; SMTP e destino externo de backup permanecem aguardando definição do proprietário. Não simular integrações reais como concluídas.
 9. Após as melhorias funcionais: revisão de perfis e permissões por usuário, conforme [escopo registrado](permissoes-por-usuario.md).
 
@@ -19,3 +19,5 @@ Não declarar compatibilidade física com balanças/impressoras nem homologaçã
 ## Ajuste visual para a próxima atualização
 
 Em Vendas, o aviso de caixa fechado passa a ter fundo vermelho suave no modo claro, fundo vermelho escuro no modo escuro, borda lateral, ícone de cadeado e título em negrito: **Você precisa abrir um caixa para vender**. A condição de exibição e o bloqueio das vendas permanecem os mesmos.
+
+Lote 0.13.0–0.17.0 concluído: [roteiro de validação e atualização](../atualizacoes/mark-0.13-a-0.17.md). A próxima revisão é a matriz de permissões com o proprietário; integrações externas dependentes de provedor continuam pendentes.

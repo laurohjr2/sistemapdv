@@ -153,13 +153,20 @@ function factory() {
             " · " +
             b.profile.basisPoints / 100 +
             "% · R$ " +
-            Number(b.discount).toFixed(2),
+            Number(b.discount).toLocaleString("pt-BR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
         );
       }
       doc
         .moveDown()
         .text(
-          "Descontos em vendas concluídas: R$ " + (centsTotal / 100).toFixed(2),
+          "Descontos em vendas concluídas: R$ " +
+            (centsTotal / 100).toLocaleString("pt-BR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
         );
       doc.end();
     }),

@@ -81,6 +81,7 @@ export default function Loyalty() {
         Cliente
         <select
           className="commerce-select"
+          aria-label="Cliente"
           value={choice}
           onChange={(e) => choose(e.target.value)}
         >

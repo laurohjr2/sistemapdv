@@ -134,6 +134,7 @@ export default function PartImport() {
               Codificação
               <select
                 className="commerce-select"
+                aria-label="Codificação"
                 value={encoding}
                 onChange={(e) => {
                   setEncoding(e.target.value);
@@ -148,6 +149,7 @@ export default function PartImport() {
               Separador
               <select
                 className="commerce-select"
+                aria-label="Separador"
                 value={separator}
                 onChange={(e) => {
                   setSeparator(e.target.value);
@@ -185,6 +187,7 @@ export default function PartImport() {
                 {k === "name" ? " *" : ""}
                 <select
                   className="commerce-select"
+                  aria-label={label}
                   value={mapping[k] ?? ""}
                   onChange={(e) => {
                     const next = { ...mapping };

@@ -47,7 +47,6 @@ const Layout = () => {
   };
 
   const navigation = [
-    {name:"Fidelidade",href:"/loyalty",icon:Users,roles:["gerente","admin"],area:"Comercial"},
     {
       name: "Dashboard",
       href: "/",
@@ -70,6 +69,7 @@ const Layout = () => {
       module: "quotes",
       area: "Comercial",
     },
+    {name:"Fidelidade",href:"/loyalty",icon:Users,roles:["gerente","admin"],area:"Comercial"},
     {name:"Combos e adicionais",href:"/bundles",icon:ShoppingBag,roles:["gerente","admin"],module:"bundles",area:"Comercial"},
     {name:"Pedidos de entrega",href:"/deliveries",icon:Truck,roles:["garcom","gerente","admin"],module:"delivery",area:"Atendimento"},
     {name:"Garantias e retornos",href:"/workshop-warranty",icon:Wrench,roles:["garcom","gerente","admin"],module:"workshop",area:"Atendimento"},

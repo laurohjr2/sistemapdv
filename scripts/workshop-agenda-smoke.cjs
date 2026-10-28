@@ -107,6 +107,8 @@ const r = (path, method = "GET", body, status = 200, token = s.login.token) =>
   fs.writeFileSync("work/marks/agenda.json", JSON.stringify({ a, b }), {
     mode: 0o600,
   });
+  fs.copyFileSync("work/workshop/session.json", "work/marks/session.json");
+  fs.chmodSync("work/marks/session.json", 0o600);
   console.log(
     count() +
       " verificações da agenda aprovadas: conflitos, limites, revisão, OS, transições, isolamento e suporte somente leitura.",

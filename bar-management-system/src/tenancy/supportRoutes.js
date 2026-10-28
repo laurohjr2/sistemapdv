@@ -8,6 +8,7 @@ const routerFactory=central=>{
   const token=jwt.sign({scope:'support',supportUserId:user.id,version:user.updatedAt.toISOString()},process.env.JWT_SECRET,{expiresIn:'1h',audience:'pdv-support',issuer:'pdv-platform'});
   await central.SupportAudit.create({supportUserId:user.id,action:'support_login'});res.json({token});
  }catch(e){next(e)}});
+ router.get('/me',authenticate,(req,res)=>res.json({id:req.supportUser.id,username:req.supportUser.username,isMaster:Boolean(req.supportUser.isMaster)}));
  router.get('/companies',authenticate,async(req,res,next)=>{try{res.json(await central.Tenant.findAll({attributes:['id','slug','name','status'],order:[['name','ASC']]}));}catch(e){next(e)}});
  router.post('/sessions',authenticate,async(req,res,next)=>{try{
   const tenant=await central.Tenant.findOne({where:{slug:req.body.company}});if(!tenant)return res.sendStatus(404);

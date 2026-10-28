@@ -252,6 +252,7 @@ export default function WorkshopWarranty() {
                   <select
                     className="commerce-select"
                     required
+                    aria-label="OS entregue"
                     value={form.orderId}
                     onChange={(e) => set("orderId", e.target.value)}
                   >
@@ -338,6 +339,7 @@ export default function WorkshopWarranty() {
                   <select
                     className="commerce-select"
                     required
+                    aria-label="Nova OS do retorno"
                     value={orderId}
                     onChange={(e) => setOrderId(e.target.value)}
                   >
