@@ -14,7 +14,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Alert, AlertDescription } from '../components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Badge } from '../components/ui/badge';
@@ -791,9 +791,12 @@ const Sales = () => {
 
       {/* Alerta se caixa estiver fechado */}
       {!cashRegister?.is_open && (
-        <Alert>
-          <Lock className="h-4 w-4" />
-          <AlertDescription>
+        <Alert className="border-red-400 border-l-4 bg-red-50 text-red-950 dark:border-red-500 dark:bg-red-950 dark:text-red-100">
+          <Lock className="h-4 w-4" aria-hidden="true" />
+          <AlertTitle className="font-bold line-clamp-none">
+            Você precisa abrir um caixa para vender
+          </AlertTitle>
+          <AlertDescription className="text-red-900 dark:text-red-100">
             O caixa está fechado. Abra o caixa para começar a realizar vendas.
           </AlertDescription>
         </Alert>

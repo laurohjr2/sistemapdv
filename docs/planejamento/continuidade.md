@@ -15,3 +15,7 @@ O proprietário autorizou concluir balanças/etiquetas e prosseguir às próxima
 9. Após as melhorias funcionais: revisão de perfis e permissões por usuário, conforme [escopo registrado](permissoes-por-usuario.md).
 
 Não declarar compatibilidade física com balanças/impressoras nem homologação fiscal sem testes no equipamento/provedor correspondente. Não alterar cadastros de clientes em produção para demonstrar funções. Validar em empresas sintéticas e preservar volumes existentes.
+
+## Ajuste visual para a próxima atualização
+
+Em Vendas, o aviso de caixa fechado passa a ter fundo vermelho suave no modo claro, fundo vermelho escuro no modo escuro, borda lateral, ícone de cadeado e título em negrito: **Você precisa abrir um caixa para vender**. A condição de exibição e o bloqueio das vendas permanecem os mesmos.
