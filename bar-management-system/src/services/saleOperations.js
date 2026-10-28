@@ -38,6 +38,8 @@ function factory() {
     return sequelize.transaction(async (transaction) => {
       if (workOrderId)
         await require("./workshopOperations").enabled(transaction);
+      if (Array.isArray(body.items) && body.items.some((i) => i?.scale))
+        await require("./scaleOperations").enabled(transaction);
       const cash = await CashRegister.findByPk(body.cash_register_id, {
         transaction,
         lock: transaction.LOCK.UPDATE,
@@ -100,6 +102,34 @@ function factory() {
       const quantities = new Map(),
         requested = [];
       for (const item of items) {
+        if (!item || typeof item !== "object" || Array.isArray(item))
+          throw fail("Item inválido");
+        if (item.scale && item.pizza)
+          throw fail(
+            "Um item não pode misturar etiqueta de balança e montagem de pizza",
+          );
+        const scaled = item.scale
+          ? await require("./scaleOperations").decode(
+              item.scale.barcode,
+              transaction,
+              item.scale.quantity,
+            )
+          : null;
+        if (scaled?.mode === "price" && item.scale.quantityConfirmed !== true)
+          throw fail(
+            "Confira o peso da embalagem antes de vender esta etiqueta",
+          );
+        if (
+          scaled &&
+          (item.scale.settingsRevision !== scaled.settingsRevision ||
+            item.scale.bindingRevision !== scaled.bindingRevision ||
+            cents(item.scale.unitPrice, "Preço da etiqueta") !==
+              cents(scaled.unitPrice))
+        )
+          throw fail(
+            "Configuração, vínculo ou preço alterado. Leia novamente a etiqueta.",
+            409,
+          );
         const resolved = item.pizza
           ? await pizzaOps.resolve(item.pizza, transaction)
           : null;
@@ -112,8 +142,18 @@ function factory() {
             "O preço da pizza mudou. Remova e monte novamente para confirmar o valor atual.",
             409,
           );
-        const id = resolved ? resolved.productId : uuid(item.product_id),
+        const id = resolved
+            ? resolved.productId
+            : scaled
+              ? scaled.productId
+              : uuid(item.product_id),
           q = quantity(item.quantity);
+        if (
+          scaled &&
+          (q !== scaled.quantity ||
+            (item.product_id && item.product_id !== scaled.productId))
+        )
+          throw fail("Quantidade ou produto divergente da etiqueta");
         if (resolved && (!Number.isInteger(q) || q > 99))
           throw fail("Informe de 1 a 99 pizzas inteiras por item");
         if (resolved && item.product_id && item.product_id !== id)
@@ -125,14 +165,17 @@ function factory() {
           id,
           quantity: q,
           pizza: resolved?.pizza || null,
-          notes: item.notes
-            ? require("./commercialValidation").text(
-                item.notes,
-                "Observações",
-                1000,
-                false,
-              )
-            : null,
+          scale: scaled,
+          notes: scaled
+            ? `Etiqueta ${scaled.barcode} — ${scaled.quantity.toLocaleString("pt-BR")} kg`
+            : item.notes
+              ? require("./commercialValidation").text(
+                  item.notes,
+                  "Observações",
+                  1000,
+                  false,
+                )
+              : null,
         });
       }
       const customerId = document ? document.customerId : body.customerId;
@@ -160,7 +203,9 @@ function factory() {
       const merged = [];
       for (const row of requested) {
         const existing =
-          !row.pizza && merged.find((m) => !m.pizza && m.id === row.id);
+          !row.pizza &&
+          !row.scale &&
+          merged.find((m) => !m.pizza && !m.scale && m.id === row.id);
         if (existing) existing.quantity += row.quantity;
         else merged.push({ ...row });
       }
@@ -170,6 +215,16 @@ function factory() {
         if (quoted && quoted.itemType !== product.itemType)
           throw fail(
             "O tipo de um item do orçamento foi alterado. Revise a proposta.",
+          );
+        if (
+          row.scale &&
+          (product.unitOfMeasure !== "kg" ||
+            product.itemType !== "product" ||
+            cents(product.salePrice) !== cents(row.scale.unitPrice))
+        )
+          throw fail(
+            "Produto ou preço mudou durante a leitura. Leia a etiqueta novamente.",
+            409,
           );
         const stockTracked = product.itemType !== "service";
         const unitPrice = row.pizza
@@ -219,6 +274,7 @@ function factory() {
             total_price: line.amount / 100,
             stockTracked,
             pizza: line.pizza,
+            scale: line.scale,
             notes: line.notes,
             preparationStatus: line.pizza ? "pendente" : null,
           },

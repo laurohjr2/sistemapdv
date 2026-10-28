@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import {useAuth} from './hooks/useAuth';
+import ScaleLabels from './pages/ScaleLabels';
 import Market from './pages/Market';
 import AutoParts from './pages/AutoParts';
 import Workshop from './pages/Workshop';
@@ -59,6 +60,7 @@ function App() {
                 <Home/>
               } 
             />
+            <Route path="scale-labels" element={<BusinessModuleRoute module="market"><ScaleLabels/></BusinessModuleRoute>}/>
             <Route path="market" element={<BusinessModuleRoute module="market"><Market/></BusinessModuleRoute>}/>
             <Route path="autoparts" element={<BusinessModuleRoute module="autoparts"><AutoParts/></BusinessModuleRoute>}/>
             <Route path="workshop" element={<BusinessModuleRoute module="workshop"><Workshop/></BusinessModuleRoute>}/>

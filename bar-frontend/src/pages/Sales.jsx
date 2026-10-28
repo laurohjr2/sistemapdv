@@ -1,3 +1,5 @@
+import {lineTotal} from '../components/commerce/helpers';
+import ScaleScanDialog from '../components/ScaleScanDialog';
 import PizzaBuilder from '../components/pizza/PizzaBuilder';
 import usePizzaCatalog from '../components/pizza/usePizzaCatalog';
 import {useAuth} from '../hooks/useAuth';
@@ -34,6 +36,10 @@ const Sales = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState(() => new URLSearchParams(window.location.search).get('search')?.slice(0,200)||'');
   const [barcodeInput, setBarcodeInput] = useState('');
+  const [scaleItem,setScaleItem]=useState(null);
+  const [scaleError,setScaleError]=useState('');
+  const [scaleWeight,setScaleWeight]=useState('');
+  const [scaleConfirmed,setScaleConfirmed]=useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('dinheiro');
   
@@ -233,12 +239,14 @@ const Sales = () => {
   const addToCart = (product) => {
     if(!cashRegister?.is_open){setError('Você precisa abrir um caixa para vender');return;}
     if(pizzaBases.has(product.id)){setPizzaOpen(true);return;}
-    const existingItem = cart.find(item => item.id === product.id&&!item.pizza);
+    const used=cart.filter(i=>i.id===product.id).reduce((sum,i)=>sum+Math.round(i.quantity*1000),0);
+    if(product.itemType!=='service'&&used+1000>Math.round(stockAvailable(product)*1000)){setError('Saldo disponível insuficiente para mais uma unidade. Confira o peso e os itens do carrinho.');return;}
+    const existingItem = cart.find(item => item.id === product.id&&!item.pizza&&!item.scale);
     
     if (existingItem) {
       if (product.itemType==='service'||existingItem.quantity < stockAvailable(product)) {
         setCart(cart.map(item =>
-          item.id === product.id&&!item.pizza
+          item.id === product.id&&!item.pizza&&!item.scale
             ? { ...item, quantity: item.quantity + 1 }
             : item
         ));
@@ -257,6 +265,7 @@ const Sales = () => {
   const updateQuantity = (cartKey,newQuantity)=>{
     if(newQuantity===0){removeFromCart(cartKey);return;}
     const current=cart.find(i=>(i.cartKey||i.id)===cartKey);
+    if(current?.scale){setError('Leia novamente a etiqueta para alterar o peso desse item.');return;}
     const product=products.find(p=>p.id===current?.id);
     if(!product)return;
     const others=cart.filter(i=>i.id===product.id&&(i.cartKey||i.id)!==cartKey).reduce((n,i)=>n+i.quantity,0);
@@ -277,19 +286,32 @@ const Sales = () => {
   };
 
   const getTotalAmount = () => {
-    return Math.max(0,Math.round((cart.reduce((total, item) => total + (item.price * item.quantity), 0)-Number(discount||0))*100)/100);
+    return Math.max(0,Math.round((cart.reduce((total, item) => total + lineTotal({quantity:item.quantity,unitPrice:item.price}), 0)-Number(discount||0))*100)/100);
   };
 
-  const handleBarcodeSearch = () => {
-    if (!barcodeInput.trim()) return;
-
-    const product = products.find(p => p.barcode === barcodeInput.trim());
-    if (product) {
-      addToCart(product);
+  const handleBarcodeSearch = async () => {
+    const code=barcodeInput.trim();if(!code)return;
+    if(!cashRegister?.is_open){setError('Você precisa abrir um caixa para vender');return;}
+    setError('');
+    try{
+      if(business.modules?.market){
+        const {data}=await api.post('/scale/scan',{barcode:code});
+        if(data.kind==='scale'){setScaleItem(data);setScaleWeight(String(data.quantity));setScaleConfirmed(false);setScaleError('');setBarcodeInput('');return;}
+        const product=products.find(p=>p.id===data.productId);if(!product)throw new Error('Atualize os produtos antes de ler novamente');addToCart(product);
+      }else{const product=products.find(p=>p.barcode===code);if(!product)throw new Error('Produto não encontrado com este código de barras');addToCart(product);}
       setBarcodeInput('');
-    } else {
-      setError('Produto não encontrado com este código de barras');
+    }catch(e){setError(e.response?.data?.error||e.message||'Falha ao ler etiqueta');}
+  };
+  const confirmScale=async()=>{
+    let checked=scaleItem;
+    if(checked?.mode==='price'){
+      if(!scaleConfirmed){setScaleError('Confira o peso e o preço antes de confirmar.');return;}
+      try{checked=(await api.post('/scale/scan',{barcode:checked.barcode,quantity:scaleWeight})).data;}catch(e){setScaleError(e.response?.data?.error||'Não foi possível conferir o peso');return;}
     }
+    const p=products.find(p=>p.id===checked?.productId),used=cart.filter(i=>i.id===p?.id).reduce((sum,i)=>sum+Math.round(i.quantity*1000),0);
+    if(!cashRegister?.is_open){setScaleError('Você precisa abrir um caixa para vender');return;}
+    if(!p||used+Math.round(checked.quantity*1000)>Math.round(stockAvailable(p)*1000)){setScaleError('Saldo disponível insuficiente. Atualize os produtos e confira os lotes.');return;}
+    setCart([...cart,{...p,cartKey:crypto.randomUUID(),price:checked.unitPrice,quantity:checked.quantity,scale:checked,notes:`Etiqueta ${checked.barcode} — ${checked.quantity.toLocaleString('pt-BR')} kg`}]);setScaleItem(null);
   };
 
   const completeSale = async () => {
@@ -311,7 +333,7 @@ const Sales = () => {
         items: cart.map(item => ({
           product_id: item.id,
           quantity: item.quantity,
-          unit_price: item.price,pizza:item.pizza,notes:item.notes
+          unit_price: item.price,pizza:item.pizza,scale:item.scale,notes:item.notes
         })),
         customerId:customerId||null,discount_amount:Number(discount||0),
         payment_method: paymentMethod,
@@ -324,7 +346,7 @@ const Sales = () => {
       // Preparar dados para impressão da nota
       const receiptData = {
         id: response.data.id,
-        items: response.data.items.map(item=>({name:item.pizza?.description||cart.find(i=>i.id===item.product_id)?.name||'Produto',notes:item.notes,quantity:Number(item.quantity),unit_price:Number(item.unit_price),total:Number(item.total_price)})),
+        items: response.data.items.map(item=>({name:item.pizza?.description||item.scale?.productName||cart.find(i=>i.id===item.product_id)?.name||'Produto',notes:item.notes,quantity:Number(item.quantity),unit_price:Number(item.unit_price),total:Number(item.total_price)})),
         total: Number(response.data.total_amount),
         customerId:customerId||null,discount_amount:Number(discount||0),
         payment_method: paymentMethod,
@@ -436,6 +458,7 @@ const Sales = () => {
 
   return (
     <div className="space-y-6">
+      <ScaleScanDialog weight={scaleWeight} onWeightChange={value=>{setScaleWeight(value);setScaleConfirmed(false)}} confirmed={scaleConfirmed} onConfirmedChange={setScaleConfirmed} item={scaleItem} onClose={()=>setScaleItem(null)} onConfirm={confirmScale} error={scaleError}/>
       {pizzaOpen&&<PizzaBuilder onAdd={addPizza} onClose={()=>setPizzaOpen(false)}/>}
       {pizzaError&&<p role="alert">{pizzaError}</p>}
       {business.modules?.pizza&&<Button onClick={()=>{if(!cashRegister?.is_open){setError('Você precisa abrir um caixa para vender');return;}setPizzaOpen(true)}}>Montar pizza</Button>}
@@ -686,6 +709,7 @@ const Sales = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
+                                disabled={Boolean(item.scale)}
                                 onClick={() => updateQuantity(item.cartKey||item.id, item.quantity - 1)}
                               >
                                 <Minus className="h-3 w-3" />
@@ -694,6 +718,7 @@ const Sales = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
+                                disabled={Boolean(item.scale)}
                                 onClick={() => updateQuantity(item.cartKey||item.id, item.quantity + 1)}
                               >
                                 <Plus className="h-3 w-3" />
@@ -701,7 +726,7 @@ const Sales = () => {
                             </div>
                           </TableCell>
                           <TableCell>R$ {item.price.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</TableCell>
-                          <TableCell>R$ {(item.price * item.quantity).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</TableCell>
+                          <TableCell>R$ {lineTotal({quantity:item.quantity,unitPrice:item.price}).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</TableCell>
                           <TableCell>
                             <Button
                               variant="outline"
@@ -855,12 +880,12 @@ const Sales = () => {
                         <div className="flex-1">
                           <p className="font-medium text-sm">{item.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {item.quantity}x R$ {item.price.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+                            {item.quantity.toLocaleString('pt-BR')}{item.scale?' kg':'x'} R$ {item.price.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                           </p>
                         </div>
                         <div className="flex items-center space-x-1">
                           <span className="font-semibold text-sm">
-                            R$ {(item.price * item.quantity).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+                            R$ {lineTotal({quantity:item.quantity,unitPrice:item.price}).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
                           </span>
                           <Button
                             variant="ghost"

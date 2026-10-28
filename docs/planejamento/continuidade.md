@@ -1,0 +1,17 @@
+# Continuidade autorizada — 28/10/2026
+
+O proprietário autorizou concluir balanças/etiquetas e prosseguir às próximas melhorias, com validação conjunta por ele amanhã de manhã. Não esperar validações intermediárias para os trabalhos autorizados. Manter versões Mark, testes e instruções de atualização por entrega.
+
+## Ordem de trabalho
+
+1. Entregue e validada em ambiente sintético — Mark 0.8.0: padrões EAN-13 de balança e etiquetas de gôndola; leitura desativada até configurar equipamento real. O proprietário ainda não tem balança; deseja opções pré-configuradas para formatos comuns.
+2. Próxima prioridade: ficha técnica com baixa de ingredientes para alimentação, preservando estoque, cancelamentos e histórico.
+3. Continuidade de alimentação: adicionais, combos e delivery.
+4. Oficina: fotos no checklist, assinatura do cliente, agenda e garantia.
+5. Autopeças: importação de catálogos, com mapeamento e revisão para não inventar compatibilidades.
+6. Clientes: fidelidade, descontos por cliente e histórico de benefícios.
+7. Suporte: geração de senhas e acessos temporários com validade/auditoria.
+8. Integrações externas: confirmação de Pix/emissão fiscal exigem provedor, credenciais e ambiente de homologação; SMTP e destino externo de backup permanecem aguardando definição do proprietário. Não simular integrações reais como concluídas.
+9. Após as melhorias funcionais: revisão de perfis e permissões por usuário, conforme [escopo registrado](permissoes-por-usuario.md).
+
+Não declarar compatibilidade física com balanças/impressoras nem homologação fiscal sem testes no equipamento/provedor correspondente. Não alterar cadastros de clientes em produção para demonstrar funções. Validar em empresas sintéticas e preservar volumes existentes.

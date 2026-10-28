@@ -76,3 +76,7 @@ Importação seletiva de produtos e serviços pré-cadastrados para sete perfis,
 ## Mercado — Mark 0.7.0
 
 [Controle opcional de lotes e validade, identificação de saldos, FEFO, conferência de devoluções e relatório](docs/mercado/README.md), integrado às movimentações de estoque.
+
+## Balanças e etiquetas — Mark 0.8.0
+
+[Quatro formatos EAN-13 pré-configurados, vínculo de PLUs, conferência no PDV e etiquetas A4 de gôndola](docs/balancas-etiquetas/README.md). Leitura desativada até conferir o equipamento. [Continuidade e revisão futura de permissões](docs/planejamento/continuidade.md).

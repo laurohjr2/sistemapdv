@@ -47,7 +47,7 @@ const profiles = [
   },
 ];
 const moduleNames = {
-  market:"Mercado — lotes e validade",
+  market:"Mercado — lotes, balanças e etiquetas",
   autoparts:"Autopeças — aplicações e equivalências",
   workshop:"Oficina — veículos e ordens de serviço",
   pizza:"Pizzaria — montagem e cardápio",

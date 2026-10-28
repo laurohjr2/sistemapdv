@@ -6,6 +6,7 @@ const SaleItem = sequelize.define('SaleItem', {
   preparationStartedAt:{type:DataTypes.DATE,allowNull:true},
   preparationCompletedAt:{type:DataTypes.DATE,allowNull:true},
   deliveredAt:{type:DataTypes.DATE,allowNull:true},
+  scale:{type:DataTypes.JSONB,allowNull:true},
   pizza:{type:DataTypes.JSONB,allowNull:true},
   stockTracked:{type:DataTypes.BOOLEAN,allowNull:false,defaultValue:true},
   id: {
