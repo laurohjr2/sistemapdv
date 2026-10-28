@@ -98,7 +98,7 @@ const Comandas = () => {
   const fetchProducts = async () => {
     try {
       const response = await api.get('/products');
-      setProducts(response.data.filter(product => product.active && Number(product.currentStock) > 0));
+      setProducts(response.data.filter(product => product.active && (product.itemType==='service'||Number(product.availableStock??product.currentStock) > 0)));
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
     }
@@ -134,7 +134,7 @@ const Comandas = () => {
         return;
       }
 
-      if (product.itemType!=='service'&&parseFloat(addItemForm.quantity) > Number(product.currentStock)) {
+      if (product.itemType!=='service'&&parseFloat(addItemForm.quantity) > Number(product.availableStock??product.currentStock)) {
         toast.error('Quantidade solicitada maior que o estoque disponível');
         return;
       }
@@ -166,7 +166,9 @@ const Comandas = () => {
     }
 
     try {
-      await api.delete(`/comandas/${selectedComanda.id}/items/${itemId}`);
+      const item=selectedComanda.items.find(i=>i.id===itemId);
+      const restoreIngredients=Boolean(item?.recipe&&['admin','gerente'].includes(user?.role)&&window.confirm('Os insumos NÃO foram usados? OK repõe os insumos; Cancelar mantém a baixa registrada.'));
+      await api.delete(`/comandas/${selectedComanda.id}/items/${itemId}`,{data:{restoreIngredients}});
       toast.success('Item removido da comanda!');
       fetchComandas();
       fetchProducts();
@@ -188,7 +190,8 @@ const Comandas = () => {
 
     try {
       await api.put(`/comandas/${selectedComanda.id}/items/${itemId}`, {
-        quantity: newQuantity
+        quantity: newQuantity,
+        restoreIngredients:Boolean(selectedComanda.items.find(i=>i.id===itemId)?.recipe&&newQuantity<Number(selectedComanda.items.find(i=>i.id===itemId)?.quantity)&&['admin','gerente'].includes(user?.role)&&window.confirm('Os insumos da quantidade removida NÃO foram usados? OK repõe; Cancelar mantém a baixa.'))
       });
 
       // Atualizar a comanda selecionada
@@ -767,7 +770,7 @@ const Comandas = () => {
                     {products.filter(p=>!pizzaBases.has(p.id)).map((product) => (
                       <SelectItem key={product.id} value={String(product.id)}>
                         {product.name} - R$ {parseFloat(product.salePrice).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
-                        (Estoque: {Number(product.currentStock)})
+                        (Estoque: {Number(product.availableStock??product.currentStock)})
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -63,7 +63,7 @@ export function LineEditor({
   const options = products.filter(
     (p) =>
       p.active &&
-      (!purchase || p.itemType !== "service") &&
+      (!purchase || (p.itemType !== "service" && !p.recipeEnabled)) &&
       !rows.some((row) => row.productId === p.id),
   );
   return (

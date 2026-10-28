@@ -4,8 +4,8 @@ import api from "../../lib/api";
 import { Button } from "../ui/button";
 import { useRecords } from "../commerce/helpers";
 import { Feedback } from "../commerce/shared";
-export default function PizzaSaleKitchen() {
-  const state = useRecords("/pizza/kitchen"),
+export default function PizzaSaleKitchen({ recipes = false }) {
+  const state = useRecords(recipes ? "/recipes/kitchen" : "/pizza/kitchen"),
     { user } = useAuth();
   const { load } = state;
   useEffect(() => {
@@ -27,7 +27,9 @@ export default function PizzaSaleKitchen() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="font-semibold text-lg">
-            Pizzas do balcão — vendas pagas
+            {recipes
+              ? "Preparados do balcão — vendas pagas"
+              : "Pizzas do balcão — vendas pagas"}
           </h2>
           <p className="text-sm text-muted-foreground">
             Identifique o pedido pelo número da venda no cupom. Atualização a
@@ -47,7 +49,8 @@ export default function PizzaSaleKitchen() {
               <span>{labels[item.preparationStatus]}</span>
             </div>
             <p>
-              {Number(item.quantity)}x {item.pizza.description}
+              {Number(item.quantity)}x{" "}
+              {item.pizza?.description || item.product?.name}
             </p>
             {item.notes && (
               <p className="font-medium">Observações: {item.notes}</p>
@@ -56,9 +59,13 @@ export default function PizzaSaleKitchen() {
               disabled={state.busy || (user?.support && !user?.master)}
               onClick={() =>
                 state.run(() =>
-                  api.put("/pizza/kitchen/" + item.id, {
-                    status: next[item.preparationStatus][0],
-                  }),
+                  api.put(
+                    (recipes ? "/recipes/kitchen/" : "/pizza/kitchen/") +
+                      item.id,
+                    {
+                      status: next[item.preparationStatus][0],
+                    },
+                  ),
                 )
               }
             >
@@ -69,7 +76,9 @@ export default function PizzaSaleKitchen() {
       </div>
       {!state.loading && !state.data.length && (
         <p className="text-sm text-muted-foreground">
-          Nenhuma pizza de venda direta aguardando retirada.
+          {recipes
+            ? "Nenhum preparado de venda direta aguardando retirada."
+            : "Nenhuma pizza de venda direta aguardando retirada."}
         </p>
       )}
     </section>

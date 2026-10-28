@@ -36,6 +36,9 @@ function factory() {
     )
       throw fail("Método de pagamento inválido");
     return sequelize.transaction(async (transaction) => {
+      await sequelize.query("SELECT pg_advisory_xact_lock(882021)", {
+        transaction,
+      });
       if (workOrderId)
         await require("./workshopOperations").enabled(transaction);
       if (Array.isArray(body.items) && body.items.some((i) => i?.scale))
@@ -146,7 +149,7 @@ function factory() {
             ? resolved.productId
             : scaled
               ? scaled.productId
-              : uuid(item.product_id),
+              : uuid(item.product_id).toLowerCase(),
           q = quantity(item.quantity);
         if (
           scaled &&
@@ -184,17 +187,21 @@ function factory() {
         : null;
       if (customerId && !customer?.active)
         throw fail("Cliente não encontrado ou inativo");
-      const products = new Map();
-      for (const [id, q] of [...quantities].sort(([a], [b]) =>
-        a.localeCompare(b),
-      )) {
-        const product = await Product.findByPk(id, {
+      const recipeOps = require("./recipeOperations");
+      const inventory = await recipeOps.lockProducts(
+          [...quantities.keys()],
           transaction,
-          lock: transaction.LOCK.UPDATE,
-        });
+        ),
+        products = new Map();
+      for (const [id, q] of quantities) {
+        const product = inventory.products.get(id);
         if (!product?.active) throw fail("Produto não encontrado ou inativo");
-        if (product.itemType !== "service" && Number(product.currentStock) < q)
-          throw fail(`Estoque insuficiente para ${product.name}`);
+        if (
+          product.itemType !== "service" &&
+          !product.recipeEnabled &&
+          Number(product.currentStock) < q
+        )
+          throw fail("Estoque insuficiente para " + product.name);
         products.set(id, product);
       }
       const lines = [];
@@ -226,7 +233,8 @@ function factory() {
             "Produto ou preço mudou durante a leitura. Leia a etiqueta novamente.",
             409,
           );
-        const stockTracked = product.itemType !== "service";
+        const stockTracked =
+          product.itemType !== "service" && !product.recipeEnabled;
         const unitPrice = row.pizza
           ? row.pizza.unitPrice
           : quoted
@@ -265,6 +273,12 @@ function factory() {
       );
       for (const line of lines) {
         const { product, stockTracked } = line;
+        const recipe = await recipeOps.consume(product.id, line.quantity, {
+          userId: user.id,
+          transaction,
+          locked: inventory,
+          note: `Insumos da venda #${sale.id}`,
+        });
         await SaleItem.create(
           {
             sale_id: sale.id,
@@ -275,12 +289,15 @@ function factory() {
             stockTracked,
             pizza: line.pizza,
             scale: line.scale,
+            recipe,
             notes: line.notes,
-            preparationStatus: line.pizza ? "pendente" : null,
+            preparationStatus: line.pizza || recipe ? "pendente" : null,
           },
           { transaction },
         );
         if (stockTracked) {
+          if (Number(product.currentStock) < line.quantity)
+            throw fail("Estoque insuficiente para " + product.name);
           await product.update(
             { currentStock: Number(product.currentStock) - line.quantity },
             { transaction },

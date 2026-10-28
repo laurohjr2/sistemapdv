@@ -235,6 +235,7 @@ const Queue = () => {
         </div>
       </div>
 
+      {business.modules?.recipes&&<PizzaSaleKitchen recipes/>}
       {business.modules?.pizza&&<><PizzaSaleKitchen/><h2 className="text-xl font-semibold">Mesas e comandas</h2></>}
       {/* Estatísticas */}
       <div className="grid gap-4 md:grid-cols-4">

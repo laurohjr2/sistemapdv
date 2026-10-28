@@ -39,6 +39,7 @@ async function destination(
 async function apply(models, movement, options) {
   const transaction = options.transaction;
   const p = await models.Product.findByPk(movement.productId, { transaction });
+  if(p?.recipeEnabled)throw fail('Produto preparado por ficha técnica não recebe estoque físico. Movimente os insumos.');
   if (!p?.lotTracked) return;
   if (!transaction) throw fail("Movimentação por lote exige transação");
   let remaining = units(movement.quantity);

@@ -172,8 +172,8 @@ function factory() {
           throw fail("Agrupe a quantidade dos produtos repetidos");
         seen.add(id);
         const p = await Product.findByPk(id, { transaction });
-        if (!p?.active || p.itemType === "service")
-          throw fail("Compras de estoque aceitam somente produtos ativos");
+        if (!p?.active || p.itemType === "service" || p.recipeEnabled)
+          throw fail("Compre os insumos: o item preparado não recebe estoque físico");
         const qty = quantity(l.quantity),
           unit = cents(l.unitCost, "Custo", true);
         total += lineCents(qty, unit);
@@ -279,7 +279,7 @@ function factory() {
           transaction,
           lock: transaction.LOCK.UPDATE,
         });
-        if (!p || p.itemType === "service")
+        if (!p || p.itemType === "service" || p.recipeEnabled)
           throw fail("Produto indisponível para recebimento");
         await p.update(
           {

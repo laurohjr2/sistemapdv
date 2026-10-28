@@ -1,5 +1,5 @@
 function createScopedModule() {
-const { Product, PartDetail, StockLot } = require('../models');
+const { Product, PartDetail, StockLot, Recipe } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 const { Op } = require('sequelize');
 
@@ -42,10 +42,11 @@ const getAllProducts = async (req, res) => {
       const totals=new Map();for(const lot of lots)totals.set(lot.productId,(totals.get(lot.productId)||0)+Math.round(Number(lot.quantity)*1000));
       for(const p of tracked){p.setDataValue('availableStock',(totals.get(p.id)||0)/1000);p.setDataValue('blockedStock',(Math.round(Number(p.currentStock)*1000)-(totals.get(p.id)||0))/1000);}
     }
+    const prepared=products.filter(p=>p.recipeEnabled);if(prepared.length){const virtual=await require('../services/recipeOperations').availability(prepared.map(p=>p.id));for(const p of prepared)p.setDataValue('availableStock',virtual.get(p.id)||0);}
     let filteredProducts = products;
     if (lowStock === 'true') {
       filteredProducts = products.filter(product => 
-        product.active&&product.itemType!=='service'&&Number(product.currentStock) <= Number(product.minStockAlert)
+        product.active&&!product.recipeEnabled&&product.itemType!=='service'&&Number(product.currentStock) <= Number(product.minStockAlert)
       );
     }
 
@@ -201,6 +202,10 @@ const updateProduct = async (req, res) => {
     }
 
     if(req.body.itemType&&req.body.itemType!==product.itemType)return res.status(400).json({error:'O tipo do item é definido no cadastro para preservar o histórico. Inative e cadastre outro item.'});
+    if(unitOfMeasure!==undefined&&unitOfMeasure!==product.unitOfMeasure){
+      const recipes=await Recipe.findAll();
+      if(product.recipeEnabled||recipes.some(r=>r.ingredients.some(i=>i.productId===product.id)))return res.status(400).json({error:'A unidade pertence a uma ficha técnica. Preserve o histórico e cadastre outro insumo/unidade.'});
+    }
     const updateData = {};
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
@@ -307,7 +312,7 @@ const getLowStockProducts = async (req, res) => {
   try {
     const products = await Product.findAll({
       where: {
-        active: true,itemType:'product',
+        active: true,itemType:'product',recipeEnabled:false,
         [Op.and]: [
           { currentStock: { [Op.lte]: { [Op.col]: 'min_stock_alert' } } }
         ]

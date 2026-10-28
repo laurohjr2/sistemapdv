@@ -16,13 +16,13 @@ const getSalesByCategory=handler(async(req,res)=>res.json(grouped((await rows(re
 const getSalesByPaymentMethod=handler(async(req,res)=>res.json(grouped((await rows(req)).flatMap(r=>(r.payments||[{method:r.paymentMethod,amount:r.total}]).map(p=>({paymentMethod:p.method,total:Number(p.amount)}))),r=>r.paymentMethod,r=>r.total).map(r=>({...r,method:r.name,total:r.revenue,paymentMethod:r.name,totalRevenue:r.revenue}))));
 const getSalesByHour=handler(async(req,res)=>res.json(grouped(await rows(req),r=>new Date(r.date).toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit'}),r=>r.total).map(r=>({hour:r.name,sales:r.count,revenue:r.revenue}))));
 const getFinancialSummary=handler(async(req,res)=>{const data=await rows(req);res.json({...summary(data),totalProducts:data.reduce((n,r)=>n+r.items.reduce((s,i)=>s+i.quantity,0),0)});});
-const stock=async()=> (await Product.findAll({where:{active:true,itemType:'product'}})).map(p=>({name:p.name,currentStock:Number(p.currentStock),minStock:Number(p.minStockAlert),status:Number(p.currentStock)<=Number(p.minStockAlert)?'Baixo':'Adequado'}));
+const stock=async()=> (await Product.findAll({where:{active:true,itemType:'product',recipeEnabled:false}})).map(p=>({name:p.name,currentStock:Number(p.currentStock),minStock:Number(p.minStockAlert),status:Number(p.currentStock)<=Number(p.minStockAlert)?'Baixo':'Adequado'}));
 const getStockReport=handler(async(req,res)=>res.json(await stock()));
 const getDashboardData=handler(async(req,res)=>{
  const now=new Date();const localDay=now.toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'});
  const data=(await revenue()).filter(r=>new Date(r.date).toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'})===localDay);
  const totals=summary(data);
- res.json({todaySales:{totalSales:totals.totalRevenue,totalComandas:totals.totalSales,averageTicket:totals.averageTicket},openComandas:await Comanda.count({where:{status:'aberta'}}),lowStockCount:await Product.count({where:{active:true,itemType:'product',currentStock:{[Op.lte]:Product.sequelize.col('min_stock_alert')}}}),topProducts:products(data).slice(0,5).map(p=>({product:{name:p.name},totalQuantity:p.quantity,totalRevenue:p.revenue}))});
+ res.json({todaySales:{totalSales:totals.totalRevenue,totalComandas:totals.totalSales,averageTicket:totals.averageTicket},openComandas:await Comanda.count({where:{status:'aberta'}}),lowStockCount:await Product.count({where:{active:true,itemType:'product',recipeEnabled:false,currentStock:{[Op.lte]:Product.sequelize.col('min_stock_alert')}}}),topProducts:products(data).slice(0,5).map(p=>({product:{name:p.name},totalQuantity:p.quantity,totalRevenue:p.revenue}))});
 });
 const getComparativeReport=handler(async(req,res)=>{const {period1Start,period1End,period2Start,period2End}=req.query;if(!period1Start||!period1End||!period2Start||!period2End)return res.status(400).json({error:'Informe os dois períodos completos'});res.json({period1:summary(await revenue({startDate:period1Start,endDate:period1End})),period2:summary(await revenue({startDate:period2Start,endDate:period2End}))});});
 const exportReport=handler(async(req,res)=>{

@@ -103,7 +103,7 @@ function factory() {
           transaction,
           lock: transaction.LOCK.UPDATE,
         });
-        if (!p || p.itemType === "service")
+        if (!p || p.itemType === "service" || p.recipeEnabled)
           throw fail("Produto não encontrado", 404);
         if (p.lotTracked === req.body.enabled) return;
         if (!req.body.enabled && ops.units(p.currentStock) !== 0)

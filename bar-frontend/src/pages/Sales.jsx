@@ -438,7 +438,9 @@ const Sales = () => {
 
     setLoading(true);
     try {
-      await api.put(`/sales/${saleId}/cancel`);
+      const detail=(await api.get(`/sales/${saleId}`)).data;
+      const restoreIngredients=detail.items?.some(i=>i.recipe)&&window.confirm('Os ingredientes dos produtos preparados NÃO foram usados? OK confirma a reposição; Cancelar mantém a baixa e registra o consumo.');
+      await api.put(`/sales/${saleId}/cancel`,{restoreIngredients:Boolean(restoreIngredients)});
       await fetchSales();
       await fetchProducts();
       alert('Venda cancelada com sucesso!');
@@ -838,7 +840,7 @@ const Sales = () => {
                             <p className="text-sm text-muted-foreground">{product.category}</p>
                             <p className="text-lg font-bold text-primary">R$ {Number(product.salePrice).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
                             <p className="text-xs text-muted-foreground">
-                              {product.itemType==='service'?'Serviço · sem estoque':product.lotTracked?`Disponível por lotes: ${stockAvailable(product)} · Físico: ${Number(product.currentStock)}`:`Estoque: ${stockAvailable(product)}`}
+                              {product.itemType==='service'?'Serviço · sem estoque':product.recipeEnabled?`Ficha técnica · disponível: ${stockAvailable(product)}`:product.lotTracked?`Disponível por lotes: ${stockAvailable(product)} · Físico: ${Number(product.currentStock)}`:`Estoque: ${stockAvailable(product)}`}
                             </p>
                           </div>
                           <Button

@@ -102,9 +102,12 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
       if (!sale) throw fail('Venda não encontrada', 404);
       if (sale.status === 'cancelled') throw fail('Venda já foi cancelada');
       const items = await SaleItem.findAll({ where: { sale_id: sale.id }, order: [['product_id', 'ASC']], transaction });
+      const recipeOps=require('../services/recipeOperations');
+      const returned=await recipeOps.physicalLocks(items.flatMap(i=>[...(i.stockTracked?[i.product_id]:[]),...(i.recipe?.consumed||[]).map(c=>c.productId)]),transaction);
       for (const item of items) {
+        if(item.recipe){await recipeOps.restore(item.recipe,req.body?.restoreIngredients===true,{userId:req.user.id,transaction,locked:{products:returned},note:`Cancelamento da venda #${sale.id}`});continue;}
         if(!item.stockTracked)continue;
-        const product = await Product.findByPk(item.product_id, { transaction, lock: transaction.LOCK.UPDATE });
+        const product = returned.get(item.product_id);
         await product.update({ currentStock: Number(product.currentStock) + Number(item.quantity) }, { transaction });
         await StockMovement.create({ productId: product.id, userId: req.user.id,
           type: 'entrada', quantity: item.quantity, reason: 'return',

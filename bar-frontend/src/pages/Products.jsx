@@ -222,6 +222,7 @@ const Products = () => {
   };
 
   const getStockStatusBadge = (product) => {
+    if(product.recipeEnabled)return <Badge variant="secondary">Ficha técnica · disponível: {Number(product.availableStock||0)}</Badge>;
     if(product.itemType==='service')return <Badge variant="secondary">Serviço · sem estoque</Badge>;
     const current = parseFloat(product.currentStock || 0);
     const min = parseFloat(product.minStockAlert || 0);
@@ -250,7 +251,7 @@ const Products = () => {
     const matchesTab = activeTab === 'all' || 
                       (activeTab === 'active' && product.active) ||
                       (activeTab === 'inactive' && !product.active) ||
-                      (activeTab === 'low_stock' && product.active && product.itemType!=='service'&&parseFloat(product.currentStock || 0) <= parseFloat(product.minStockAlert || 0));
+                      (activeTab === 'low_stock' && product.active && !product.recipeEnabled && product.itemType!=='service'&&parseFloat(product.currentStock || 0) <= parseFloat(product.minStockAlert || 0));
     
     return matchesSearch && matchesCategory && matchesTab;
   });
@@ -259,7 +260,7 @@ const Products = () => {
     total: products.length,
     active: products.filter(p => p.active).length,
     inactive: products.filter(p => !p.active).length,
-    lowStock: products.filter(p => p.active && p.itemType!=='service'&&parseFloat(p.currentStock || 0) <= parseFloat(p.minStockAlert || 0)).length
+    lowStock: products.filter(p => p.active && !p.recipeEnabled && p.itemType!=='service'&&parseFloat(p.currentStock || 0) <= parseFloat(p.minStockAlert || 0)).length
   };
 
   return (

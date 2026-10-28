@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize');
 module.exports = function defineModel(sequelize) {
 
 const Product = sequelize.define('Product', {
+  recipeEnabled:{type:DataTypes.BOOLEAN,allowNull:false,defaultValue:false},
   lotTracked:{type:DataTypes.BOOLEAN,allowNull:false,defaultValue:false},
   id: {
     type: DataTypes.UUID,
