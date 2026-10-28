@@ -6,6 +6,7 @@ import Deliveries from './pages/Deliveries';
 import Bundles from './pages/Bundles';
 import Market from './pages/Market';
 import AutoParts from './pages/AutoParts';
+import WorkshopWarranty from './pages/WorkshopWarranty';
 import WorkshopAgenda from './pages/WorkshopAgenda';
 import Workshop from './pages/Workshop';
 import Pizzeria from './pages/Pizzeria';
@@ -70,6 +71,7 @@ function App() {
             <Route path="scale-labels" element={<BusinessModuleRoute module="market"><ScaleLabels/></BusinessModuleRoute>}/>
             <Route path="market" element={<BusinessModuleRoute module="market"><Market/></BusinessModuleRoute>}/>
             <Route path="autoparts" element={<BusinessModuleRoute module="autoparts"><AutoParts/></BusinessModuleRoute>}/>
+            <Route path="workshop-warranty" element={<BusinessModuleRoute module="workshop"><WorkshopWarranty/></BusinessModuleRoute>}/>
             <Route path="workshop-agenda" element={<BusinessModuleRoute module="workshop"><WorkshopAgenda/></BusinessModuleRoute>}/>
             <Route path="workshop" element={<BusinessModuleRoute module="workshop"><Workshop/></BusinessModuleRoute>}/>
             <Route path="pizzeria" element={<ProtectedRoute requiredRoles={['admin','gerente']}><BusinessModuleRoute module="pizza"><Pizzeria/></BusinessModuleRoute></ProtectedRoute>}/>
