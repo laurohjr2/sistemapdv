@@ -1,3 +1,4 @@
+import {Link} from 'react-router-dom';
 import {lineTotal} from '../components/commerce/helpers';
 import ScaleScanDialog from '../components/ScaleScanDialog';
 import PizzaBuilder from '../components/pizza/PizzaBuilder';
@@ -969,6 +970,7 @@ const Sales = () => {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
+                      {business.modules?.delivery&&sale.status==='completed'&&<Button variant="outline" size="sm" asChild><Link to={'/deliveries?sale='+sale.id}>Entrega</Link></Button>}
                       {sale.status === 'completed' && (
                         <Button
                           variant="outline"

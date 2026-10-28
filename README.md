@@ -82,3 +82,7 @@ Importação seletiva de produtos e serviços pré-cadastrados para sete perfis,
 [Quatro formatos EAN-13 pré-configurados, vínculo de PLUs, conferência no PDV e etiquetas A4 de gôndola](docs/balancas-etiquetas/README.md). Leitura desativada até conferir o equipamento. [Continuidade e revisão futura de permissões](docs/planejamento/continuidade.md).
 
 - [Mark 0.9.0 — Fichas técnicas e ingredientes](docs/fichas-tecnicas/README.md)
+
+- [Mark 0.10.0 — Pedidos de entrega](docs/entregas/README.md)
+
+- [Roteiro de validação conjunta das Marks 0.8.0 a 0.10.0](docs/planejamento/validacao-marks-0.8-a-0.10.md)

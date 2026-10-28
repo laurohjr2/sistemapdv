@@ -1,23 +1,23 @@
-const common = { recipes:false, market:false, autoparts:false, workshop:false, pizza:false, quotes: true, purchasing: true, finance: true };
+const common = { delivery:false, recipes:false, market:false, autoparts:false, workshop:false, pizza:false, quotes: true, purchasing: true, finance: true };
 const profiles = [
   {
     id: "bar_restaurante",
     name: "Bar / restaurante",
     description: "Mesas, comandas e produção na cozinha.",
-    modules: { ...common, recipes:true, tables: true, kitchen: true },
+    modules: { ...common, delivery:true, recipes:true, tables: true, kitchen: true },
   },
   {
     id: "pizzaria",
     name: "Pizzaria",
     description:
       "Balcão, mesas, cozinha e gestão comercial para pizzarias.",
-    modules: { ...common, recipes:true, pizza:true, tables: true, kitchen: true },
+    modules: { ...common, delivery:true, recipes:true, pizza:true, tables: true, kitchen: true },
   },
   {
     id: "hamburgueria",
     name: "Hamburgueria",
     description: "Balcão, mesas, comandas e preparo de lanches na cozinha.",
-    modules: { ...common, recipes:true, tables: true, kitchen: true },
+    modules: { ...common, delivery:true, recipes:true, tables: true, kitchen: true },
   },
   {
     id: "oficina",
@@ -47,6 +47,7 @@ const profiles = [
   },
 ];
 const moduleNames = {
+  delivery:"Pedidos de entrega",
   recipes:"Alimentação — fichas técnicas e ingredientes",
   market:"Mercado — lotes, balanças e etiquetas",
   autoparts:"Autopeças — aplicações e equivalências",

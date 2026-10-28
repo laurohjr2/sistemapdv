@@ -1,5 +1,6 @@
 module.exports = function buildModels(sequelize) {
 const Recipe=require('./Recipe')(sequelize);
+const DeliveryOrder=require('./DeliveryOrder')(sequelize);
 const ScaleSettings=require('./ScaleSettings')(sequelize);
 const ScaleProduct=require('./ScaleProduct')(sequelize);
 const StockLot=require('./StockLot')(sequelize);
@@ -31,6 +32,7 @@ const FinancialPayment=require('./FinancialPayment')(sequelize);
 const CashMovement=require('./CashMovement')(sequelize);
 const BusinessSettings = require('./BusinessSettings')(sequelize);
 
+DeliveryOrder.belongsTo(Sale,{foreignKey:'saleId',as:'sale'});
 StockLot.belongsTo(Product,{foreignKey:'productId',as:'product'});
 StockMovement.addHook('afterCreate','lotControl',(movement,options)=>require('../services/lotOperations').apply({StockLot,Product},movement,options));
 Product.hasOne(PartDetail,{foreignKey:'productId',as:'partDetails'});
@@ -90,7 +92,7 @@ Product.hasMany(Ticket, { foreignKey: 'product_id', as: 'tickets' });
 Ticket.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 return {
-  sequelize, Recipe, ScaleSettings, ScaleProduct, StockLot, PartDetail, PartEquivalence, Vehicle, WorkOrder,
+  sequelize, DeliveryOrder, Recipe, ScaleSettings, ScaleProduct, StockLot, PartDetail, PartEquivalence, Vehicle, WorkOrder,
   PizzaCatalog,
   User,
   Product,

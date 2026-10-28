@@ -101,6 +101,9 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
       if(ticket) await ticket.update({status:'cancelled'},{transaction});
       if (!sale) throw fail('Venda não encontrada', 404);
       if (sale.status === 'cancelled') throw fail('Venda já foi cancelada');
+      const delivery=await require('../models').DeliveryOrder.findOne({where:{saleId:sale.id},transaction,lock:transaction.LOCK.UPDATE});
+      if(delivery&&['dispatched','delivered'].includes(delivery.status))throw fail('A venda saiu para entrega. Confira a devolução com a administração antes de estornar.');
+      if(delivery&&delivery.status!=='cancelled')await delivery.update({status:'cancelled',revision:delivery.revision+1,history:require('../services/deliveryOperations').event(delivery,req.user,'cancelled','Venda cancelada no caixa')},{transaction});
       const items = await SaleItem.findAll({ where: { sale_id: sale.id }, order: [['product_id', 'ASC']], transaction });
       const recipeOps=require('../services/recipeOperations');
       const returned=await recipeOps.physicalLocks(items.flatMap(i=>[...(i.stockTracked?[i.product_id]:[]),...(i.recipe?.consumed||[]).map(c=>c.productId)]),transaction);

@@ -6,7 +6,7 @@ O proprietário autorizou concluir balanças/etiquetas e prosseguir às próxima
 
 1. Entregue e validada em ambiente sintético — Mark 0.8.0: padrões EAN-13 de balança e etiquetas de gôndola; leitura desativada até configurar equipamento real. O proprietário ainda não tem balança; deseja opções pré-configuradas para formatos comuns.
 2. Entregue e validada em ambiente sintético — Mark 0.9.0: ficha técnica com baixa de ingredientes para alimentação, preservando estoque, cancelamentos e histórico.
-3. Continuidade de alimentação: adicionais, combos e delivery.
+3. Entregue e validada em ambiente sintético — Mark 0.10.0: pedidos de entrega vinculados a vendas pagas, contato/endereço, etapas, cozinha, histórico e impressão. Adicionais/combos e evolução do delivery permanecem na continuidade de alimentação.
 4. Oficina: fotos no checklist, assinatura do cliente, agenda e garantia.
 5. Autopeças: importação de catálogos, com mapeamento e revisão para não inventar compatibilidades.
 6. Clientes: fidelidade, descontos por cliente e histórico de benefícios.

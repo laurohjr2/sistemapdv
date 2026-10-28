@@ -30,3 +30,5 @@ Definir acessos por usuário, perfil e ação, com indicação clara do que pode
 Matriz de menus × ações × perfis, revisão com o proprietário, regras de combinação de permissões por usuário, implementação das mesmas regras no servidor e na interface, auditoria das alterações e testes de isolamento/negação. Antes de implementar a matriz, confirmar os papéis reais de operação e os limites pretendidos. Nomes de papéis e permissões específicas ainda não aprovados não devem ser presumidos.
 
 Incluir fichas técnicas: consultar composição/custos, editar/ativar receita e autorizar reposição de ingredientes não utilizados. O padrão de cancelamento deve preservar o consumo; apenas uma permissão explícita pode autorizar reposição.
+
+Incluir entregas: consultar/alterar contato e endereço, imprimir dados do destinatário, avançar etapas, identificar entregador, confirmar recebimento e cancelar apenas a entrega. Separar essas ações do estorno financeiro, preservando as regras de devolução física.

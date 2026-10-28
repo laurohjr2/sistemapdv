@@ -95,6 +95,7 @@ router.put('/',authenticateToken,authorizeRoles('admin'),express.json({limit:'6m
         const {SaleItem,Sale}=require('../models'),{Op}=require('sequelize');
         if(await SaleItem.count({where:{recipe:{[Op.ne]:null},preparationStatus:{[Op.in]:['pendente','preparando','pronto']}},include:[{model:Sale,as:'sale',where:{status:'completed'}}],transaction}))throw invalid('Finalize os preparados do balcão antes de desativar fichas técnicas ou cozinha.');
       }
+      if(previous.delivery&&!next.delivery&&await require('../models').DeliveryOrder.count({where:{status:require('../services/deliveryOperations').active},transaction}))throw invalid('Conclua ou cancele os pedidos de entrega antes de ocultar o módulo.');
       if(previous.recipes&&!next.recipes&&await require('../models').Product.count({where:{recipeEnabled:true},transaction}))throw invalid('Desative as fichas técnicas dos produtos antes de ocultar o módulo.');
       if(previous.market&&!next.market&&(await require('../models').ScaleSettings.findByPk(1,{transaction}))?.enabled)throw invalid('Desative a leitura de etiquetas de balança antes de ocultar Mercado.');
       if(previous.market&&!next.market&&await require('../models').Product.count({where:{lotTracked:true},transaction}))throw invalid('Desative o controle dos produtos com saldo zerado antes de ocultar o módulo de lotes.');

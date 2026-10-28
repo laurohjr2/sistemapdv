@@ -1,4 +1,4 @@
-# Validação conjunta — Marks 0.8.0 e 0.9.0
+# Validação conjunta — Marks 0.8.0 a 0.10.0
 
 ## Atualizar o Docker local
 
@@ -9,7 +9,7 @@ git pull --ff-only
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\docker\atualizar.ps1
 ```
 
-Abra http://127.0.0.1:8080 e pressione **Ctrl+Shift+R**. Em **Sobre o sistema**, confira se interface e servidor exibem **0.9.0**. O script mantém os volumes e as credenciais; não use `down -v`. Para consultar as credenciais locais, sem colá-las no terminal como comandos:
+Abra http://127.0.0.1:8080 e pressione **Ctrl+Shift+R**. Em **Sobre o sistema**, confira se interface e servidor exibem **0.10.0**. O script mantém os volumes e as credenciais; não use `down -v`. Para consultar as credenciais locais, sem colá-las no terminal como comandos:
 
 ```powershell
 docker compose run --rm --no-deps provision node /app/docker/local.cjs credentials
@@ -40,6 +40,18 @@ O acesso Master é pela opção **Acesso do suporte**, com as credenciais Master
 
 Use dados de demonstração; não faça vendas ou entradas fictícias na empresa de um cliente real. Guias completos: [balanças e etiquetas](../balancas-etiquetas/README.md) e [fichas técnicas](../fichas-tecnicas/README.md).
 
+## Mark 0.10.0 — Pedidos de entrega
+
+- Habilite **Pedidos de entrega** em Configurações, se necessário.
+- Faça uma venda de demonstração e registre o pagamento normalmente. Se houver taxa, inclua um serviço de entrega na própria venda antes de finalizar.
+- No histórico de Vendas, clique **Entrega**; confira o número da venda e preencha destinatário, telefone e endereço.
+- Avance recebido → separação/preparo → pronto → saída → entregue. Com cozinha ativa, ela precisa concluir o preparo antes de liberar a saída.
+- Informe o entregador/transportador na saída e gere o PDF de separação/entrega.
+- Confira que cadastrar/avançar a entrega não cobrou nem baixou estoque novamente.
+- Em outro pedido de teste, cancele apenas a entrega: a venda deve continuar paga. Cancelar a venda antes da saída também deve cancelar a entrega vinculada.
+- Consulte o histórico de alterações e confira o fluxo numa janela estreita/celular.
+- Guia completo: [Pedidos de entrega](../entregas/README.md).
+
 ## Continuidade
 
-Adicionais/combos/delivery, ampliações de oficina, importação de catálogos, fidelidade e acessos temporários permanecem no [roteiro autorizado](continuidade.md). A revisão de permissões por usuário vem após as melhorias funcionais, conforme solicitado.
+Adicionais/combos e evolução do delivery, ampliações de oficina, importação de catálogos, fidelidade e acessos temporários permanecem no [roteiro autorizado](continuidade.md). A revisão de permissões por usuário vem após as melhorias funcionais, conforme solicitado.

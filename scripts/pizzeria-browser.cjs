@@ -142,6 +142,7 @@ fs.mkdirSync(output, { recursive: true });
       .waitFor();
     checks++;
     await page.goto(rootUrl + "/sales");
+    await page.getByText("Caixa Aberto", { exact: true }).waitFor();
     await page
       .getByRole("button", { name: "Montar pizza", exact: true })
       .click();
@@ -257,6 +258,7 @@ fs.mkdirSync(output, { recursive: true });
     checks += 3;
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(rootUrl + "/sales");
+    await page.getByText("Caixa Aberto", { exact: true }).waitFor();
     await page
       .getByRole("button", { name: "Montar pizza", exact: true })
       .click();
@@ -286,6 +288,7 @@ fs.mkdirSync(output, { recursive: true });
     await page.goto(rootUrl + "/pizzeria");
     await page.getByRole("heading", { name: "Acesso Negado" }).waitFor();
     await page.goto(rootUrl + "/sales");
+    await page.getByText("Caixa Aberto", { exact: true }).waitFor();
     await page
       .getByRole("button", { name: "Montar pizza", exact: true })
       .waitFor();
