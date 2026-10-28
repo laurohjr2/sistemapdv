@@ -5,6 +5,7 @@ import ScaleScanDialog from '../components/ScaleScanDialog';
 import PizzaBuilder from '../components/pizza/PizzaBuilder';
 import usePizzaCatalog from '../components/pizza/usePizzaCatalog';
 import {useAuth} from '../hooks/useAuth';
+import LoyaltyDiscount from '../components/LoyaltyDiscount';
 import CustomerSelect from '../components/CustomerSelect';
 import PixPayment from '../components/PixPayment';
 import { useBusiness } from '../hooks/useBusiness';
@@ -27,9 +28,14 @@ const Sales = () => {
   const {business} = useBusiness();
   const {user}=useAuth();
   const [discount,setDiscount]=useState('');
+  const [loyalty,setLoyalty]=useState(null);
   const [customerId,setCustomerId]=useState('');
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
+  const loyaltyCartKey=JSON.stringify(cart);
+  useEffect(()=>{
+    if(loyalty&&(loyalty.customerId!==customerId||loyalty.cartKey!==loyaltyCartKey)){setLoyalty(null);setDiscount('');}
+  },[customerId,loyaltyCartKey,loyalty]);
   const [pizzaOpen,setPizzaOpen]=useState(false);
   const [bundleOpen,setBundleOpen]=useState(false);
   const {menu:pizzaMenu,error:pizzaError}=usePizzaCatalog(Boolean(business.modules?.pizza));
@@ -339,7 +345,7 @@ const Sales = () => {
           quantity: item.quantity,
           unit_price: item.price,pizza:item.pizza,scale:item.scale,bundle:item.bundle,notes:item.notes
         })),
-        customerId:customerId||null,discount_amount:Number(discount||0),
+        customerId:customerId||null,discount_amount:Number(discount||0),loyalty:loyalty?{customerId:loyalty.customerId,revision:loyalty.revision}:undefined,
         payment_method: paymentMethod,
         total_amount: getTotalAmount(),
         cash_register_id: cashRegister.id
@@ -349,7 +355,7 @@ const Sales = () => {
       
       // Preparar dados para impressão da nota
       const receiptData = {
-        id: response.data.id,
+        id: response.data.id,notes:response.data.notes,
         items: response.data.items.map(item=>({name:item.bundle?.component?.name||item.bundle?.components?.[item.bundle.index]?.name||item.pizza?.description||item.scale?.productName||cart.find(i=>i.id===item.product_id)?.name||'Produto',notes:item.notes,quantity:Number(item.quantity),unit_price:Number(item.unit_price),total:Number(item.total_price)})),
         total: Number(response.data.total_amount),
         customerId:customerId||null,discount_amount:Number(discount||0),
@@ -422,6 +428,8 @@ const Sales = () => {
             Total: R$ ${receiptData.total.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
           </div>
           
+          <p>Desconto: R$ ${Number(receiptData.discount_amount||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
+          ${receiptData.notes?`<p>${escapeHtml(receiptData.notes)}</p>`:''}
           <p>Forma de Pagamento: ${receiptData.payment_method}</p>
           
           <div class="footer">
@@ -759,7 +767,11 @@ const Sales = () => {
 
                 <div className="space-y-2">
                   <CustomerSelect value={customerId} onChange={setCustomerId}/>
-                  {['admin','gerente'].includes(user?.role)&&<label>Desconto (R$)<Input currency value={discount} onChange={e=>setDiscount(e.target.value)}/></label>}
+                  {['admin','gerente'].includes(user?.role)&&<>
+                    <label>Desconto (R$)<Input currency value={discount} onChange={e=>{setLoyalty(null);setDiscount(e.target.value)}}/></label>
+                    <LoyaltyDiscount customerId={customerId} subtotal={cart.reduce((sum,item)=>sum+lineTotal({quantity:item.quantity,unitPrice:item.price}),0)} disabled={loading||!cashRegister?.is_open} onApply={value=>{setDiscount(String(value.discount));setLoyalty({...value,cartKey:loyaltyCartKey})}}/>
+                    {loyalty&&<p className="text-sm font-semibold">{loyalty.description} aplicado.</p>}
+                  </>}
                   <Label htmlFor="payment_method">Forma de Pagamento</Label>
                   <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                     <SelectTrigger id="payment_method" aria-label="Forma de Pagamento">

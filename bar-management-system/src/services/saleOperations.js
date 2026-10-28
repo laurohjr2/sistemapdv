@@ -10,6 +10,7 @@ function factory() {
     Quote,
     AuditLog,
     WorkOrder,
+    LoyaltyBenefit,
   } = require("../models");
   const {
     fail,
@@ -23,6 +24,15 @@ function factory() {
     if (body.sourceWorkOrderId) throw fail("Receba a OS pelo menu Oficina");
     if (workOrderId && body.sourceQuoteId)
       throw fail("Origem do recebimento inválida");
+    if (body.loyalty && !["admin", "gerente"].includes(user.role))
+      throw fail(
+        "A aplicação de fidelidade exige gerente ou administrador",
+        403,
+      );
+    if (body.loyalty && (workOrderId || body.sourceQuoteId))
+      throw fail(
+        "Use a condição aprovada da OS ou orçamento; fidelidade é aplicada em vendas diretas",
+      );
     const source = body.sourceQuoteId ? uuid(body.sourceQuoteId) : null;
     let discount = cents(body.discount_amount ?? 0, "Desconto", true);
     if (!source && discount && !["admin", "gerente"].includes(user.role))
@@ -298,6 +308,22 @@ function factory() {
         total += amount;
         lines.push({ ...row, product, unitPrice, stockTracked, amount });
       }
+      let loyalty = null;
+      if (body.loyalty) {
+        if (!customer || body.loyalty.customerId !== customer.id)
+          throw fail("Selecione novamente o cliente da fidelidade");
+        loyalty = await require("./loyaltyOperations").quote(
+          customer.id,
+          total,
+          body.loyalty.revision,
+          transaction,
+        );
+        if (discount !== loyalty.discount)
+          throw fail(
+            "O carrinho ou benefício mudou. Confira novamente o desconto de fidelidade.",
+            409,
+          );
+      }
       if (document) discount = cents(document.discount, "Desconto", true);
       if (total > 9999999999 || discount > total)
         throw fail("Desconto ou total inválido");
@@ -313,7 +339,7 @@ function factory() {
           sourceWorkOrderId: workOrder?.id || null,
           notes: workOrder
             ? `Ordem de serviço #${workOrder.number} — ${workOrder.vehicleSnapshot.plate}`
-            : null,
+            : loyalty?.description || null,
           customerId: customer?.id || null,
           discount_amount: discount / 100,
           payments,
@@ -325,6 +351,16 @@ function factory() {
         },
         { transaction },
       );
+      if (loyalty)
+        await LoyaltyBenefit.create(
+          {
+            saleId: sale.id,
+            customerId: customer.id,
+            profile: loyalty.snapshot,
+            discount: discount / 100,
+          },
+          { transaction },
+        );
       for (const line of lines) {
         const { product, stockTracked } = line;
         const recipe = await recipeOps.consume(product.id, line.quantity, {

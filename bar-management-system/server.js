@@ -38,6 +38,7 @@ app.use('/api/support',require('./src/tenancy/supportRoutes')(central));
 app.use(tenantBoundary);
 app.post('/api/support/session/end',async(req,res,next)=>{try{if(!req.supportSession)return res.sendStatus(403);await req.supportSession.update({revoked:true});await central.SupportAudit.create({supportUserId:req.supportUser.id,tenantId:req.tenant.id,action:'support_session_closed'});res.sendStatus(204);}catch(e){next(e)}});
 app.get('/api/support/company-info',async(req,res,next)=>{try{if(!req.supportUser)return res.sendStatus(403);await central.SupportAudit.create({supportUserId:req.supportUser.id,tenantId:req.tenant.id,action:'support_company_id_viewed'});res.json({clientId:req.tenant.id,company:req.tenant.slug});}catch(e){next(e)}});
+app.use('/api/loyalty',require('./src/routes/loyalty'));
 app.use('/api/settings', require('./src/routes/settings'));
 app.use(express.urlencoded({ extended: true }));
 

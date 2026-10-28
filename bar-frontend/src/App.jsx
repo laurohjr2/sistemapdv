@@ -35,6 +35,7 @@ import Suppliers from './pages/Suppliers';
 import Purchases from './pages/Purchases';
 import Finance from './pages/Finance';
 import BusinessModuleRoute from './components/BusinessModuleRoute';
+import Loyalty from './pages/Loyalty';
 import Customers from './pages/Customers';
 import Recovery from './pages/Recovery';
 import Support from './pages/Support';
@@ -71,6 +72,7 @@ function App() {
             <Route path="recipes" element={<ProtectedRoute requiredRoles={['admin','gerente']}><BusinessModuleRoute module="recipes"><Recipes/></BusinessModuleRoute></ProtectedRoute>}/>
             <Route path="scale-labels" element={<BusinessModuleRoute module="market"><ScaleLabels/></BusinessModuleRoute>}/>
             <Route path="market" element={<BusinessModuleRoute module="market"><Market/></BusinessModuleRoute>}/>
+            <Route path="loyalty" element={<ProtectedRoute requiredRoles={['admin','gerente']}><Loyalty/></ProtectedRoute>}/>
             <Route path="part-imports" element={<ProtectedRoute requiredRoles={['admin','gerente']}><BusinessModuleRoute module="autoparts"><PartImport/></BusinessModuleRoute></ProtectedRoute>}/>
             <Route path="autoparts" element={<BusinessModuleRoute module="autoparts"><AutoParts/></BusinessModuleRoute>}/>
             <Route path="workshop-warranty" element={<BusinessModuleRoute module="workshop"><WorkshopWarranty/></BusinessModuleRoute>}/>

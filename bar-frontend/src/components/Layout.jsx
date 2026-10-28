@@ -47,6 +47,7 @@ const Layout = () => {
   };
 
   const navigation = [
+    {name:"Fidelidade",href:"/loyalty",icon:Users,roles:["gerente","admin"],area:"Comercial"},
     {
       name: "Dashboard",
       href: "/",
