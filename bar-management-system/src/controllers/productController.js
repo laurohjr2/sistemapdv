@@ -1,5 +1,5 @@
 function createScopedModule() {
-const { Product, PartDetail } = require('../models');
+const { Product, PartDetail, StockLot } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 const { Op } = require('sequelize');
 
@@ -36,6 +36,12 @@ const getAllProducts = async (req, res) => {
       order: [['name', 'ASC']]
     });
 
+    const tracked=products.filter(p=>p.lotTracked);
+    if(tracked.length){
+      const lots=await StockLot.findAll({where:{productId:{[Op.in]:tracked.map(p=>p.id)},kind:'identified',expirationDate:{[Op.gte]:require('../services/commercialValidation').today()},quantity:{[Op.gt]:0}},raw:true});
+      const totals=new Map();for(const lot of lots)totals.set(lot.productId,(totals.get(lot.productId)||0)+Math.round(Number(lot.quantity)*1000));
+      for(const p of tracked){p.setDataValue('availableStock',(totals.get(p.id)||0)/1000);p.setDataValue('blockedStock',(Math.round(Number(p.currentStock)*1000)-(totals.get(p.id)||0))/1000);}
+    }
     let filteredProducts = products;
     if (lowStock === 'true') {
       filteredProducts = products.filter(product => 

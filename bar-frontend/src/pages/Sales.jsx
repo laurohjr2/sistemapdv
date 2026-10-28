@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ShoppingCart, Plus, Minus, Trash2, Receipt, X, Search, Scan, DollarSign, Lock, Unlock, Printer } from 'lucide-react';
 import api from "../lib/api";
 
+const stockAvailable = product => Number(product.availableStock ?? product.currentStock);
 const Sales = () => {
   const {business} = useBusiness();
   const {user}=useAuth();
@@ -235,7 +236,7 @@ const Sales = () => {
     const existingItem = cart.find(item => item.id === product.id&&!item.pizza);
     
     if (existingItem) {
-      if (product.itemType==='service'||existingItem.quantity < Number(product.currentStock)) {
+      if (product.itemType==='service'||existingItem.quantity < stockAvailable(product)) {
         setCart(cart.map(item =>
           item.id === product.id&&!item.pizza
             ? { ...item, quantity: item.quantity + 1 }
@@ -245,7 +246,7 @@ const Sales = () => {
         setError('Quantidade em estoque insuficiente');
       }
     } else {
-      if (product.itemType==='service'||Number(product.currentStock) > 0) {
+      if (product.itemType==='service'||stockAvailable(product) > 0) {
         setCart([...cart, { ...product, cartKey:product.id, quantity: 1 }]);
       } else {
         setError('Produto sem estoque');
@@ -259,7 +260,7 @@ const Sales = () => {
     const product=products.find(p=>p.id===current?.id);
     if(!product)return;
     const others=cart.filter(i=>i.id===product.id&&(i.cartKey||i.id)!==cartKey).reduce((n,i)=>n+i.quantity,0);
-    if((current.pizza&&newQuantity>99)||(product.itemType!=='service'&&newQuantity+others>Number(product.currentStock))){setError('Quantidade em estoque insuficiente ou limite de 99 pizzas por item');return;}
+    if((current.pizza&&newQuantity>99)||(product.itemType!=='service'&&newQuantity+others>stockAvailable(product))){setError('Quantidade em estoque insuficiente ou limite de 99 pizzas por item');return;}
     setCart(cart.map(i=>(i.cartKey||i.id)===cartKey?{...i,quantity:newQuantity}:i));
   };
   const removeFromCart=key=>setCart(cart.filter(i=>(i.cartKey||i.id)!==key));
@@ -267,7 +268,7 @@ const Sales = () => {
     if(!cashRegister?.is_open)throw new Error('Você precisa abrir um caixa para vender');
     const product=products.find(p=>p.id===data.productId);
     const existing=cart.filter(i=>i.id===data.productId).reduce((n,i)=>n+i.quantity,0);
-    if(!product||Number(product.currentStock)<existing+data.quantity)throw new Error('Estoque insuficiente do produto-base para esta pizza');
+    if(!product||stockAvailable(product)<existing+data.quantity)throw new Error('Estoque insuficiente do produto-base para esta pizza');
     setCart([...cart,{...product,id:product.id,cartKey:crypto.randomUUID(),name:data.pizza.description,price:data.unitPrice,pizza:data.pizza.selection,quantity:data.quantity,notes:data.notes}]);
   }
 
@@ -475,9 +476,9 @@ const Sales = () => {
                         <SelectValue placeholder="Selecione um produto" />
                       </SelectTrigger>
                       <SelectContent>
-                        {products.filter(p => p.currentStock > 0).map((product) => (
+                        {products.filter(p => stockAvailable(p) > 0).map((product) => (
                           <SelectItem key={product.id} value={String(product.id)}>
-                            {product.name} - R$ {Number(product.salePrice)} (Estoque: {product.currentStock})
+                            {product.name} - R$ {Number(product.salePrice)} (Disponível: {stockAvailable(product)})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -812,12 +813,12 @@ const Sales = () => {
                             <p className="text-sm text-muted-foreground">{product.category}</p>
                             <p className="text-lg font-bold text-primary">R$ {Number(product.salePrice).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
                             <p className="text-xs text-muted-foreground">
-                              {product.itemType==='service'?'Serviço · sem estoque':`Estoque: ${Number(product.currentStock)}`}
+                              {product.itemType==='service'?'Serviço · sem estoque':product.lotTracked?`Disponível por lotes: ${stockAvailable(product)} · Físico: ${Number(product.currentStock)}`:`Estoque: ${stockAvailable(product)}`}
                             </p>
                           </div>
                           <Button
                             onClick={() => addToCart(product)}
-                            disabled={(product.itemType!=='service'&&Number(product.currentStock) === 0) || !cashRegister?.is_open}
+                            disabled={(product.itemType!=='service'&&stockAvailable(product) === 0) || !cashRegister?.is_open}
                             size="sm"
                           >
                             <Plus className="h-4 w-4" />

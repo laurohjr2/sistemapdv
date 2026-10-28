@@ -14,6 +14,7 @@ const changeStock = mode => async(req,res,next)=>{
    const newStock=mode==='adjust'?quantity:oldStock+(mode==='add'?quantity:-quantity),difference=newStock-oldStock;
    if(newStock<0)throw Object.assign(new Error('Estoque insuficiente'),{status:400});
    const cost=Number(req.body.unitCost??product.costPrice);if(!Number.isFinite(cost)||cost<0)throw Object.assign(new Error('Custo inválido'),{status:400});
+   if(product.lotTracked&&req.body.expirationDate)require('../services/commercialValidation').date(req.body.expirationDate,'Validade');
    let stockMovement;
    if(difference){
     stockMovement=await StockMovement.create({productId:product.id,userId:req.user.id,type:difference>0?'entrada':'saida',quantity:Math.abs(difference),unitCost:cost,reason:mode==='adjust'?'adjustment':mode==='add'?'purchase':req.body.reason||'manual_adjustment',notes:req.body.notes,batchNumber:req.body.batchNumber,expirationDate:req.body.expirationDate||null},{transaction});

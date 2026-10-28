@@ -72,3 +72,7 @@ Importação seletiva de produtos e serviços pré-cadastrados para sete perfis,
 ## Autopeças — Mark 0.6.0
 
 [Referências, códigos originais, aplicações por veículo, equivalências e busca no balcão](docs/autopecas/README.md), preservando preços e estoque dos produtos existentes.
+
+## Mercado — Mark 0.7.0
+
+[Controle opcional de lotes e validade, identificação de saldos, FEFO, conferência de devoluções e relatório](docs/mercado/README.md), integrado às movimentações de estoque.

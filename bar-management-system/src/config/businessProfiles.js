@@ -1,4 +1,4 @@
-const common = { autoparts:false, workshop:false, pizza:false, quotes: true, purchasing: true, finance: true };
+const common = { market:false, autoparts:false, workshop:false, pizza:false, quotes: true, purchasing: true, finance: true };
 const profiles = [
   {
     id: "bar_restaurante",
@@ -36,8 +36,8 @@ const profiles = [
     id: "mercado",
     name: "Mercado",
     description:
-      "Vendas, produtos, compras e financeiro. Pesagem e validade avançada terão implantação específica.",
-    modules: { ...common, tables: false, kitchen: false },
+      "Vendas, lotes, validade, compras e financeiro.",
+    modules: { ...common, market:true, tables: false, kitchen: false },
   },
   {
     id: "comercio",
@@ -47,6 +47,7 @@ const profiles = [
   },
 ];
 const moduleNames = {
+  market:"Mercado — lotes e validade",
   autoparts:"Autopeças — aplicações e equivalências",
   workshop:"Oficina — veículos e ordens de serviço",
   pizza:"Pizzaria — montagem e cardápio",

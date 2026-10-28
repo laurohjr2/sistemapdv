@@ -2,6 +2,8 @@ const { DataTypes } = require('sequelize');
 module.exports = function defineModel(sequelize) {
 
 const StockMovement = sequelize.define('StockMovement', {
+  lotId:{type:DataTypes.UUID,allowNull:true},
+  lotAllocations:{type:DataTypes.JSONB,allowNull:true},
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,

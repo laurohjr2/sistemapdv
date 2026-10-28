@@ -80,3 +80,5 @@ O script de atualização tem sintaxe compatível com PowerShell 5.1/7; o teste 
 A rotina de backup e recuperação recebeu uma entrega própria: consulte o [guia atualizado](../backup-recuperacao/README.md). O destino externo será definido posteriormente; a ativação do agendamento depende dessa configuração.
 
 A versão 0.4.0 entrega a montagem de pizzas com tamanhos, sabores, bordas e adicionais. Veja a [configuração e os limites atuais](../pizzaria/README.md).
+
+O controle opcional de lotes e validade foi entregue na **Mark 0.7.0**. Veja o [guia de Mercado](../mercado/README.md).

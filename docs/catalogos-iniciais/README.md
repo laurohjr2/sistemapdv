@@ -49,3 +49,5 @@ Validado no Docker com PostgreSQL e Chromium em 27/10/2026:
 - 3 verificações da versão publicada/cache; compilação Docker concluída; lint sem erros e com os 12 avisos anteriores do projeto.
 
 Reprodução apenas no projeto descartável `pdv-commerce-test`: execute `node scripts/starter-catalog-smoke.cjs` e depois `node scripts/starter-catalog-browser.cjs`. Os testes criam empresas sintéticas, sem usar cadastros reais. O teste de navegador utiliza o Playwright de `work/browser/node_modules/playwright` e Chromium em `/usr/bin/chromium`. A atualização física no computador Windows do cliente ainda deve ser aplicada pelos comandos acima.
+
+O controle opcional de lotes e validade foi entregue na **Mark 0.7.0**. Veja o [guia de Mercado](../mercado/README.md).
