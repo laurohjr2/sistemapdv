@@ -53,6 +53,7 @@ app.use('/api/recipes',require('./src/routes/recipes'));
 app.use('/api/scale',require('./src/routes/scale'));
 app.use('/api/market',require('./src/routes/market'));
 app.use('/api/autoparts',require('./src/routes/autoparts'));
+app.use('/api/workshop/orders',require('./src/routes/workshopEvidence'));
 app.use('/api/workshop',require('./src/routes/workshop'));
 app.use('/api/commerce',require('./src/routes/commerce'));
 app.use('/api/stock', stockRoutes);

@@ -88,3 +88,5 @@ Importação seletiva de produtos e serviços pré-cadastrados para sete perfis,
 - [Roteiro de validação conjunta das Marks 0.8.0 a 0.10.0](docs/planejamento/validacao-marks-0.8-a-0.10.md)
 
 - [Mark 0.11.0 — Combos e adicionais](docs/combos-adicionais/README.md)
+
+- [Mark 0.12.0 — Oficina: fotos e assinaturas](docs/oficina/evidencias.md)

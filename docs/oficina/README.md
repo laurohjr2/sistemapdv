@@ -1,5 +1,7 @@
 # Oficina mecânica — Mark 0.5.0
 
+Evolução disponível: [Mark 0.12.0 — Fotos e assinaturas](evidencias.md). Os limites abaixo descrevem a entrega original 0.5.0.
+
 A oficina integra clientes, veículos, peças, mão de obra e recebimento. Cada empresa mantém seus próprios veículos e ordens de serviço, e o perfil pode ser combinado com os demais módulos.
 
 ## Atualizar e habilitar

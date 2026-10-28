@@ -1,3 +1,4 @@
+import WorkshopEvidence from "../components/WorkshopEvidence";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
@@ -732,6 +733,17 @@ export default function Workshop() {
               <p>
                 <strong>Diagnóstico:</strong> {selected.diagnosis || "Pendente"}
               </p>
+              <WorkshopEvidence
+                order={selected}
+                onChanged={async () => {
+                  const id = selected.id,
+                    fresh = (await api.get("/workshop/orders/" + id)).data;
+                  setSelected((current) =>
+                    current?.id === id ? fresh : current,
+                  );
+                  await state.load();
+                }}
+              />
               <details>
                 <summary className="cursor-pointer font-medium">
                   Checklist de entrada
@@ -910,6 +922,10 @@ export default function Workshop() {
                       {date(ev.at)} · {ev.username} ·{" "}
                       {labels[ev.action] ||
                         {
+                          photo_added: "Foto anexada",
+                          photo_archived: "Foto arquivada",
+                          signature_recorded: "Assinatura registrada",
+                          signature_voided: "Registro de assinatura cancelado",
                           created: "Criada",
                           revised: "Revisada",
                           paid: "Recebida",

@@ -117,15 +117,13 @@ function createRouter() {
     "/orders/:id/checkout",
     manager,
     handler(async (req, res) =>
-      res
-        .status(201)
-        .json(
-          await require("../services/saleOperations").create({
-            workOrderId: req.params.id,
-            body: req.body,
-            user: req.user,
-          }),
-        ),
+      res.status(201).json(
+        await require("../services/saleOperations").create({
+          workOrderId: req.params.id,
+          body: req.body,
+          user: req.user,
+        }),
+      ),
     ),
   );
   router.get(
@@ -217,11 +215,12 @@ function createRouter() {
       add("Histórico", true);
       for (const e of o.events)
         add(
-          `${stamp(e.at)} | ${e.username} | ${ops.states[e.action] || { created: "Criada", revised: "Revisada", paid: "Recebida", payment_cancelled: "Pagamento cancelado" }[e.action] || e.action}${e.note ? " | " + e.note : ""}`,
+          `${stamp(e.at)} | ${e.username} | ${ops.states[e.action] || { created: "Criada", revised: "Revisada", paid: "Recebida", payment_cancelled: "Pagamento cancelado", photo_added: "Foto anexada", photo_archived: "Foto arquivada", signature_recorded: "Assinatura registrada", signature_voided: "Registro de assinatura cancelado" }[e.action] || e.action}${e.note ? " | " + e.note : ""}`,
         );
       add(
         "Estoque das peças movimentado no recebimento. Serviços não movimentam estoque.",
       );
+      await require("../services/workshopEvidence").appendPdf(doc, o);
       doc.end();
     }),
   );

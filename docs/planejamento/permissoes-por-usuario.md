@@ -34,3 +34,5 @@ Incluir fichas técnicas: consultar composição/custos, editar/ativar receita e
 Incluir entregas: consultar/alterar contato e endereço, imprimir dados do destinatário, avançar etapas, identificar entregador, confirmar recebimento e cancelar apenas a entrega. Separar essas ações do estorno financeiro, preservando as regras de devolução física.
 
 Incluir combos: editar/inativar catálogo promocional, lançar conjuntos/adicionais e remover o grupo completo. Distinguir a promoção cadastrada por gerente de um desconto livre dado pelo operador, mantendo a autorização para reposição de insumos.
+
+Incluir evidências da oficina: consultar/baixar fotos, anexar como responsável atribuído, arquivar sem apagar, registrar/cancelar registro de assinatura e imprimir anexos. Preservar a separação entre registro desenhado, autorização da OS e recebimento financeiro.
