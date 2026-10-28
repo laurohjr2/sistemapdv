@@ -108,6 +108,7 @@ const Layout = () => {
     {name:"Fichas técnicas",href:"/recipes",icon:ChefHat,roles:["gerente","admin"],module:"recipes",area:"Cadastros e estoque"},
     {name:"Balanças e etiquetas",href:"/scale-labels",icon:Printer,roles:["garcom","gerente","admin"],module:"market",area:"Cadastros e estoque"},
     {name:"Lotes e validade",href:"/market",icon:PackageSearch,roles:["garcom","gerente","admin"],module:"market",area:"Cadastros e estoque"},
+    {name:"Importar autopeças",href:"/part-imports",icon:PackageSearch,roles:["gerente","admin"],module:"autoparts",area:"Cadastros e estoque"},
     {name:"Autopeças",href:"/autoparts",icon:PackageSearch,roles:["garcom","gerente","admin"],module:"autoparts",area:"Cadastros e estoque"},
     {name:"Pizzaria",href:"/pizzeria",icon:Pizza,roles:["gerente","admin"],module:"pizza",area:"Cadastros e estoque"},
     {

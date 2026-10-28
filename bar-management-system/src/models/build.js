@@ -1,4 +1,5 @@
 module.exports = function buildModels(sequelize) {
+const PartImport=require('./PartImport')(sequelize);
 const WorkshopWarranty=require('./WorkshopWarranty')(sequelize);
 const WorkshopReturn=require('./WorkshopReturn')(sequelize);
 const WorkshopAppointment=require('./WorkshopAppointment')(sequelize);
@@ -98,7 +99,7 @@ Product.hasMany(Ticket, { foreignKey: 'product_id', as: 'tickets' });
 Ticket.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 return {
-  sequelize, WorkshopWarranty, WorkshopReturn, WorkshopAppointment, WorkOrderPhoto, WorkOrderSignature, MenuBundle, DeliveryOrder, Recipe, ScaleSettings, ScaleProduct, StockLot, PartDetail, PartEquivalence, Vehicle, WorkOrder,
+  sequelize, PartImport, WorkshopWarranty, WorkshopReturn, WorkshopAppointment, WorkOrderPhoto, WorkOrderSignature, MenuBundle, DeliveryOrder, Recipe, ScaleSettings, ScaleProduct, StockLot, PartDetail, PartEquivalence, Vehicle, WorkOrder,
   PizzaCatalog,
   User,
   Product,

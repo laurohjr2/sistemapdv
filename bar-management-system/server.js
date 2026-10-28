@@ -52,6 +52,7 @@ app.use('/api/bundles',require('./src/routes/bundles'));
 app.use('/api/recipes',require('./src/routes/recipes'));
 app.use('/api/scale',require('./src/routes/scale'));
 app.use('/api/market',require('./src/routes/market'));
+app.use('/api/part-imports',require('./src/routes/partImport'));
 app.use('/api/autoparts',require('./src/routes/autoparts'));
 app.use('/api/workshop-warranty',require('./src/routes/workshopWarranty'));
 app.use('/api/workshop-agenda',require('./src/routes/workshopAgenda'));
