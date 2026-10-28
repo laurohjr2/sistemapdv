@@ -50,7 +50,7 @@ export default function PizzaSaleKitchen({ recipes = false }) {
             </div>
             <p>
               {Number(item.quantity)}x{" "}
-              {item.pizza?.description || item.product?.name}
+              {item.bundle?.component?.name || item.pizza?.description || item.product?.name}
             </p>
             {item.notes && (
               <p className="font-medium">Observações: {item.notes}</p>

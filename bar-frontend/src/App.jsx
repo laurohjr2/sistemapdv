@@ -3,6 +3,7 @@ import {useAuth} from './hooks/useAuth';
 import ScaleLabels from './pages/ScaleLabels';
 import Recipes from './pages/Recipes';
 import Deliveries from './pages/Deliveries';
+import Bundles from './pages/Bundles';
 import Market from './pages/Market';
 import AutoParts from './pages/AutoParts';
 import Workshop from './pages/Workshop';
@@ -62,6 +63,7 @@ function App() {
                 <Home/>
               } 
             />
+            <Route path="bundles" element={<ProtectedRoute requiredRoles={['admin','gerente']}><BusinessModuleRoute module="bundles"><Bundles/></BusinessModuleRoute></ProtectedRoute>}/>
             <Route path="deliveries" element={<BusinessModuleRoute module="delivery"><Deliveries/></BusinessModuleRoute>}/>
             <Route path="recipes" element={<ProtectedRoute requiredRoles={['admin','gerente']}><BusinessModuleRoute module="recipes"><Recipes/></BusinessModuleRoute></ProtectedRoute>}/>
             <Route path="scale-labels" element={<BusinessModuleRoute module="market"><ScaleLabels/></BusinessModuleRoute>}/>

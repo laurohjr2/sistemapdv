@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize');
 module.exports = function defineModel(sequelize) {
 
 const SaleItem = sequelize.define('SaleItem', {
+  bundle:{type:DataTypes.JSONB,allowNull:true},
   preparationStatus:{type:DataTypes.STRING(12),allowNull:true},
   preparationStartedAt:{type:DataTypes.DATE,allowNull:true},
   preparationCompletedAt:{type:DataTypes.DATE,allowNull:true},

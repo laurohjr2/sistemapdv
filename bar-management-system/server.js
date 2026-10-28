@@ -48,6 +48,7 @@ app.use('/api/customers',require('./src/routes/customers'));
 app.use('/api/products', productRoutes);
 app.use('/api/pizza',require('./src/routes/pizza'));
 app.use('/api/deliveries',require('./src/routes/deliveries'));
+app.use('/api/bundles',require('./src/routes/bundles'));
 app.use('/api/recipes',require('./src/routes/recipes'));
 app.use('/api/scale',require('./src/routes/scale'));
 app.use('/api/market',require('./src/routes/market'));

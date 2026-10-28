@@ -32,3 +32,5 @@ Matriz de menus × ações × perfis, revisão com o proprietário, regras de co
 Incluir fichas técnicas: consultar composição/custos, editar/ativar receita e autorizar reposição de ingredientes não utilizados. O padrão de cancelamento deve preservar o consumo; apenas uma permissão explícita pode autorizar reposição.
 
 Incluir entregas: consultar/alterar contato e endereço, imprimir dados do destinatário, avançar etapas, identificar entregador, confirmar recebimento e cancelar apenas a entrega. Separar essas ações do estorno financeiro, preservando as regras de devolução física.
+
+Incluir combos: editar/inativar catálogo promocional, lançar conjuntos/adicionais e remover o grupo completo. Distinguir a promoção cadastrada por gerente de um desconto livre dado pelo operador, mantendo a autorização para reposição de insumos.

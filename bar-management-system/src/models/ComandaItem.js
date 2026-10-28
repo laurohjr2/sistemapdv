@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize');
 module.exports = function defineModel(sequelize) {
 
 const ComandaItem = sequelize.define('ComandaItem', {
+  bundle:{type:DataTypes.JSONB,allowNull:true},
   recipe:{type:DataTypes.JSONB,allowNull:true},
   pizza:{type:DataTypes.JSONB,allowNull:true},
   stockTracked:{type:DataTypes.BOOLEAN,allowNull:false,defaultValue:true},

@@ -1,4 +1,5 @@
 module.exports = function buildModels(sequelize) {
+const MenuBundle=require('./MenuBundle')(sequelize);
 const Recipe=require('./Recipe')(sequelize);
 const DeliveryOrder=require('./DeliveryOrder')(sequelize);
 const ScaleSettings=require('./ScaleSettings')(sequelize);
@@ -92,7 +93,7 @@ Product.hasMany(Ticket, { foreignKey: 'product_id', as: 'tickets' });
 Ticket.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 return {
-  sequelize, DeliveryOrder, Recipe, ScaleSettings, ScaleProduct, StockLot, PartDetail, PartEquivalence, Vehicle, WorkOrder,
+  sequelize, MenuBundle, DeliveryOrder, Recipe, ScaleSettings, ScaleProduct, StockLot, PartDetail, PartEquivalence, Vehicle, WorkOrder,
   PizzaCatalog,
   User,
   Product,

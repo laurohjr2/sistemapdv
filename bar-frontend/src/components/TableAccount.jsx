@@ -1,3 +1,4 @@
+import BundlePicker from './BundlePicker';
 import PizzaBuilder from './pizza/PizzaBuilder';
 import usePizzaCatalog from './pizza/usePizzaCatalog';
 import { useEffect, useState, useCallback } from "react";
@@ -32,6 +33,7 @@ export default function TableAccount({ table, onClose, onUpdate }) {
   const { user } = useAuth(),
     { business } = useBusiness();
   const [pizzaOpen,setPizzaOpen]=useState(false);
+  const [bundleOpen,setBundleOpen]=useState(false);
   const {menu:pizzaMenu}=usePizzaCatalog(Boolean(business.modules?.pizza));
   const pizzaBases=new Set((pizzaMenu?.sizes||[]).filter(s=>s.active).map(s=>s.productId));
   const [comanda, setComanda] = useState(null),
@@ -158,7 +160,7 @@ export default function TableAccount({ table, onClose, onUpdate }) {
       return;
     }
     popup.document.write(
-      `<html><head><title>Comanda — Mesa ${table.tableNumber}</title><style>body{font-family:Arial;margin:24px}table{width:100%;border-collapse:collapse}td,th{padding:8px;text-align:left;border-bottom:1px solid #ddd}</style></head><body>${receiptHeader(business)}<h2>Mesa ${table.tableNumber}</h2><p>Cliente: ${escapeHtml(account.customerName || name || "Não informado")}</p><p>${account.status === "fechada" ? "Conta paga" : "CONFERÊNCIA — conta aberta"}</p><table><tr><th>Produto</th><th>Qtd</th><th>Total</th></tr>${(comanda?.items || []).map((i) => `<tr><td>${escapeHtml(i.pizza?.description || i.product?.name || "Produto")}${i.notes?`<br>${escapeHtml(i.notes)}`:""}</td><td>${Number(i.quantity)}</td><td>${money(i.totalItemValue)}</td></tr>`).join("")}</table><p>Subtotal: ${money(account.totalValue)}</p><p>Desconto: ${money(account.discountValue)}</p><strong>Total: ${money(account.finalValue ?? account.totalValue)}</strong>${(account.payments || []).map((p) => `<p>${escapeHtml(methods[p.method])}: ${money(p.amount)}</p>`).join("")}<p>${escapeHtml(business.receiptMessage)}</p></body></html>`,
+      `<html><head><title>Comanda — Mesa ${table.tableNumber}</title><style>body{font-family:Arial;margin:24px}table{width:100%;border-collapse:collapse}td,th{padding:8px;text-align:left;border-bottom:1px solid #ddd}</style></head><body>${receiptHeader(business)}<h2>Mesa ${table.tableNumber}</h2><p>Cliente: ${escapeHtml(account.customerName || name || "Não informado")}</p><p>${account.status === "fechada" ? "Conta paga" : "CONFERÊNCIA — conta aberta"}</p><table><tr><th>Produto</th><th>Qtd</th><th>Total</th></tr>${(comanda?.items || []).map((i) => `<tr><td>${escapeHtml(i.bundle?.component?.name || i.pizza?.description || i.product?.name || "Produto")}${i.notes?`<br>${escapeHtml(i.notes)}`:""}</td><td>${Number(i.quantity)}</td><td>${money(i.totalItemValue)}</td></tr>`).join("")}</table><p>Subtotal: ${money(account.totalValue)}</p><p>Desconto: ${money(account.discountValue)}</p><strong>Total: ${money(account.finalValue ?? account.totalValue)}</strong>${(account.payments || []).map((p) => `<p>${escapeHtml(methods[p.method])}: ${money(p.amount)}</p>`).join("")}<p>${escapeHtml(business.receiptMessage)}</p></body></html>`,
     );
     popup.document.close();
     popup.onload = () => popup.print();
@@ -231,7 +233,7 @@ export default function TableAccount({ table, onClose, onUpdate }) {
                     className="py-2 flex flex-wrap justify-between gap-2"
                   >
                     <div>
-                      <strong>{i.pizza?.description||i.product?.name}</strong> × {Number(i.quantity)}
+                      <strong>{i.bundle?.component?.name||i.pizza?.description||i.product?.name}</strong> × {Number(i.quantity)}
                       <p>{i.notes}</p>
                       <span
                         className={
@@ -268,6 +270,8 @@ export default function TableAccount({ table, onClose, onUpdate }) {
                 ))}
               </div>
               {business.modules?.pizza&&<Button onClick={()=>setPizzaOpen(true)} disabled={busy}>Montar pizza</Button>}
+              {business.modules?.bundles&&<Button variant="outline" onClick={()=>setBundleOpen(true)} disabled={busy}>Selecionar combo</Button>}
+              {bundleOpen&&<BundlePicker onClose={()=>setBundleOpen(false)} onAdd={async data=>{await api.post('/bundles/comandas/'+comanda.id,{selection:data.selection,quantity:data.quantity,notes:data.notes,expectedUnitPrice:data.preview.unitPrice});setComanda((await api.get('/comandas/'+comanda.id)).data);await onUpdate();}}/>}
               {pizzaOpen&&<PizzaBuilder onClose={()=>setPizzaOpen(false)} onAdd={async data=>{await api.post('/comandas/'+comanda.id+'/items',{productId:data.productId,pizza:data.pizza.selection,quantity:data.quantity,notes:data.notes,expectedUnitPrice:data.unitPrice});setComanda((await api.get('/comandas/'+comanda.id)).data);await onUpdate();}}/>}
               <form onSubmit={add} className="space-y-3 border rounded p-3">
                 <label>

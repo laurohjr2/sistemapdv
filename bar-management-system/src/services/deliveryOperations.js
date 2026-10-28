@@ -135,7 +135,7 @@ function factory() {
           paidTotal: sale.total_amount,
           items: lines.map((i) => ({
             productId: i.product_id,
-            name: i.pizza?.description || i.product.name,
+            name: i.bundle?.component?.name || i.pizza?.description || i.product.name,
             unit: i.product.unitOfMeasure,
             quantity: Number(i.quantity),
             unitPrice: Number(i.unit_price),

@@ -86,12 +86,46 @@ function factory() {
           throw fail("Esta OS já foi recebida", 409);
       }
       const document = quote || workOrder;
-      const items = document
+      const rawItems = document
         ? document.lines.map((l) => ({
             product_id: l.productId,
             quantity: l.quantity,
           }))
         : body.items;
+      if (!Array.isArray(rawItems) || !rawItems.length || rawItems.length > 200)
+        throw fail("Informe de 1 a 200 itens");
+      const items = [],
+        bundleRows = new Map(),
+        bundleOps = require("./bundleOperations");
+      for (const item of rawItems) {
+        if (item?.bundle) {
+          if (item.pizza || item.scale)
+            throw fail("Um combo não pode misturar outra montagem ou etiqueta");
+          const resolved = await bundleOps.resolve(item.bundle, transaction),
+            amount = bundleOps.integer(item.quantity);
+          if (
+            cents(item.unit_price, "Preço", true) !==
+            cents(resolved.unitPrice, "Preço", true)
+          )
+            throw fail(
+              "O preço dos adicionais mudou. Selecione novamente.",
+              409,
+            );
+          const groupId = require("node:crypto").randomUUID();
+          for (let index = 0; index < resolved.lines.length; index++) {
+            const row = {
+              product_id: resolved.lines[index].productId,
+              quantity: amount,
+              notes: `Combo: ${resolved.name} · grupo ${groupId.slice(0, 8)}${resolved.lines[index].kind === "extra" ? " · adicional" : ""}${item.notes ? " · " + require("./commercialValidation").text(item.notes, "Observações", 500) : ""}`,
+            };
+            items.push(row);
+            bundleRows.set(
+              row,
+              bundleOps.snapshot(resolved, groupId, amount, index),
+            );
+          }
+        } else items.push(item);
+      }
       if (!Array.isArray(items) || !items.length || items.length > 200)
         throw fail("Informe de 1 a 200 itens");
       const pizzaOps = require("./pizzaOperations");
@@ -167,6 +201,7 @@ function factory() {
         requested.push({
           id,
           quantity: q,
+          bundle: bundleRows.get(item) || null,
           pizza: resolved?.pizza || null,
           scale: scaled,
           notes: scaled
@@ -210,9 +245,12 @@ function factory() {
       const merged = [];
       for (const row of requested) {
         const existing =
+          !row.bundle &&
           !row.pizza &&
           !row.scale &&
-          merged.find((m) => !m.pizza && !m.scale && m.id === row.id);
+          merged.find(
+            (m) => !m.bundle && !m.pizza && !m.scale && m.id === row.id,
+          );
         if (existing) existing.quantity += row.quantity;
         else merged.push({ ...row });
       }
@@ -233,13 +271,29 @@ function factory() {
             "Produto ou preço mudou durante a leitura. Leia a etiqueta novamente.",
             409,
           );
+        if (row.bundle) {
+          const component = row.bundle.component;
+          if (
+            product.itemType !== "service" &&
+            product.unitOfMeasure !== "unidade"
+          )
+            throw fail("Unidade do componente mudou. Revise o combo.", 409);
+          if (
+            component.kind === "extra" &&
+            cents(product.salePrice, "Preço", true) !==
+              cents(component.unitPrice, "Preço", true)
+          )
+            throw fail("Preço do adicional mudou. Selecione novamente.", 409);
+        }
         const stockTracked =
           product.itemType !== "service" && !product.recipeEnabled;
-        const unitPrice = row.pizza
-          ? row.pizza.unitPrice
-          : quoted
-            ? quoted.unitPrice
-            : Number(product.salePrice);
+        const unitPrice = row.bundle
+          ? row.bundle.allocatedUnitPrice
+          : row.pizza
+            ? row.pizza.unitPrice
+            : quoted
+              ? quoted.unitPrice
+              : Number(product.salePrice);
         const amount = lineCents(row.quantity, cents(unitPrice, "Preço", true));
         total += amount;
         lines.push({ ...row, product, unitPrice, stockTracked, amount });
@@ -287,6 +341,7 @@ function factory() {
             unit_price: line.unitPrice,
             total_price: line.amount / 100,
             stockTracked,
+            bundle: line.bundle,
             pizza: line.pizza,
             scale: line.scale,
             recipe,

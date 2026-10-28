@@ -1,3 +1,4 @@
+import BundlePicker from '../components/BundlePicker';
 import {Link} from 'react-router-dom';
 import {lineTotal} from '../components/commerce/helpers';
 import ScaleScanDialog from '../components/ScaleScanDialog';
@@ -30,6 +31,7 @@ const Sales = () => {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [pizzaOpen,setPizzaOpen]=useState(false);
+  const [bundleOpen,setBundleOpen]=useState(false);
   const {menu:pizzaMenu,error:pizzaError}=usePizzaCatalog(Boolean(business.modules?.pizza));
   const pizzaBases=new Set((pizzaMenu?.sizes||[]).filter(s=>s.active).map(s=>s.productId));
   const [sales, setSales] = useState([]);
@@ -267,6 +269,7 @@ const Sales = () => {
     if(newQuantity===0){removeFromCart(cartKey);return;}
     const current=cart.find(i=>(i.cartKey||i.id)===cartKey);
     if(current?.scale){setError('Leia novamente a etiqueta para alterar o peso desse item.');return;}
+    if(current?.bundle){if(!Number.isInteger(newQuantity)||newQuantity<1||newQuantity>99){setError('Use de 1 a 99 combos por grupo');return;}setCart(cart.map(i=>(i.cartKey||i.id)===cartKey?{...i,quantity:newQuantity}:i));return;}
     const product=products.find(p=>p.id===current?.id);
     if(!product)return;
     const others=cart.filter(i=>i.id===product.id&&(i.cartKey||i.id)!==cartKey).reduce((n,i)=>n+i.quantity,0);
@@ -334,7 +337,7 @@ const Sales = () => {
         items: cart.map(item => ({
           product_id: item.id,
           quantity: item.quantity,
-          unit_price: item.price,pizza:item.pizza,scale:item.scale,notes:item.notes
+          unit_price: item.price,pizza:item.pizza,scale:item.scale,bundle:item.bundle,notes:item.notes
         })),
         customerId:customerId||null,discount_amount:Number(discount||0),
         payment_method: paymentMethod,
@@ -347,7 +350,7 @@ const Sales = () => {
       // Preparar dados para impressão da nota
       const receiptData = {
         id: response.data.id,
-        items: response.data.items.map(item=>({name:item.pizza?.description||item.scale?.productName||cart.find(i=>i.id===item.product_id)?.name||'Produto',notes:item.notes,quantity:Number(item.quantity),unit_price:Number(item.unit_price),total:Number(item.total_price)})),
+        items: response.data.items.map(item=>({name:item.bundle?.component?.name||item.bundle?.components?.[item.bundle.index]?.name||item.pizza?.description||item.scale?.productName||cart.find(i=>i.id===item.product_id)?.name||'Produto',notes:item.notes,quantity:Number(item.quantity),unit_price:Number(item.unit_price),total:Number(item.total_price)})),
         total: Number(response.data.total_amount),
         customerId:customerId||null,discount_amount:Number(discount||0),
         payment_method: paymentMethod,
@@ -462,6 +465,8 @@ const Sales = () => {
   return (
     <div className="space-y-6">
       <ScaleScanDialog weight={scaleWeight} onWeightChange={value=>{setScaleWeight(value);setScaleConfirmed(false)}} confirmed={scaleConfirmed} onConfirmedChange={setScaleConfirmed} item={scaleItem} onClose={()=>setScaleItem(null)} onConfirm={confirmScale} error={scaleError}/>
+      {bundleOpen&&<BundlePicker onClose={()=>setBundleOpen(false)} onAdd={async data=>{if(!cashRegister?.is_open)throw new Error('Você precisa abrir um caixa para vender');const key=crypto.randomUUID();setCart(prev=>[...prev,{id:'bundle:'+key,cartKey:key,name:data.preview.name,itemType:'service',price:data.preview.unitPrice,quantity:data.quantity,bundle:data.selection,notes:data.notes}]);}}/>}
+      {business.modules?.bundles&&<Button variant="outline" onClick={()=>{if(!cashRegister?.is_open){setError('Você precisa abrir um caixa para vender');return;}setBundleOpen(true)}}>Selecionar combo</Button>}
       {pizzaOpen&&<PizzaBuilder onAdd={addPizza} onClose={()=>setPizzaOpen(false)}/>}
       {pizzaError&&<p role="alert">{pizzaError}</p>}
       {business.modules?.pizza&&<Button onClick={()=>{if(!cashRegister?.is_open){setError('Você precisa abrir um caixa para vender');return;}setPizzaOpen(true)}}>Montar pizza</Button>}

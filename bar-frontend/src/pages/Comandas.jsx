@@ -1,3 +1,4 @@
+import BundlePicker from '../components/BundlePicker';
 import PizzaBuilder from '../components/pizza/PizzaBuilder';
 import usePizzaCatalog from '../components/pizza/usePizzaCatalog';
 import {useAuth} from '../hooks/useAuth';
@@ -30,6 +31,7 @@ const Comandas = () => {
   const [comandas, setComandas] = useState([]);
   const [openComandas, setOpenComandas] = useState([]);
   const [pizzaOpen,setPizzaOpen]=useState(false);
+  const [bundleOpen,setBundleOpen]=useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedComanda, setSelectedComanda] = useState(null);
@@ -161,6 +163,13 @@ const Comandas = () => {
   };
 
   const handleRemoveItem = async (itemId) => {
+    const member=selectedComanda.items.find(i=>i.id===itemId);
+    if(member?.bundle){
+      if(!window.confirm('Remover o combo completo, incluindo os adicionais?'))return;
+      const hasRecipe=selectedComanda.items.some(i=>i.bundle?.groupId===member.bundle.groupId&&i.recipe);
+      const restoreIngredients=Boolean(hasRecipe&&['admin','gerente'].includes(user?.role)&&window.confirm('Os ingredientes NÃO foram usados? OK repõe os ingredientes; Cancelar mantém o consumo registrado.'));
+      try{await api.delete('/bundles/comandas/'+selectedComanda.id+'/'+member.bundle.groupId,{data:{restoreIngredients}});setSelectedComanda((await api.get('/comandas/'+selectedComanda.id)).data);fetchProducts();fetchComandas();}catch(e){toast.error(e.response?.data?.error||'Não foi possível remover o combo');}return;
+    }
     if (!window.confirm('Tem certeza que deseja remover este item?')) {
       return;
     }
@@ -266,7 +275,7 @@ const Comandas = () => {
             <tbody>
               ${receiptData.items?.map(item => `
                 <tr>
-                  <td>${escapeHtml(item.pizza?.description||item.product?.name)}</td>
+                  <td>${escapeHtml(item.bundle?.component?.name||item.pizza?.description||item.product?.name)}${item.bundle?`<br>${escapeHtml(item.notes||item.bundle.name)}`:''}</td>
                   <td>${item.quantity}</td>
                   <td>R$ ${parseFloat(item.priceAtSale).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                   <td>R$ ${parseFloat(item.totalItemValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
@@ -647,6 +656,8 @@ const Comandas = () => {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <Label className="text-sm font-medium">Itens da Comanda</Label>{business.modules?.pizza&&selectedComanda.status==='aberta'&&<Button onClick={()=>setPizzaOpen(true)}>Montar pizza</Button>}
+                  {business.modules?.bundles&&selectedComanda.status==='aberta'&&<Button variant="outline" onClick={()=>setBundleOpen(true)}>Selecionar combo</Button>}
+                  {bundleOpen&&<BundlePicker onClose={()=>setBundleOpen(false)} onAdd={async data=>{await api.post('/bundles/comandas/'+selectedComanda.id,{selection:data.selection,quantity:data.quantity,notes:data.notes,expectedUnitPrice:data.preview.unitPrice});setSelectedComanda((await api.get('/comandas/'+selectedComanda.id)).data);fetchComandas();fetchProducts();}}/>}
                   {pizzaOpen&&<PizzaBuilder onClose={()=>setPizzaOpen(false)} onAdd={async data=>{await api.post('/comandas/'+selectedComanda.id+'/items',{productId:data.productId,pizza:data.pizza.selection,quantity:data.quantity,notes:data.notes,expectedUnitPrice:data.unitPrice});setSelectedComanda((await api.get('/comandas/'+selectedComanda.id)).data);fetchComandas();fetchProducts();}}/>}
                   {selectedComanda.status === 'aberta' && (
                     <Button
@@ -673,9 +684,9 @@ const Comandas = () => {
                     <TableBody>
                       {selectedComanda.items?.map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell>{item.pizza?.description||item.product?.name}</TableCell>
+                          <TableCell>{item.bundle?.component?.name||item.bundle?.components?.[item.bundle.index]?.name||item.pizza?.description||item.product?.name}{item.bundle&&<p className="text-xs text-muted-foreground">{item.bundle.name} · grupo {item.bundle.groupId.slice(0,8)}</p>}</TableCell>
                           <TableCell>
-                            {selectedComanda.status === 'aberta' ? (
+                            {selectedComanda.status === 'aberta'&&!item.bundle ? (
                               <div className="flex items-center space-x-2">
                                 <Button
                                   variant="outline"
@@ -706,7 +717,7 @@ const Comandas = () => {
                                 size="sm"
                                 onClick={() => handleRemoveItem(item.id)}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" />{item.bundle?'Remover combo':''}
                               </Button>
                             </TableCell>
                           )}
