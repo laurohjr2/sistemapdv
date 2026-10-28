@@ -71,6 +71,7 @@ const Layout = () => {
     },
     {name:"Combos e adicionais",href:"/bundles",icon:ShoppingBag,roles:["gerente","admin"],module:"bundles",area:"Comercial"},
     {name:"Pedidos de entrega",href:"/deliveries",icon:Truck,roles:["garcom","gerente","admin"],module:"delivery",area:"Atendimento"},
+    {name:"Agenda da oficina",href:"/workshop-agenda",icon:Clock,roles:["garcom","gerente","admin"],module:"workshop",area:"Atendimento"},
     {name:"Oficina",href:"/workshop",icon:Wrench,roles:["garcom","gerente","admin"],module:"workshop",area:"Atendimento"},
     {
       name: "Mesas",
