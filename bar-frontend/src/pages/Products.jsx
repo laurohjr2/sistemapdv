@@ -275,7 +275,7 @@ const Products = () => {
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm}>
+            <Button permission="products.edit" onClick={resetForm}>
               <Plus className="mr-2 h-4 w-4" />
               Novo Produto
             </Button>
@@ -705,14 +705,14 @@ const Products = () => {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button
+                            <Button permission="products.edit"
                               variant="outline"
                               size="sm"
                               onClick={() => handleEdit(product)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button
+                            <Button permission="products.edit"
                               variant="outline"
                               size="sm"
                               onClick={() => handleDelete(product.id)}
@@ -761,7 +761,7 @@ const Products = () => {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Preço de Custo</Label>
-                  <p className="text-sm">R$ {parseFloat(viewingProduct.costPrice || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
+                  <p className="text-sm">R$ {viewingProduct.costPrice===undefined?'Sem acesso':parseFloat(viewingProduct.costPrice).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Preço de Venda</Label>

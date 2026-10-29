@@ -23,6 +23,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if(error.response?.data?.code==='ACCESS_DENIED')window.dispatchEvent(new Event('pdv-access-change'));
     if ((error.response?.status === 401 || error.response?.data?.code === 'COMPANY_SUSPENDED') && !error.config?.url?.startsWith('/support') && !error.config?.url?.startsWith('/auth/') && !error.config?.url?.startsWith('/settings/branding')) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');

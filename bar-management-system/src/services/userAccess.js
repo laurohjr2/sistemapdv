@@ -1,7 +1,7 @@
 const catalog = require("../config/accessCatalog");
 function factory() {
   const { UserAccess } = require("../models");
-  async function info(user) {
+  async function info(user, transaction) {
     if (user.platformUserId)
       return {
         kind: "master",
@@ -15,7 +15,11 @@ function factory() {
         kind: "support",
         mode: "readonly",
         revision: 0,
-        permissions: catalog.ceiling("gerente"),
+        permissions: catalog
+          .ceiling("gerente")
+          .filter((p) =>
+            /\.(view|read|menu|report|export|ranking|financial|print)$/.test(p),
+          ),
         home: "/settings",
       };
     if (user.role === "admin")
@@ -26,7 +30,7 @@ function factory() {
         permissions: catalog.ceiling("admin"),
         home: "/",
       };
-    const record = await UserAccess.findByPk(user.id),
+    const record = await UserAccess.findByPk(user.id, { transaction }),
       allowed = new Set(catalog.ceiling(user.role));
     const restricted = record?.mode === "restricted",
       permissions = restricted
@@ -43,6 +47,9 @@ function factory() {
       kind: "tenant",
       mode: restricted ? "restricted" : "legacy",
       template: record?.template || null,
+      profileName:
+        catalog.templates.find((t) => t.id === record?.template)?.name ||
+        "Personalizado",
       revision: record?.revision || 0,
       permissions,
       home,

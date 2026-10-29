@@ -1,3 +1,4 @@
+import UserAccessEditor from "../components/UserAccessEditor";
 import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useRecords } from "../components/commerce/helpers";
@@ -10,7 +11,8 @@ export default function UserAccess() {
     [query, setQuery] = useSearchParams(),
     [selected, setSelected] = useState(query.get("user") || ""),
     [record, setRecord] = useState(null),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [refreshVersion, setRefreshVersion] = useState(0);
   useEffect(() => {
     let alive = true;
     setRecord(null);
@@ -31,7 +33,7 @@ export default function UserAccess() {
     return () => {
       alive = false;
     };
-  }, [selected]);
+  }, [selected, refreshVersion]);
   return (
     <div className="space-y-5">
       <h1 className="text-3xl font-bold">Acessos e permissões</h1>
@@ -83,6 +85,17 @@ export default function UserAccess() {
           </p>
         </section>
       )}
+      {record && catalog.data?.permissions && (
+        <UserAccessEditor
+          key={selected + ":" + record.access.revision}
+          record={record}
+          catalog={catalog.data}
+          onSaved={() => setRefreshVersion((v) => v + 1)}
+        />
+      )}
+      <Button variant="outline" onClick={() => setRefreshVersion((v) => v + 1)}>
+        Recarregar usuário selecionado
+      </Button>
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Matriz de limites por papel</h2>
         <p className="text-sm text-muted-foreground">
@@ -101,7 +114,7 @@ export default function UserAccess() {
               </tr>
             </thead>
             <tbody>
-              {catalog.data?.permissions.map((p) => (
+              {catalog.data?.permissions?.map((p) => (
                 <tr key={p.id}>
                   <td>
                     <span className="text-xs text-muted-foreground block">
@@ -126,7 +139,7 @@ export default function UserAccess() {
         <h2 className="text-xl font-semibold">
           Perfis operacionais disponíveis
         </h2>
-        {catalog.data?.templates.map((t) => (
+        {catalog.data?.templates?.map((t) => (
           <p key={t.id} className="border rounded p-3">
             {t.name} · {t.permissions.length} ações ·{" "}
             {t.roles.includes("garcom") ? "Operação e gerência" : "Gerência"}

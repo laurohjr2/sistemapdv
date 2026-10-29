@@ -260,6 +260,12 @@ function required(req) {
   } else one("unmapped");
   if (!read) {
     if (
+      ["costPrice", "cost_price", "unitCost", "unit_cost"].some((k) =>
+        Object.hasOwn(b, k),
+      )
+    )
+      one("costs.view");
+    if (
       [
         "discount",
         "discount_amount",
@@ -311,14 +317,12 @@ function enforce(req, res, access) {
   if (access.mode !== "restricted") return true;
   const missing = denied(access, required(req));
   if (missing.length) {
-    res
-      .status(403)
-      .json({
-        code: "ACCESS_DENIED",
-        error:
-          "Seu perfil não permite esta operação. Solicite ao administrador a revisão dos seus acessos.",
-        required: missing,
-      });
+    res.status(403).json({
+      code: "ACCESS_DENIED",
+      error:
+        "Seu perfil não permite esta operação. Solicite ao administrador a revisão dos seus acessos.",
+      required: missing,
+    });
     return false;
   }
   if (!access.permissions.includes("costs.view")) {

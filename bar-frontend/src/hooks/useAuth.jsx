@@ -36,6 +36,12 @@ export const AuthProvider = ({ children }) => {
     validateToken();
   }, []);
 
+  useEffect(()=>{
+    const refresh=async()=>{if(!getToken())return;try{const {data}=await authAPI.validateToken();setUserState(data.user);setUser(data.user)}catch(e){if(e.response?.status===401){removeToken();removeUser();setUserState(null)}}};
+    const timer=setInterval(()=>{if(document.visibilityState==='visible')refresh()},30000);
+    window.addEventListener('focus',refresh);window.addEventListener('pdv-access-change',refresh);
+    return()=>{clearInterval(timer);window.removeEventListener('focus',refresh);window.removeEventListener('pdv-access-change',refresh)};
+  },[]);
   const login = async (credentials) => {
     try {
       const response = await authAPI.login({...credentials,company:credentials.company?.trim().toLowerCase()});

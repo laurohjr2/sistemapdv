@@ -3,7 +3,7 @@ import { Feedback } from "../components/commerce/shared";
 import { Button } from "../components/ui/button";
 export default function MyAccess() {
   const state = useRecords("/access/me"),
-    data = state.data;
+    data = state.data?.definitions ? state.data : null;
   return (
     <div className="space-y-4">
       <div className="flex justify-between flex-wrap gap-3">

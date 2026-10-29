@@ -45,3 +45,48 @@ assert.deepEqual(
 console.log(
   "Catálogo, perfis, limites de papel e política de ações sensíveis conferidos.",
 );
+// Every existing router endpoint must map to a known permission, including aliases.
+const fs = require("node:fs");
+const prefixes = {
+  workshopEvidence: "workshop/orders",
+  comandaCustomer: "comandas",
+  workshopAgenda: "workshop-agenda",
+  workshopWarranty: "workshop-warranty",
+  partImport: "part-imports",
+  cashRegister: "cash-register",
+  waitingQueue: "waiting-queue",
+};
+let routes = 0;
+for (const file of fs
+  .readdirSync("bar-management-system/src/routes")
+  .filter((f) => f.endsWith(".js") && f !== "passwordRecovery.js")) {
+  const name = file.slice(0, -3),
+    source = fs.readFileSync(
+      "bar-management-system/src/routes/" + file,
+      "utf8",
+    );
+  for (const match of source.matchAll(
+    /router\.(get|post|put|delete|patch)\(\s*['"]([^'"]+)/g,
+  )) {
+    const request = {
+      originalUrl:
+        "/api/" + (prefixes[name] || name) + (match[2] === "/" ? "" : match[2]),
+      method: match[1].toUpperCase(),
+      body: { status: "ready" },
+      query: {},
+    };
+    for (const id of p
+      .required(request)
+      .flatMap((r) => (typeof r === "string" ? [r] : r.any)))
+      assert.ok(
+        c.permissions.some((permission) => permission.id === id),
+        file + " " + match[2] + " " + id,
+      );
+    routes++;
+  }
+}
+assert.deepEqual(
+  JSON.parse(fs.readFileSync("bar-frontend/src/lib/accessNavigation.json")),
+  c.navigation,
+);
+console.log(routes + " rotas classificadas e mapa de navegação sincronizado.");

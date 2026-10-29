@@ -162,7 +162,7 @@ const groups = {
   ],
   settings: [
     "Configurações",
-    ["view", "Abrir configurações", ["admin"]],
+    ["view", "Abrir configurações", management],
     ["edit", "Alterar módulos e identidade", ["admin"]],
   ],
   users: ["Usuários", ["manage", "Administrar usuários e acessos", ["admin"]]],
@@ -322,4 +322,80 @@ const navigation = {
   "/users": "users.manage",
   "/print": "printer.view",
 };
-module.exports = { permissions, templates, navigation, ceiling };
+const dependencies = {
+  "cash.open": ["cash.view"],
+  "cash.close": ["cash.view", "cash.report"],
+  "sales.create": ["sales.view", "products.read", "cash.view"],
+  "tables.edit": ["tables.view", "products.read", "customers.view"],
+  "tables.receive": ["tables.view"],
+  "tables.cancel": ["tables.view"],
+  "tables.print": ["tables.view"],
+  "products.menu": ["products.read"],
+  "products.edit": ["products.menu", "costs.view"],
+  "products.import": ["products.menu", "costs.view"],
+  "stock.add": ["stock.view", "products.read"],
+  "stock.remove": ["stock.view", "products.read"],
+  "stock.adjust": ["stock.view", "products.read"],
+  "stock.export": ["stock.view", "costs.view"],
+  "quotes.edit": ["quotes.view", "products.read", "customers.view"],
+  "quotes.approve": ["quotes.view"],
+  "quotes.convert": ["quotes.view", "sales.create"],
+  "purchases.view": ["costs.view"],
+  "purchases.edit": ["purchases.view", "suppliers.view", "products.read"],
+  "purchases.receive": ["purchases.view", "products.read"],
+  "purchases.cancel": ["purchases.view"],
+  "finance.edit": ["finance.view"],
+  "finance.pay": ["finance.view", "cash.view"],
+  "finance.cancel": ["finance.view"],
+  "finance.export": ["finance.view"],
+  "reports.export": ["reports.view"],
+  "reports.ranking": ["reports.view"],
+  "reports.financial": ["reports.view"],
+  "recipes.view": ["costs.view", "products.read"],
+  "recipes.edit": ["recipes.view"],
+  "parts.edit": ["parts.view", "products.read"],
+  "parts.import": ["parts.view", "costs.view"],
+  "workshop.manage": ["workshop.view", "products.read", "customers.view"],
+  "workshop.approve": ["workshop.view"],
+  "workshop.execute": ["workshop.view"],
+  "workshop.photo": ["workshop.view"],
+  "workshop.evidence": ["workshop.view"],
+  "workshop.receive": ["workshop.view", "cash.view"],
+  "workshop.cancel": ["workshop.view"],
+  "workshop.print": ["workshop.view"],
+  "agenda.edit": ["agenda.view", "workshop.view"],
+  "warranty.edit": ["warranty.view", "workshop.view"],
+  "warranty.print": ["warranty.view"],
+  "loyalty.edit": ["loyalty.view", "customers.view"],
+  "loyalty.apply": ["loyalty.view", "discounts.apply", "sales.create"],
+  "loyalty.export": ["loyalty.view"],
+  "delivery.edit": ["delivery.view", "sales.view"],
+  "delivery.status": ["delivery.view"],
+  "delivery.cancel": ["delivery.view"],
+  "delivery.print": ["delivery.view"],
+  "lots.manage": ["lots.view", "products.read"],
+  "scales.edit": ["scales.view", "products.read"],
+  "scales.print": ["scales.view"],
+  "kitchen.update": ["kitchen.view"],
+};
+// Suggested profiles include the reads required by their operations.
+function expand(ids) {
+  const result = new Set(ids);
+  let size;
+  do {
+    size = result.size;
+    for (const id of result)
+      for (const dependency of dependencies[id] || []) result.add(dependency);
+  } while (size !== result.size);
+  return [...result].sort();
+}
+for (const t of templates) t.permissions = expand(t.permissions);
+navigation["/user-access"] = "users.manage";
+module.exports = {
+  permissions,
+  templates,
+  navigation,
+  ceiling,
+  dependencies,
+  expand,
+};

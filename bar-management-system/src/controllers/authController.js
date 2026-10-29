@@ -38,7 +38,7 @@ const login = async (req, res) => {
         id: user.id,
         username: user.username,
         company:req.tenant.slug,
-        role: user.role
+        role: user.role,access:await require("../services/userAccess").info(user)
       }
     });
   } catch (error) {
@@ -106,7 +106,7 @@ const validateToken = async (req, res) => {
         username: req.master?req.supportUser.username:req.user.username,
         company:req.tenant.slug,
         support:Boolean(req.supportUser),master:Boolean(req.master),
-        role: req.user.role
+        role: req.user.role,access:req.access||await require("../services/userAccess").info(req.user)
       }
     });
   } catch (error) {

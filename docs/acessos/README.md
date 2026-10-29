@@ -1,4 +1,4 @@
-# Perfis e permissões — Mark 0.18.0
+# Perfis e permissões — Marks 0.18.0 e 0.19.0
 
 Continuidade autorizada pelo proprietário em 29/10/2026, para validação no dia 30/10 às 09:00 (horário de São Paulo). A autorização atual permite implementar a matriz e as configurações; substitui a espera registrada no planejamento anterior. Não remapear funcionários automaticamente.
 
@@ -13,3 +13,5 @@ A matriz inclui caixa, vendas, descontos, mesas/comandas, cozinha, clientes, pro
 Os perfis sugeridos são opções para configuração pelo administrador: Caixa, Atendimento, Cozinha, Mecânico responsável, Estoque, Gerência, Consulta gerencial e Sem acesso operacional.
 
 Fonte da matriz: `bar-management-system/src/config/accessCatalog.js`. Teste puro: `node scripts/access-catalog-test.cjs`.
+
+Configuração, efeito e restauração: [guia da Mark 0.19.0](configuracao.md).

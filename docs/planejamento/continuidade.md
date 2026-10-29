@@ -21,3 +21,7 @@ Não declarar compatibilidade física com balanças/impressoras nem homologaçã
 Em Vendas, o aviso de caixa fechado passa a ter fundo vermelho suave no modo claro, fundo vermelho escuro no modo escuro, borda lateral, ícone de cadeado e título em negrito: **Você precisa abrir um caixa para vender**. A condição de exibição e o bloqueio das vendas permanecem os mesmos.
 
 Lote 0.13.0–0.17.0 concluído: [roteiro de validação e atualização](../atualizacoes/mark-0.13-a-0.17.md). A próxima revisão é a matriz de permissões com o proprietário; integrações externas dependentes de provedor continuam pendentes.
+
+## Continuidade autorizada em 29/10/2026
+
+Implementadas Marks 0.18.0 (matriz/consulta) e 0.19.0 (perfis e exceções, enforcement, auditoria e proteção administrativa), com validação em empresas sintéticas. Usuários atuais permanecem no modelo anterior até aplicação de perfil pelo administrador. [Roteiro para 30/10 às 09:00](../atualizacoes/mark-0.18-a-0.19.md). Integrações dependentes de SMTP/provedor fiscal/Pix/destino externo de backup permanecem aguardando definição; não foram simuladas como prontas.

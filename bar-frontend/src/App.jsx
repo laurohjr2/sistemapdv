@@ -43,7 +43,7 @@ import Recovery from './pages/Recovery';
 import Support from './pages/Support';
 import { BusinessProvider } from './hooks/useBusiness';
 
-function Home(){const {user}=useAuth();return user?.role==='garcom'?<Navigate to="/sales" replace/>:<Dashboard/>;}
+function Home(){const {user}=useAuth();if(user?.access?.mode==='restricted'&&user.access.home!=='/')return <Navigate to={user.access.home} replace/>;return user?.role==='garcom'?<Navigate to="/sales" replace/>:<Dashboard/>;}
 function App() {
   return (
     <AuthProvider>

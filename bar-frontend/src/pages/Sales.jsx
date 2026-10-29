@@ -5,6 +5,7 @@ import ScaleScanDialog from '../components/ScaleScanDialog';
 import PizzaBuilder from '../components/pizza/PizzaBuilder';
 import usePizzaCatalog from '../components/pizza/usePizzaCatalog';
 import {useAuth} from '../hooks/useAuth';
+import {canAccess} from '../lib/access';
 import LoyaltyDiscount from '../components/LoyaltyDiscount';
 import CustomerSelect from '../components/CustomerSelect';
 import PixPayment from '../components/PixPayment';
@@ -474,10 +475,10 @@ const Sales = () => {
     <div className="space-y-6">
       <ScaleScanDialog weight={scaleWeight} onWeightChange={value=>{setScaleWeight(value);setScaleConfirmed(false)}} confirmed={scaleConfirmed} onConfirmedChange={setScaleConfirmed} item={scaleItem} onClose={()=>setScaleItem(null)} onConfirm={confirmScale} error={scaleError}/>
       {bundleOpen&&<BundlePicker onClose={()=>setBundleOpen(false)} onAdd={async data=>{if(!cashRegister?.is_open)throw new Error('Você precisa abrir um caixa para vender');const key=crypto.randomUUID();setCart(prev=>[...prev,{id:'bundle:'+key,cartKey:key,name:data.preview.name,itemType:'service',price:data.preview.unitPrice,quantity:data.quantity,bundle:data.selection,notes:data.notes}]);}}/>}
-      {business.modules?.bundles&&<Button variant="outline" onClick={()=>{if(!cashRegister?.is_open){setError('Você precisa abrir um caixa para vender');return;}setBundleOpen(true)}}>Selecionar combo</Button>}
+      {business.modules?.bundles&&<Button permission="sales.create" variant="outline" onClick={()=>{if(!cashRegister?.is_open){setError('Você precisa abrir um caixa para vender');return;}setBundleOpen(true)}}>Selecionar combo</Button>}
       {pizzaOpen&&<PizzaBuilder onAdd={addPizza} onClose={()=>setPizzaOpen(false)}/>}
       {pizzaError&&<p role="alert">{pizzaError}</p>}
-      {business.modules?.pizza&&<Button onClick={()=>{if(!cashRegister?.is_open){setError('Você precisa abrir um caixa para vender');return;}setPizzaOpen(true)}}>Montar pizza</Button>}
+      {business.modules?.pizza&&<Button permission="sales.create" onClick={()=>{if(!cashRegister?.is_open){setError('Você precisa abrir um caixa para vender');return;}setPizzaOpen(true)}}>Montar pizza</Button>}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Painel de Vendas</h1>
@@ -490,7 +491,7 @@ const Sales = () => {
           {/* Botão Ticket Rápido */}
           <Dialog open={isTicketDialogOpen} onOpenChange={setIsTicketDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" disabled={!cashRegister?.is_open}>
+              <Button permission="sales.create" variant="outline" disabled={!cashRegister?.is_open}>
                 <Receipt className="mr-2 h-4 w-4" />
                 Ticket Rápido
               </Button>
@@ -593,7 +594,7 @@ const Sales = () => {
           {!cashRegister?.is_open ? (
             <Dialog open={isOpenCashDialogOpen} onOpenChange={setIsOpenCashDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button permission="cash.open" variant="outline">
                   <Unlock className="mr-2 h-4 w-4" />
                   Abrir Caixa
                 </Button>
@@ -630,7 +631,7 @@ const Sales = () => {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={openCashRegister} disabled={loading}>
+                  <Button permission="cash.open" onClick={openCashRegister} disabled={loading}>
                     {loading ? 'Abrindo...' : 'Abrir Caixa'}
                   </Button>
                 </DialogFooter>
@@ -639,7 +640,7 @@ const Sales = () => {
           ) : (
             <Dialog open={isCloseCashDialogOpen} onOpenChange={open=>{setIsCloseCashDialogOpen(open);if(open)fetchCashRegisterStatus();}}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button permission="cash.close" variant="outline">
                   <Lock className="mr-2 h-4 w-4" />
                   Fechar Caixa
                 </Button>
@@ -675,7 +676,7 @@ const Sales = () => {
                   )}
                 </div>
                 <DialogFooter>
-                  <Button onClick={closeCashRegister} disabled={loading}>
+                  <Button permission="cash.close" onClick={closeCashRegister} disabled={loading}>
                     {loading ? 'Fechando...' : 'Fechar Caixa'}
                   </Button>
                 </DialogFooter>
@@ -767,9 +768,9 @@ const Sales = () => {
 
                 <div className="space-y-2">
                   <CustomerSelect value={customerId} onChange={setCustomerId}/>
-                  {['admin','gerente'].includes(user?.role)&&<>
+                  {['admin','gerente'].includes(user?.role)&&canAccess(user,'discounts.apply')&&<>
                     <label>Desconto (R$)<Input currency value={discount} onChange={e=>{setLoyalty(null);setDiscount(e.target.value)}}/></label>
-                    <LoyaltyDiscount customerId={customerId} subtotal={cart.reduce((sum,item)=>sum+lineTotal({quantity:item.quantity,unitPrice:item.price}),0)} disabled={loading||!cashRegister?.is_open} onApply={value=>{setDiscount(String(value.discount));setLoyalty({...value,cartKey:loyaltyCartKey})}}/>
+                    {canAccess(user,'loyalty.apply')&&<LoyaltyDiscount customerId={customerId} subtotal={cart.reduce((sum,item)=>sum+lineTotal({quantity:item.quantity,unitPrice:item.price}),0)} disabled={loading||!cashRegister?.is_open} onApply={value=>{setDiscount(String(value.discount));setLoyalty({...value,cartKey:loyaltyCartKey})}}/>}
                     {loyalty&&<p className="text-sm font-semibold">{loyalty.description} aplicado.</p>}
                   </>}
                   <Label htmlFor="payment_method">Forma de Pagamento</Label>
@@ -791,7 +792,7 @@ const Sales = () => {
                   <Button variant="outline" onClick={clearCart}>
                     Limpar Carrinho
                   </Button>
-                  <Button onClick={completeSale} disabled={loading || cart.length === 0}>
+                  <Button permission="sales.create" onClick={completeSale} disabled={loading || cart.length === 0}>
                     {loading ? 'Processando...' : 'Finalizar Venda'}
                   </Button>
                 </div>
@@ -845,7 +846,7 @@ const Sales = () => {
                     onChange={(e) => setBarcodeInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleBarcodeSearch()}
                   />
-                  <Button onClick={handleBarcodeSearch}>
+                  <Button permission="sales.create" onClick={handleBarcodeSearch}>
                     Buscar
                   </Button>
                 </div>
@@ -864,7 +865,7 @@ const Sales = () => {
                               {product.itemType==='service'?'Serviço · sem estoque':product.recipeEnabled?`Ficha técnica · disponível: ${stockAvailable(product)}`:product.lotTracked?`Disponível por lotes: ${stockAvailable(product)} · Físico: ${Number(product.currentStock)}`:`Estoque: ${stockAvailable(product)}`}
                             </p>
                           </div>
-                          <Button
+                          <Button permission="sales.create"
                             onClick={() => addToCart(product)}
                             disabled={(product.itemType!=='service'&&stockAvailable(product) === 0) || !cashRegister?.is_open}
                             size="sm"
@@ -992,7 +993,7 @@ const Sales = () => {
                     <TableCell className="text-right">
                       {business.modules?.delivery&&sale.status==='completed'&&<Button variant="outline" size="sm" asChild><Link to={'/deliveries?sale='+sale.id}>Entrega</Link></Button>}
                       {sale.status === 'completed' && (
-                        <Button
+                        <Button permission="sales.cancel"
                           variant="outline"
                           size="sm"
                           onClick={() => cancelSale(sale.id)}

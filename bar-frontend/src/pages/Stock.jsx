@@ -279,7 +279,7 @@ const Stock = () => {
         <div className="flex gap-2">
           <Dialog open={isAddProductOpen} onOpenChange={setIsAddProductOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button permission="products.edit" variant="outline">
                 <Package className="mr-2 h-4 w-4" />
                 Cadastrar Produto
               </Button>
@@ -390,7 +390,7 @@ const Stock = () => {
           
           <Dialog open={isAddStockOpen} onOpenChange={setIsAddStockOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button permission="stock.add">
                 <Plus className="mr-2 h-4 w-4" />
                 Adicionar Estoque
               </Button>
@@ -490,7 +490,7 @@ const Stock = () => {
           
           <Dialog open={isRemoveStockOpen} onOpenChange={setIsRemoveStockOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button permission="stock.remove" variant="outline">
                 <Minus className="mr-2 h-4 w-4" />
                 Remover Estoque
               </Button>
@@ -580,7 +580,7 @@ const Stock = () => {
           
           <Dialog open={isAdjustStockOpen} onOpenChange={setIsAdjustStockOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button permission="stock.adjust" variant="outline">
                 <Edit className="mr-2 h-4 w-4" />
                 Ajustar Estoque
               </Button>

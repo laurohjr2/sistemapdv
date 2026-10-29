@@ -66,6 +66,8 @@ async function authenticateToken(req, res, next) {
     )
       return res.status(401).json({ error: "Sessão inválida" });
     req.user = user;
+    req.access=await require('../services/userAccess').info(user);
+    if(!require('../services/accessPolicy').enforce(req,res,req.access))return;
     next();
   } catch (error) {
     next(error);

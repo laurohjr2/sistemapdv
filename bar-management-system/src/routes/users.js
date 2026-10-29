@@ -14,7 +14,7 @@ router.post('/', authorizeRoles('admin'), register);
 router.put('/:id/password', authorizeRoles('admin'), async(req,res,next)=>{
  try {
   const user=await User.findByPk(req.params.id);
-  if (!user) return res.status(404).json({error:'Usuário não encontrado'});
+  if (!user||user.platformUserId) return res.status(404).json({error:'Usuário não encontrado'});
   if(typeof req.body.newPassword!=='string'||req.body.newPassword.length<6) return res.status(400).json({error:'Senha deve ter ao menos seis caracteres'});
   if(!(await user.validatePassword(req.body.currentPassword || ''))) return res.status(400).json({error:'Senha atual inválida'});
   await user.update({passwordHash:req.body.newPassword});

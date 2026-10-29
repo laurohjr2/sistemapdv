@@ -1,4 +1,4 @@
-# Revisão de permissões — etapa posterior às melhorias funcionais
+# Perfis e permissões — implementação autorizada em 29/10/2026
 
 Solicitada por Lauro em 28/10/2026. Avaliar após concluir as melhorias funcionais em andamento. Não aplicar mudanças de acesso nesta etapa de balanças/etiquetas.
 
@@ -38,3 +38,7 @@ Incluir combos: editar/inativar catálogo promocional, lançar conjuntos/adicion
 Incluir evidências da oficina: consultar/baixar fotos, anexar como responsável atribuído, arquivar sem apagar, registrar/cancelar registro de assinatura e imprimir anexos. Preservar a separação entre registro desenhado, autorização da OS e recebimento financeiro.
 
 Incluir as Marks 0.13 a 0.17 na revisão: agenda (consultar/agendar/reagendar/chegada/ausência/vínculo com OS), garantia/retorno (emitir/cancelar registro/analisar/aceitar/recusar/imprimir), catálogo CSV (preparar/conferir/confirmar), fidelidade (definir condição, ver histórico, aplicar desconto e exportar) e emissão/revogação de código técnico. Emissão de acesso temporário permanece exclusiva da conta Master, sem delegação implícita aos administradores dos clientes. A sessão por código continua somente consulta.
+
+## Continuidade de 29/10/2026
+
+O proprietário autorizou prosseguir e validar as Marks em conjunto em 30/10 às 09:00. A espera pela revisão anterior foi substituída pela implementação configurável, mantendo os usuários atuais no modelo anterior até escolha explícita do administrador. Marks 0.18.0 e 0.19.0: [matriz e configuração](../acessos/README.md), [roteiro de validação](../atualizacoes/mark-0.18-a-0.19.md). Perfis sugeridos não promovem papel nem ativam módulos automaticamente.

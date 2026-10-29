@@ -1,3 +1,5 @@
+import {useAuth} from "../../hooks/useAuth";
+import {canAccess} from "../../lib/access";
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva } from "class-variance-authority";
@@ -37,11 +39,14 @@ const buttonVariants = cva(
 
 function Button({
   className,
+  permission,
   variant,
   size,
   asChild = false,
   ...props
 }) {
+  const {user}=useAuth();
+  if(permission&&!canAccess(user,permission))return null;
   const Comp = asChild ? Slot : "button"
 
   return (

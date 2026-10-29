@@ -4,6 +4,7 @@ import { useState } from "react";
 import BusinessBrand from "./BusinessBrand";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.jsx";
+import { canNavigate } from "../lib/access";
 import { hasRole } from "../lib/auth";
 import { Button } from "./ui/button";
 import {
@@ -185,7 +186,7 @@ const Layout = () => {
   ];
   const filteredNavigation = navigation.filter(
     (item) =>
-      hasRole(item.roles) &&
+      hasRole(item.roles) && canNavigate(user,item.href) &&
       (!item.module || business.modules?.[item.module] !== false),
   );
   function renderNavigation() {
@@ -338,7 +339,8 @@ const Layout = () => {
           )}
         </div>
         <main className="p-4 sm:p-6 bg-muted/20 min-h-[75vh]">
-          <Outlet />
+          {user?.access?.mode==='restricted'&&<p className="mb-4 text-sm text-muted-foreground">Perfil: {user.access.profileName||'Personalizado'} · <Link className="underline" to="/my-access">Conferir meus acessos</Link></p>}
+            <Outlet />
         </main>
         <ApplicationVersion />
       </div>
