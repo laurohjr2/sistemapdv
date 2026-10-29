@@ -1,3 +1,6 @@
+import { useBusiness } from "../hooks/useBusiness";
+import PizzaBuilder from "./pizza/PizzaBuilder";
+import usePizzaCatalog from "./pizza/usePizzaCatalog";
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { Button } from "./ui/button";
@@ -11,6 +14,12 @@ import {
 } from "./ui/dialog";
 import { money } from "./commerce/helpers";
 export default function BundlePicker({ onAdd, onClose }) {
+  const { business } = useBusiness();
+  const { menu, error: menuError } = usePizzaCatalog(
+    Boolean(business.modules?.pizza),
+  );
+  const [pizzas, setPizzas] = useState({}),
+    [pizzaSlot, setPizzaSlot] = useState(null);
   const [bundles, setBundles] = useState([]),
     [products, setProducts] = useState([]),
     [id, setId] = useState(""),
@@ -25,6 +34,10 @@ export default function BundlePicker({ onAdd, onClose }) {
     signature = JSON.stringify({
       id,
       revision: selected?.revision,
+      pizzas: Object.entries(pizzas).map(([slot, pizza]) => ({
+        slot: Number(slot),
+        pizza,
+      })),
       extras: Object.entries(extras)
         .filter(([, n]) => Number(n) > 0)
         .map(([productId, quantity]) => ({
@@ -32,6 +45,10 @@ export default function BundlePicker({ onAdd, onClose }) {
           quantity: Number(quantity),
         })),
     });
+  const slots = (selected?.components || []).flatMap((c) =>
+    Array.from({ length: c.quantity }, () => c),
+  );
+  const missingPizzas = slots.some((c, slot) => c.pizzaSizeId && !pizzas[slot]);
   useEffect(() => {
     let live = true;
     Promise.all([api.get("/bundles"), api.get("/products")])
@@ -56,13 +73,13 @@ export default function BundlePicker({ onAdd, onClose }) {
     let live = true;
     setPreview(null);
     setError("");
-    if (!id) return;
+    if (!id || missingPizzas) return;
     const timer = setTimeout(
       () =>
         api
           .post("/bundles/price", JSON.parse(signature))
           .then((r) => {
-            if (live) setPreview(r.data);
+            if (live) setPreview({ ...r.data, signature });
           })
           .catch((e) => {
             if (live)
@@ -76,10 +93,10 @@ export default function BundlePicker({ onAdd, onClose }) {
       live = false;
       clearTimeout(timer);
     };
-  }, [id, signature]);
+  }, [id, signature, missingPizzas]);
   async function submit(e) {
     e.preventDefault();
-    if (!preview) return;
+    if (!preview || preview.signature !== signature || missingPizzas) return;
     setBusy(true);
     setError("");
     try {
@@ -135,6 +152,8 @@ export default function BundlePicker({ onAdd, onClose }) {
                   onChange={(e) => {
                     setId(e.target.value);
                     setExtras({});
+                    setPizzas({});
+                    setPizzaSlot(null);
                   }}
                 >
                   <option value="">Selecione</option>
@@ -147,6 +166,44 @@ export default function BundlePicker({ onAdd, onClose }) {
               </label>
               {!bundles.length && (
                 <p>Cadastre um combo no menu Combos e adicionais.</p>
+              )}
+              {slots.map((c, slot) =>
+                c.pizzaSizeId ? (
+                  <section className="border rounded p-3 space-y-2" key={slot}>
+                    <h3 className="font-semibold">
+                      Pizza {slot + 1} ·{" "}
+                      {menu?.sizes.find((s) => s.id === c.pizzaSizeId)?.name ||
+                        "Tamanho configurado"}
+                    </h3>
+                    <p className="text-sm">
+                      Sabores incluídos no preço fixo do combo. Borda e
+                      adicionais são cobrados à parte.
+                    </p>
+                    {pizzas[slot] && (
+                      <p>
+                        Pizza montada · {pizzas[slot].flavorIds.length}{" "}
+                        sabor(es). Confira a descrição na prévia.
+                      </p>
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setPizzaSlot(slot)}
+                    >
+                      {pizzas[slot] ? "Editar" : "Montar"} pizza {slot + 1}
+                    </Button>
+                  </section>
+                ) : null,
+              )}
+              {menuError && slots.some((c) => c.pizzaSizeId) && (
+                <p role="alert" className="text-destructive">
+                  {menuError}
+                </p>
+              )}
+              {missingPizzas && (
+                <p role="status">
+                  Monte todas as pizzas para conferir o total do combo.
+                </p>
               )}
               {selected?.extras.map((e) => (
                 <label key={e.productId} className="block">
@@ -212,9 +269,32 @@ export default function BundlePicker({ onAdd, onClose }) {
                   </ul>
                 </div>
               )}
-              <Button disabled={!preview || busy}>Adicionar combo</Button>
+              <Button
+                disabled={
+                  !preview ||
+                  preview.signature !== signature ||
+                  missingPizzas ||
+                  busy
+                }
+              >
+                Adicionar combo
+              </Button>
             </fieldset>
           </form>
+        )}
+        {pizzaSlot !== null && slots[pizzaSlot]?.pizzaSizeId && (
+          <PizzaBuilder
+            key={pizzaSlot}
+            combo
+            fixedSizeId={slots[pizzaSlot].pizzaSizeId}
+            onClose={() => setPizzaSlot(null)}
+            onAdd={async (data) => {
+              setPizzas((prev) => ({
+                ...prev,
+                [pizzaSlot]: data.pizza.selection,
+              }));
+            }}
+          />
         )}
       </DialogContent>
     </Dialog>

@@ -52,7 +52,12 @@ function factory() {
       throw fail("Ative Combos e adicionais nas configurações", 403);
     return m;
   };
-  async function products(ids, transaction, modules) {
+  async function products(
+    ids,
+    transaction,
+    modules,
+    pizzaProducts = new Set(),
+  ) {
     const map = new Map();
     const pizzaIds = modules.pizza
       ? await require("./pizzaOperations").baseIds(transaction)
@@ -60,17 +65,45 @@ function factory() {
     for (const id of [...new Set(ids)]) {
       const p = await Product.findByPk(id, { transaction });
       if (!p?.active) throw fail("Produto não encontrado ou inativo");
+      if (
+        pizzaProducts.has(p.id) &&
+        (p.itemType === "service" || p.unitOfMeasure !== "unidade")
+      )
+        throw fail(
+          "Revise o produto-base da pizza: use produto em unidade",
+          409,
+        );
       if (p.unitOfMeasure !== "unidade" && p.itemType !== "service")
         throw fail(
           "Use produtos em unidade ou porção com ficha técnica para o combo",
         );
-      if (pizzaIds.has(p.id))
+      if (pizzaIds.has(p.id) && !pizzaProducts.has(p.id))
         throw fail(
-          "Pizzas personalizadas devem ser montadas pelo botão Montar pizza",
+          "Defina o tamanho da pizza na composição do combo; pizzas não podem ser adicionais opcionais.",
         );
       map.set(p.id, p);
     }
     return map;
+  }
+  async function pizzaComponents(components, extras, transaction, modules) {
+    const configured = components.filter((c) => c.pizzaSizeId);
+    if (!configured.length) return new Set();
+    if (!modules.pizza)
+      throw fail("Ative Pizzaria para utilizar pizzas nos combos", 403);
+    const menu = await require("./pizzaOperations").catalog(transaction, true);
+    for (const c of configured) {
+      const size = menu.sizes.find((s) => s.id === c.pizzaSizeId && s.active);
+      if (!size || size.productId !== c.productId)
+        throw fail(
+          "Tamanho da pizza indisponível ou divergente do produto-base",
+        );
+    }
+    const ids = new Set(configured.map((c) => c.productId));
+    if (extras.some((e) => ids.has(e.productId)))
+      throw fail(
+        "Pizza deve fazer parte da composição, não dos adicionais opcionais",
+      );
+    return ids;
   }
   async function save(id, b, user) {
     if (
@@ -85,8 +118,13 @@ function factory() {
     const parse = (rows, extra = false) => {
       if (!Array.isArray(rows) || rows.length > 30 || (!extra && !rows.length))
         throw fail("Informe de 1 a 30 componentes e até 30 adicionais");
+      if (extra && rows.some((r) => r?.pizzaSizeId))
+        throw fail("Pizza deve fazer parte da composição");
       const result = rows.map((r) => ({
         productId: uuid(r?.productId).toLowerCase(),
+        ...(!extra && r?.pizzaSizeId
+          ? { pizzaSizeId: uuid(r.pizzaSizeId).toLowerCase() }
+          : {}),
         [extra ? "maxQuantity" : "quantity"]: integer(
           r[extra ? "maxQuantity" : "quantity"],
           10,
@@ -114,12 +152,20 @@ function factory() {
       if (id && !old) throw fail("Combo não encontrado", 404);
       if (b.revision !== (old?.revision || 0))
         throw fail("Combo alterado em outro terminal. Recarregue.", 409);
-      if (b.active)
+      if (b.active) {
+        const pizzaProducts = await pizzaComponents(
+          components,
+          extras,
+          transaction,
+          modules,
+        );
         await products(
           [...components, ...extras].map((i) => i.productId),
           transaction,
           modules,
+          pizzaProducts,
         );
+      }
       const values = {
         name,
         price,
@@ -164,24 +210,77 @@ function factory() {
     });
     if (new Set(extras.map((e) => e.productId)).size !== extras.length)
       throw fail("Adicional repetido");
+    const pizzaProducts = await pizzaComponents(
+      b.components,
+      b.extras,
+      transaction,
+      modules,
+    );
     const map = await products(
-        [...b.components, ...extras].map((i) => i.productId),
+      [...b.components, ...extras].map((i) => i.productId),
+      transaction,
+      modules,
+      pizzaProducts,
+    );
+    const slots = b.components.flatMap((c) =>
+      Array.from({ length: c.quantity }, () => ({
+        ...c,
+        product: map.get(c.productId),
+      })),
+    );
+    const inputPizzas = selection.pizzas || [];
+    if (
+      !Array.isArray(inputPizzas) ||
+      inputPizzas.length > 50 ||
+      new Set(inputPizzas.map((p) => p?.slot)).size !== inputPizzas.length
+    )
+      throw fail("Montagens de pizza inválidas ou repetidas");
+    for (const choice of inputPizzas) {
+      if (!Number.isInteger(choice?.slot) || !slots[choice.slot]?.pizzaSizeId)
+        throw fail("A pizza não pertence a esta posição do combo");
+    }
+    for (let index = 0; index < slots.length; index++) {
+      const slot = slots[index];
+      if (!slot.pizzaSizeId) continue;
+      const choice = inputPizzas.find((p) => p.slot === index);
+      if (!choice || choice.pizza?.sizeId !== slot.pizzaSizeId)
+        throw fail("Monte cada pizza no tamanho definido pelo combo");
+      // Require a reviewed catalog version even if the amount stayed the same.
+      if (!Number.isInteger(choice.pizza.catalogRevision))
+        throw fail("Confira o cardápio antes de montar a pizza do combo");
+      const resolved = await require("./pizzaOperations").resolve(
+        choice.pizza,
         transaction,
-        modules,
-      ),
-      slots = b.components.flatMap((i) =>
-        Array.from({ length: i.quantity }, () => map.get(i.productId)),
-      ),
-      prices = allocate(
-        cents(b.price, "Preço", true),
-        slots.map((p) => cents(p.salePrice, "Preço", true)),
       );
-    const lines = slots.map((p, i) => ({
-      productId: p.id,
-      name: p.name,
-      unitPrice: prices[i] / 100,
-      kind: "base",
-    }));
+      if (resolved.productId !== slot.productId)
+        throw fail("Produto-base divergente da pizza do combo");
+      slot.pizza = resolved.pizza;
+    }
+    const prices = allocate(
+      cents(b.price, "Preço", true),
+      slots.map((s) =>
+        cents(s.pizza?.flavorPrice ?? s.product.salePrice, "Preço", true),
+      ),
+    );
+    const lines = slots.map((slot, index) => {
+      const surcharge = slot.pizza
+        ? cents(slot.pizza.unitPrice, "Preço", true) -
+          cents(slot.pizza.flavorPrice, "Sabores", true)
+        : 0;
+      return {
+        productId: slot.productId,
+        name: slot.pizza?.description || slot.product.name,
+        unitPrice: (prices[index] + surcharge) / 100,
+        kind: "base",
+        ...(slot.pizza
+          ? {
+              pizza: slot.pizza,
+              pizzaSurcharge: surcharge / 100,
+              includedFlavors: true,
+            }
+          : {}),
+      };
+    });
     for (const e of extras)
       for (let n = 0; n < e.quantity; n++) {
         const p = map.get(e.productId);
@@ -204,6 +303,10 @@ function factory() {
       baseUnitPrice: Number(b.price),
       unitPrice: total / 100,
       extras,
+      pizzas: inputPizzas.map((p) => ({
+        slot: p.slot,
+        pizza: slots[p.slot].pizza.selection,
+      })),
       lines,
     };
   }
@@ -216,6 +319,7 @@ function factory() {
     unitPrice: resolved.unitPrice,
     baseUnitPrice: resolved.baseUnitPrice,
     extras: resolved.extras,
+    pizzas: resolved.pizzas,
     components: index === 0 ? resolved.lines : undefined,
     component: resolved.lines[index],
     index,
@@ -278,6 +382,7 @@ function factory() {
             role: user.role,
             notes: `Combo: ${resolved.name} · grupo ${groupId.slice(0, 8)}${b.notes ? " · " + text(b.notes, "Observações", 500) : ""}`,
             bundleSnapshot: snapshot(resolved, groupId, amount, i),
+            resolvedBundlePizza: resolved.lines[i].pizza || null,
             transactionContext: transaction,
             lockedInventory: inventory,
           }),

@@ -177,9 +177,10 @@ function factory() {
             "Configuração, vínculo ou preço alterado. Leia novamente a etiqueta.",
             409,
           );
-        const resolved = item.pizza
-          ? await pizzaOps.resolve(item.pizza, transaction)
-          : null;
+        const bundlePizza = bundleRows.get(item)?.component?.pizza;
+        const resolved = bundlePizza
+          ? {productId: item.product_id, unitPrice: bundlePizza.unitPrice, pizza: bundlePizza}
+          : item.pizza ? await pizzaOps.resolve(item.pizza, transaction) : null;
         if (
           resolved &&
           item.unit_price !== undefined &&

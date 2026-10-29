@@ -37,3 +37,7 @@ Implementadas fidelidade em mesas/comandas, desconto único conferido no servido
 ## Mark 0.20.1 — ajuste após validação
 
 Prioridade solicitada: prévia de quantidade × preço, correção de quantidade lançada e escolha entre desconto em reais ou porcentagem no fechamento de mesas. Quantidades antigas são preservadas até conferência pelo operador. [Atualização e validação](../atualizacoes/mark-0.20.1.md). Pizzas personalizadas em combos continuam como próxima evolução funcional.
+
+## Continuidade aprovada — estabilização
+
+O proprietário aprovou concluir pizzas nos combos e concentrar a sequência na estabilização da Mark 1.0.0. Mark 0.21.0 implementa a montagem por pizza, complementos, validação de versões e snapshots nos fluxos de venda e mesa/comanda. [Guia e validação](../atualizacoes/mark-0.21.md). [Escopo e critérios para a Mark 1.0.0](mark-1.0.md). Novas expansões ficam para versões posteriores; integrações externas aguardam definição e homologação. A Mark 1.0.0 depende da revisão técnica e da validação final do proprietário.

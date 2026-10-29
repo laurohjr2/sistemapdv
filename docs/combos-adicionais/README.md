@@ -1,5 +1,7 @@
 # Mark 0.11.0 — Combos e adicionais
 
+A Mark 0.21.0 acrescenta [pizzas personalizadas dentro dos combos](../pizzaria/combos.md), com tamanho fixado no cadastro, sabores incluídos e cobrança de borda/adicionais. O conteúdo abaixo descreve a entrega original.
+
 ## Onde encontrar
 
 **Comercial → Combos e adicionais**, para gerente/administrador e Master; suporte permanece em consulta. O lançamento fica disponível em **Vendas**, **Mesas** e **Comandas**, pelo botão **Selecionar combo**.
@@ -40,7 +42,7 @@ Não se pode ocultar Combos e adicionais enquanto houver grupos em comandas aber
 
 ## Pizzaria e limites
 
-As pizzas com escolha de sabores, tamanhos, bordas e adicionais continuam por **Montar pizza**. Esta entrega não coloca uma pizza personalizada dentro de um combo: não é permitido contornar a escolha de sabores incluindo seu produto-base no catálogo de combos. O delivery da pizzaria e os adicionais do montador de pizza continuam funcionando.
+Na entrega original Mark 0.11.0, pizzas personalizadas eram montadas apenas separadamente. A partir da [Mark 0.21.0](../pizzaria/combos.md), o combo pode incluir pizzas com tamanho definido e montagem obrigatória por unidade. Não lance apenas o produto-base para contornar a escolha dos sabores. O delivery e o montador de pizzas avulsas continuam disponíveis.
 
 Não há importação automática de combos, alteração automática de preço dos componentes, produção antecipada, combos em orçamentos/OS nem emissão fiscal nesta entrega.
 

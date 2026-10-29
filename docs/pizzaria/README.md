@@ -57,7 +57,7 @@ O sistema bloqueia a desativação da Pizzaria enquanto houver comandas abertas 
 
 ## Limites e próximas etapas
 
-Ainda ficam para entregas específicas: ficha técnica e consumo de ingredientes, alergênicos, porções desiguais, adicionais por metade, combos, delivery com endereços/taxas/entregadores, pedidos pela internet e integração fiscal. Os cupons são documentos não fiscais. A confirmação de Pix continua sendo feita pelo operador.
+Entregas posteriores acrescentaram [fichas técnicas](../fichas-tecnicas/README.md), [combos com pizzas personalizadas](combos.md) e pedidos de entrega. O consumo segue a ficha técnica do produto-base; não há geração automática de receitas por sabor. Continuam como evoluções específicas: alergênicos, porções desiguais, adicionais por metade, pedidos pela internet e integração fiscal. Os cupons são documentos não fiscais. A confirmação de Pix continua sendo feita pelo operador.
 
 ## Validação
 

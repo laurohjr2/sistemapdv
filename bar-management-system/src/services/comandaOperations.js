@@ -2,7 +2,7 @@ function createScopedModule() {
 const {sequelize,Comanda,ComandaItem,Product,StockMovement,Table,CashRegister}=require('../models');
 const fail=(message,status=400)=>Object.assign(new Error(message),{status});
 const quantity=value=>{const n=Number(value);if(!Number.isFinite(n)||n<=0||Math.abs(n*1000-Math.round(n*1000))>1e-6)throw fail('Quantidade positiva com até três casas decimais obrigatória');return n};
-async function changeItem({comandaId,itemId,productId,amount,notes,userId,pizza,expectedUnitPrice,restoreIngredients=false,role,remove=false,bundleSnapshot,transactionContext,lockedInventory,bundleGroupRemoval=false}){
+async function changeItem({comandaId,itemId,productId,amount,notes,userId,pizza,expectedUnitPrice,restoreIngredients=false,role,remove=false,bundleSnapshot,transactionContext,lockedInventory,bundleGroupRemoval=false,resolvedBundlePizza}){
  const perform=async transaction=>{
   await sequelize.query("SELECT pg_advisory_xact_lock(882021)",{transaction});
   const comanda=await Comanda.findByPk(comandaId,{transaction,lock:transaction.LOCK.UPDATE});
@@ -11,7 +11,7 @@ async function changeItem({comandaId,itemId,productId,amount,notes,userId,pizza,
   const item=itemId?await ComandaItem.findOne({where:{id:itemId,comandaId},transaction,lock:transaction.LOCK.UPDATE}):null;
   if(itemId&&!item)throw fail('Item não encontrado',404);
   if(item?.bundle&&!bundleGroupRemoval)throw fail('Remova o combo completo ou adicione um novo grupo para alterar sua quantidade.');
-  const resolved=!item&&pizza?await require('./pizzaOperations').resolve(pizza,transaction):null;
+  const resolved=!item&&resolvedBundlePizza?{productId,unitPrice:resolvedBundlePizza.unitPrice,pizza:resolvedBundlePizza}:!item&&pizza?await require('./pizzaOperations').resolve(pizza,transaction):null;
   if(resolved&&expectedUnitPrice!==undefined&&require('./commercialValidation').cents(expectedUnitPrice)!==require('./commercialValidation').cents(resolved.unitPrice))throw fail('O preço da pizza mudou. Monte novamente para confirmar o valor atual.',409);
   if(!item&&!resolved&&require('../config/businessProfiles').effectiveModules(await require('./businessSettingsService').getSettings(transaction)).pizza&&(await require('./pizzaOperations').baseIds(transaction)).has(productId))throw fail('Use Montar pizza para escolher os sabores deste produto');
   if(resolved&&productId&&resolved.productId!==productId)throw fail('Produto-base divergente da montagem');

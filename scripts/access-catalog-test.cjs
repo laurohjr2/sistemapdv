@@ -23,6 +23,18 @@ assert.deepEqual(req("/reports/export/pdf", "GET", {}, { type: "waiters" }), [
   "reports.ranking",
 ]);
 assert.deepEqual(req("/unknown"), ["unmapped"]);
+assert.deepEqual(req("/bundles/price", "POST", { pizzas: [{ slot: 0 }] }), [
+  "bundles.view",
+  "pizza.view",
+]);
+assert.deepEqual(
+  req("/bundles/comandas/id", "POST", { selection: { pizzas: [{ slot: 0 }] } }),
+  ["bundles.view", "tables.edit", "pizza.view"],
+);
+assert.deepEqual(
+  req("/sales", "POST", { items: [{ bundle: { pizzas: [{ slot: 0 }] } }] }),
+  ["sales.create", "pizza.view"],
+);
 assert.deepEqual(
   req("/workshop/orders/abc/status", "POST", { status: "ready" }),
   ["workshop.execute"],

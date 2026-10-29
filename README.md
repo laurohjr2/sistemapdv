@@ -98,3 +98,5 @@ Perfis e permissões: [Marks 0.18.0–0.19.0 e roteiro de validação](docs/atua
 Fidelidade em mesas/comandas e aviso de dois segundos: [Mark 0.20.0](docs/atualizacoes/mark-0.20.md).
 
 Quantidades e desconto percentual nas mesas: [Mark 0.20.1](docs/atualizacoes/mark-0.20.1.md).
+
+Pizzas personalizadas nos combos: [Mark 0.21.0](docs/atualizacoes/mark-0.21.md). [Escopo e critérios da Mark 1.0.0](docs/planejamento/mark-1.0.md).

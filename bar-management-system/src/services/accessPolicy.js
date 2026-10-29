@@ -284,6 +284,18 @@ function required(req) {
       );
     if (b.restoreIngredients === true) one("recipes.restore");
   }
+  if (
+    !read &&
+    ((root === "bundles" &&
+      (b.pizzas?.length ||
+        b.selection?.pizzas?.length ||
+        (Array.isArray(b.components) &&
+          b.components.some((c) => c?.pizzaSizeId)))) ||
+      (root === "sales" &&
+        Array.isArray(b.items) &&
+        b.items.some((i) => i?.bundle?.pizzas?.length)))
+  )
+    one("pizza.view");
   return result;
 }
 const denied = (access, requirements) =>

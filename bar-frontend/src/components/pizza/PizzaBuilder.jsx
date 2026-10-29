@@ -11,9 +11,14 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import { money } from "../commerce/helpers";
-export default function PizzaBuilder({ onAdd, onClose }) {
+export default function PizzaBuilder({
+  onAdd,
+  onClose,
+  fixedSizeId = "",
+  combo = false,
+}) {
   const { menu, error: loadError } = usePizzaCatalog(true);
-  const [sizeId, setSizeId] = useState(""),
+  const [sizeId, setSizeId] = useState(fixedSizeId),
     [flavorIds, setFlavors] = useState([]),
     [crustId, setCrust] = useState(""),
     [extras, setExtras] = useState([]),
@@ -90,7 +95,9 @@ export default function PizzaBuilder({ onAdd, onClose }) {
     >
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Montar pizza</DialogTitle>
+          <DialogTitle>
+            {combo ? "Montar pizza do combo" : "Montar pizza"}
+          </DialogTitle>
           <DialogDescription>
             Escolha o tamanho, sabores e complementos. As porções de cada sabor
             são iguais.
@@ -114,6 +121,7 @@ export default function PizzaBuilder({ onAdd, onClose }) {
               Tamanho
               <select
                 aria-label="Tamanho da pizza"
+                disabled={Boolean(fixedSizeId) || busy}
                 className="commerce-select"
                 required
                 value={sizeId}
@@ -127,7 +135,9 @@ export default function PizzaBuilder({ onAdd, onClose }) {
               >
                 <option value="">Selecione o tamanho</option>
                 {menu.sizes
-                  .filter((s) => s.active)
+                  .filter(
+                    (s) => s.active && (!fixedSizeId || s.id === fixedSizeId),
+                  )
                   .map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} · {s.slices} fatias · até {s.maxFlavors} sabores
@@ -178,7 +188,9 @@ export default function PizzaBuilder({ onAdd, onClose }) {
                   {menu.pricingRule === "highest"
                     ? "preço do sabor mais caro"
                     : "média dos sabores escolhidos"}
-                  . Borda e adicionais são cobrados por pizza inteira.
+                  {combo
+                    ? ". Os sabores estão incluídos no preço fixo do combo. Borda e adicionais são cobrados à parte por pizza inteira."
+                    : ". Borda e adicionais são cobrados por pizza inteira."}
                 </p>
                 <label className="block">
                   Borda
@@ -245,36 +257,44 @@ export default function PizzaBuilder({ onAdd, onClose }) {
                 </fieldset>
               </>
             )}
-            <div className="grid sm:grid-cols-2 gap-3">
-              <label>
-                Quantidade de pizzas
-                <Input
-                  aria-label="Quantidade de pizzas"
-                  required
-                  type="number"
-                  min="1"
-                  max="99"
-                  step="1"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                />
-              </label>
-              <label>
-                Observações para o preparo
-                <Input
-                  aria-label="Observações da pizza"
-                  maxLength={1000}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </label>
-            </div>
+            {!combo && (
+              <div className="grid sm:grid-cols-2 gap-3">
+                <label>
+                  Quantidade de pizzas
+                  <Input
+                    aria-label="Quantidade de pizzas"
+                    required
+                    type="number"
+                    min="1"
+                    max="99"
+                    step="1"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                  />
+                </label>
+                <label>
+                  Observações para o preparo
+                  <Input
+                    aria-label="Observações da pizza"
+                    maxLength={1000}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
+                </label>
+              </div>
+            )}
             {price && (
               <div className="rounded-xl border bg-muted p-4">
                 <p>{price.pizza.description}</p>
                 <p className="mt-2 text-xl font-semibold">
-                  {money(price.unitPrice)} por pizza · Total{" "}
-                  {money(price.unitPrice * Number(quantity))}
+                  {combo ? (
+                    `Acréscimo por pizza no combo: ${money(price.unitPrice - price.pizza.flavorPrice)}`
+                  ) : (
+                    <>
+                      {money(price.unitPrice)} por pizza · Total{" "}
+                      {money(price.unitPrice * Number(quantity))}
+                    </>
+                  )}
                 </p>
               </div>
             )}
@@ -288,7 +308,11 @@ export default function PizzaBuilder({ onAdd, onClose }) {
                 Number(quantity) > 99
               }
             >
-              {busy ? "Adicionando..." : "Adicionar pizza"}
+              {busy
+                ? "Conferindo..."
+                : combo
+                  ? "Confirmar pizza no combo"
+                  : "Adicionar pizza"}
             </Button>
           </form>
         )}

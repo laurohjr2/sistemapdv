@@ -1,3 +1,5 @@
+import { useBusiness } from "../hooks/useBusiness";
+import usePizzaCatalog from "../components/pizza/usePizzaCatalog";
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
@@ -13,7 +15,7 @@ const blank = () => ({
   active: true,
   revision: 0,
 });
-function Parts({ title, rows, onChange, products, extra = false }) {
+function Parts({ title, rows, onChange, products, menu, extra = false }) {
   const [choice, setChoice] = useState("");
   const field = extra ? "maxQuantity" : "quantity";
   return (
@@ -34,7 +36,9 @@ function Parts({ title, rows, onChange, products, extra = false }) {
                 (p) =>
                   p.active &&
                   (p.unitOfMeasure === "unidade" || p.itemType === "service") &&
-                  !rows.some((i) => i.productId === p.id),
+                  !rows.some((i) => i.productId === p.id) &&
+                  (!extra ||
+                    !menu?.sizes.some((s) => s.active && s.productId === p.id)),
               )
               .map((p) => (
                 <option key={p.id} value={p.id}>
@@ -48,7 +52,17 @@ function Parts({ title, rows, onChange, products, extra = false }) {
           variant="outline"
           disabled={!choice}
           onClick={() => {
-            onChange([...rows, { productId: choice, [field]: 1 }]);
+            const size =
+              !extra &&
+              menu?.sizes.find((s) => s.active && s.productId === choice);
+            onChange([
+              ...rows,
+              {
+                productId: choice,
+                [field]: 1,
+                ...(size ? { pizzaSizeId: size.id } : {}),
+              },
+            ]);
             setChoice("");
           }}
         >
@@ -70,6 +84,45 @@ function Parts({ title, rows, onChange, products, extra = false }) {
                 <td>
                   {products.find((p) => p.id === r.productId)?.name ||
                     "Produto indisponível"}
+                  {!extra &&
+                    (r.pizzaSizeId ||
+                      menu?.sizes.some(
+                        (s) => s.active && s.productId === r.productId,
+                      )) && (
+                      <label className="block mt-2">
+                        Tamanho da pizza
+                        <select
+                          required
+                          className="commerce-select"
+                          aria-label={
+                            "Tamanho da pizza de " +
+                            (products.find((p) => p.id === r.productId)?.name ||
+                              "produto")
+                          }
+                          value={r.pizzaSizeId || ""}
+                          onChange={(e) =>
+                            onChange(
+                              rows.map((v, i) =>
+                                i === index
+                                  ? { ...v, pizzaSizeId: e.target.value }
+                                  : v,
+                              ),
+                            )
+                          }
+                        >
+                          <option value="">Selecione o tamanho</option>
+                          {(menu?.sizes || [])
+                            .filter(
+                              (s) => s.active && s.productId === r.productId,
+                            )
+                            .map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name} · até {s.maxFlavors} sabores
+                              </option>
+                            ))}
+                        </select>
+                      </label>
+                    )}
                 </td>
                 <td>
                   <Input
@@ -110,6 +163,8 @@ function Parts({ title, rows, onChange, products, extra = false }) {
   );
 }
 export default function Bundles() {
+  const { business } = useBusiness();
+  const { menu } = usePizzaCatalog(Boolean(business.modules?.pizza));
   const state = useRecords("/bundles"),
     { user } = useAuth(),
     writable =
@@ -214,6 +269,7 @@ export default function Bundles() {
           <Parts
             title="Composição incluída no preço"
             products={products}
+            menu={menu}
             rows={draft.components}
             onChange={(components) => setDraft({ ...draft, components })}
           />
@@ -221,6 +277,7 @@ export default function Bundles() {
             title="Adicionais cobrados separadamente"
             extra
             products={products}
+            menu={menu}
             rows={draft.extras}
             onChange={(extras) => setDraft({ ...draft, extras })}
           />
@@ -228,8 +285,11 @@ export default function Bundles() {
             Os adicionais usam o preço cadastrado do próprio produto. Use itens
             em unidade; para porções de ingredientes, cadastre uma porção em
             unidade com ficha técnica. Um combo com só um lanche e opções de
-            adicionais também funciona como lanche personalizado. Pizzas com
-            sabores continuam pelo botão Montar pizza.
+            adicionais também funciona como lanche personalizado. Para incluir
+            pizza, escolha seu produto-base e tamanho. Todos os sabores
+            disponíveis nesse tamanho estão incluídos no preço fixo do combo;
+            borda e adicionais da pizza são cobrados à parte. O operador monta
+            cada pizza ao selecionar o combo.
           </p>
           <p className="text-sm text-muted-foreground">
             O valor do combo é distribuído entre os componentes, mantendo a soma
