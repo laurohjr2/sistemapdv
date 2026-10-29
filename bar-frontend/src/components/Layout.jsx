@@ -178,6 +178,10 @@ const Layout = () => {
       roles: ["garcom", "gerente", "admin"],
       area: "Sistema",
     },
+    {name:"Meus acessos",href:"/my-access",icon:Users,roles:["garcom","gerente","admin"],area:"Sistema"},
+
+    {name:"Acessos e permissões",href:"/user-access",icon:Users,roles:["admin"],area:"Sistema"},
+
   ];
   const filteredNavigation = navigation.filter(
     (item) =>

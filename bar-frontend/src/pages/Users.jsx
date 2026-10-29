@@ -1,4 +1,5 @@
 import React from 'react';
+import {Link} from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -206,6 +207,7 @@ const Users = () => {
 
   return (
     <div className="space-y-6">
+      <Link to="/user-access" className="underline">Conferir acessos e permissões</Link>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Usuários</h1>
