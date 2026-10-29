@@ -9,7 +9,7 @@ O proprietário autorizou concluir balanças/etiquetas e prosseguir às próxima
 3. Entregue e validada em ambiente sintético — Mark 0.10.0: pedidos de entrega vinculados a vendas pagas, contato/endereço, etapas, cozinha, histórico e impressão. Entregue e validada em ambiente sintético — Mark 0.11.0: combos e adicionais opcionais em vendas, mesas e comandas. Combos com pizzas personalizadas e evolução do delivery permanecem na continuidade de alimentação.
 4. Oficina: Mark 0.12.0 entregue e validada em ambiente sintético — fotos do checklist e assinatura desenhada de aceite/recebimento, com histórico e PDF. Mark 0.13.0 entregue e validada em ambiente sintético — agenda, conflitos por veículo/responsável, chegada, ausência, cancelamento, vínculo com OS e histórico. Mark 0.14.0 entregue e validada em ambiente sintético — condições de garantia, análise de retorno, vínculo com outra OS, histórico e PDF.
 5. Entregue e validada em ambiente sintético — Mark 0.15.0: importação CSV de catálogo de autopeças, mapeamento, prévia persistida, validação de duplicidades e cadastro inativo com estoque zero. Aplicações somente da fonte informada, sem inventar compatibilidades.
-6. Entregue e validada em ambiente sintético — Mark 0.16.0: fidelidade por cliente, percentual/validade, aplicação conferida pela gerência nas vendas diretas, histórico de condições e benefícios, cancelamentos identificados e PDF. Cashback/pontos e aplicação em comandas permanecem evolução futura.
+6. Entregue e validada em ambiente sintético — Mark 0.16.0: fidelidade por cliente, percentual/validade, aplicação conferida pela gerência nas vendas diretas, histórico de condições e benefícios, cancelamentos identificados e PDF. Mark 0.20.0 amplia a fidelidade para mesas e comandas; cashback/pontos permanecem evolução futura.
 7. Entregue e validada em ambiente sintético — Mark 0.17.0: códigos temporários de uso único, emitidos pelo Master para suporte somente leitura, restritos à empresa/operador, com validade, revogação e auditoria.
 8. Integrações externas: confirmação de Pix/emissão fiscal exigem provedor, credenciais e ambiente de homologação; SMTP e destino externo de backup permanecem aguardando definição do proprietário. Não simular integrações reais como concluídas.
 9. Após as melhorias funcionais: revisão de perfis e permissões por usuário, conforme [escopo registrado](permissoes-por-usuario.md).
@@ -28,4 +28,8 @@ Implementadas Marks 0.18.0 (matriz/consulta) e 0.19.0 (perfis e exceções, enfo
 
 ## Ajuste aprovado após validação da Mark 0.19.0
 
-Preparado para a próxima Mark: ao confirmar o salvamento dos acessos no servidor, exibir notificação **Acessos salvos com sucesso**, identificando o usuário, por seis segundos. A notificação permanece visível após recarregar o editor e usa cores próprias para temas claro/escuro. Falhas continuam exibindo o erro, sem notificação de sucesso.
+Preparado para a próxima Mark: ao confirmar o salvamento dos acessos no servidor, exibir notificação **Acessos salvos com sucesso**, identificando o usuário, por dois segundos. A notificação permanece visível após recarregar o editor e usa cores próprias para temas claro/escuro. Falhas continuam exibindo o erro, sem notificação de sucesso.
+
+## Mark 0.20.0
+
+Implementadas fidelidade em mesas/comandas, desconto único conferido no servidor, snapshot do benefício no fechamento, histórico por origem/situação e cupom, preservando recebimento e estoque. Inclui redução do aviso de salvamento para dois segundos. [Roteiro de validação](../atualizacoes/mark-0.20.md). Próxima evolução funcional prevista: pizzas personalizadas em combos.

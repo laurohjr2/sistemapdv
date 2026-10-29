@@ -1,6 +1,6 @@
 function createScopedModule() {
 const { printHeader } = require('../services/businessSettingsService');
-const { Comanda, ComandaItem, Product, User, Table } = require('../models');
+const { LoyaltyComandaBenefit, Comanda, ComandaItem, Product, User, Table } = require('../models');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
@@ -12,6 +12,7 @@ const generateComandaReceipt = async (req, res) => {
 
     const comanda = await Comanda.findByPk(id, {
       include: [
+        {model:LoyaltyComandaBenefit,as:'loyaltyBenefit',required:false},
         {
           model: Table,
           as: 'table',
@@ -67,7 +68,7 @@ const generateComandaReceipt = async (req, res) => {
     }
 
     // Informações da comanda
-    doc.fontSize(14).text(`CUPOM FISCAL - COMANDA #${comanda.id.substring(0, 8).toUpperCase()}`, { align: 'center' });
+    doc.fontSize(14).text(`CUPOM NÃO FISCAL - COMANDA #${comanda.id.substring(0, 8).toUpperCase()}`, { align: 'center' });
     doc.moveDown();
 
     // Dados do cliente/mesa
@@ -139,6 +140,7 @@ const generateComandaReceipt = async (req, res) => {
     doc.fontSize(14).text(`TOTAL: R$ ${parseFloat(comanda.finalValue || comanda.totalValue).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`, { align: 'right' });
     doc.moveDown();
 
+    if(comanda.loyaltyBenefit){const b=comanda.loyaltyBenefit;doc.fontSize(11).text('Fidelidade: '+b.profile.label+' · '+(b.profile.basisPoints/100).toLocaleString('pt-BR')+'%',{align:'left'});doc.text('Cliente vinculado: '+(b.profile.customerName||comanda.customerName||'Cliente cadastrado'));doc.moveDown();}
     // Método de pagamento
     if(comanda.payments?.length){for(const p of comanda.payments)doc.fontSize(12).text(`Pagamento: ${p.method} — R$ ${Number(p.amount).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`);}
     if (comanda.paymentMethod && !comanda.payments?.length) {

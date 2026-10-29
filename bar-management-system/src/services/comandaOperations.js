@@ -37,7 +37,7 @@ async function changeItem({comandaId,itemId,productId,amount,notes,userId,pizza,
  };
  return transactionContext?perform(transactionContext):sequelize.transaction(perform);
 }
-async function close({id,tableId,userId,role,payments,paymentMethod,paymentStatus='pago',discountValue=0,discountPercentage=0,notes}){
+async function close({id,tableId,userId,role,payments,paymentMethod,paymentStatus='pago',discountValue=0,discountPercentage=0,notes,loyalty}){
  if(payments?.length)paymentMethod=payments[0].method;
  if((Number(discountValue)||Number(discountPercentage))&&!['admin','gerente'].includes(role))throw fail('Somente gerente e administrador podem dar descontos',403);
  if(!['dinheiro','pix','cartao_credito','cartao_debito','vale_refeicao'].includes(paymentMethod))throw fail('Forma de pagamento inválida');
@@ -45,16 +45,19 @@ async function close({id,tableId,userId,role,payments,paymentMethod,paymentStatu
  discountValue=Number(discountValue);discountPercentage=Number(discountPercentage);
  if(!Number.isFinite(discountValue)||discountValue<0||!Number.isFinite(discountPercentage)||discountPercentage<0||discountPercentage>100)throw fail('Desconto inválido');
  return sequelize.transaction(async transaction=>{
+  await sequelize.query("SELECT pg_advisory_xact_lock(882021)",{transaction});
   // Mesma ordem de bloqueio usada pelas vendas: caixa antes dos produtos/comandas.
   const cash=paymentStatus==='pago'?await CashRegister.findOne({where:{is_open:true},transaction,lock:transaction.LOCK.UPDATE}):null;
   if(paymentStatus==='pago'&&!cash)throw fail('Abra o caixa antes de receber o pagamento');
   const comanda=await Comanda.findOne({where:id?{id}:{tableId,status:'aberta'},transaction,lock:transaction.LOCK.UPDATE});
   if(!comanda)throw fail('Comanda não encontrada',404);
   if(comanda.status!=='aberta')throw fail('Comanda não está aberta');
+  const benefit=loyalty?await require('./comandaLoyalty').apply(comanda,loyalty,discountValue,discountPercentage,userId,role,transaction):null;
   if(discountValue+Number(comanda.totalValue)*discountPercentage/100>Number(comanda.totalValue))throw fail('Desconto excede o total');
   const total=Math.round((Number(comanda.totalValue)-discountValue-Number(comanda.totalValue)*discountPercentage/100)*100)/100;
   const normalized=require('./payments').settlement(payments,paymentMethod,total);
   await comanda.update({payments:normalized,status:'fechada',closedAt:new Date(),closedByUserId:userId,paymentMethod,paymentStatus,discountValue,discountPercentage,notes,cashRegisterId:cash?.id||null},{transaction});
+  if(benefit)comanda.setDataValue('loyaltyBenefit',benefit.toJSON());
   if(comanda.tableId)await Table.update({status:'disponivel'},{where:{id:comanda.tableId},transaction});
   return comanda;
  });

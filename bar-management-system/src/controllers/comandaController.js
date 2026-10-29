@@ -1,7 +1,7 @@
 function createScopedModule() {
 const operations = require('../services/comandaOperations');
 const { openTable } = require('../services/tableSeatingService');
-const { Comanda, ComandaItem, Table, Product, User, StockMovement, sequelize } = require('../models');
+const { LoyaltyComandaBenefit, Customer, Comanda, ComandaItem, Table, Product, User, StockMovement, sequelize } = require('../models');
 const { logAction } = require('../utils/auditLogger');
 const { Op } = require('sequelize');
 
@@ -14,7 +14,7 @@ const openComanda = async (req, res) => {
       return res.status(400).json({ error: 'Table ID is required for table comandas' });
     }
 
-    if (type === 'balcao' && !customerName) {
+    if (type === 'balcao' && !customerName && !req.body.customerId) {
       return res.status(400).json({ error: 'Customer name is required for counter comandas' });
     }
 
@@ -25,7 +25,11 @@ const openComanda = async (req, res) => {
         tableId, userId:req.user.id, customerName, customerPhone, customerId:req.body.customerId, transaction
       })));
     } else if (type === 'balcao' && !tableId) {
-      comanda = await Comanda.create({ type, customerName, customerPhone, deliveryType, openedByUserId:req.user.id });
+      comanda=await sequelize.transaction(async transaction=>{
+        const customer=req.body.customerId?await Customer.findByPk(require('../services/commercialValidation').uuid(req.body.customerId),{transaction}):null;
+        if(req.body.customerId&&!customer?.active)throw operations.fail('Cliente não encontrado ou inativo');
+        return Comanda.create({type,customerName:customer?.name||customerName,customerPhone:customer?.phone||customerPhone,customerId:customer?.id||null,deliveryType,openedByUserId:req.user.id},{transaction});
+      });
     } else {
       return res.status(400).json({error:'Tipo de comanda ou mesa inválido.'});
     }
@@ -60,6 +64,7 @@ const getComandaById = async (req, res) => {
 
     const comanda = await Comanda.findByPk(id, {
       include: [
+        {model:LoyaltyComandaBenefit,as:'loyaltyBenefit',required:false},
         {
           model: Table,
           as: 'table',

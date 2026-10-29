@@ -1,4 +1,5 @@
 module.exports = function buildModels(sequelize) {
+const LoyaltyComandaBenefit=require('./LoyaltyComandaBenefit')(sequelize);
 const UserAccess=require('./UserAccess')(sequelize);
 const UserAccessEvent=require('./UserAccessEvent')(sequelize);
 const LoyaltyProfile=require('./LoyaltyProfile')(sequelize);
@@ -50,6 +51,7 @@ Product.hasOne(PartDetail,{foreignKey:'productId',as:'partDetails'});
 Vehicle.belongsTo(Customer,{foreignKey:'customerId',as:'customer'});
 WorkOrder.belongsTo(Sale,{foreignKey:'saleId',as:'sale'});
 FinancialEntry.hasMany(FinancialPayment,{foreignKey:'entryId',as:'payments'});
+Comanda.hasOne(LoyaltyComandaBenefit,{foreignKey:"comandaId",as:"loyaltyBenefit"});
 Sale.belongsTo(Customer,{foreignKey:'customerId',as:'customer'});
 Comanda.belongsTo(Customer,{foreignKey:'customerId',as:'customer'});
 // Define associations
@@ -103,7 +105,7 @@ Product.hasMany(Ticket, { foreignKey: 'product_id', as: 'tickets' });
 Ticket.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 return {
-  sequelize, UserAccess, UserAccessEvent, LoyaltyProfile, LoyaltyBenefit, PartImport, WorkshopWarranty, WorkshopReturn, WorkshopAppointment, WorkOrderPhoto, WorkOrderSignature, MenuBundle, DeliveryOrder, Recipe, ScaleSettings, ScaleProduct, StockLot, PartDetail, PartEquivalence, Vehicle, WorkOrder,
+  sequelize, LoyaltyComandaBenefit, UserAccess, UserAccessEvent, LoyaltyProfile, LoyaltyBenefit, PartImport, WorkshopWarranty, WorkshopReturn, WorkshopAppointment, WorkOrderPhoto, WorkOrderSignature, MenuBundle, DeliveryOrder, Recipe, ScaleSettings, ScaleProduct, StockLot, PartDetail, PartEquivalence, Vehicle, WorkOrder,
   PizzaCatalog,
   User,
   Product,

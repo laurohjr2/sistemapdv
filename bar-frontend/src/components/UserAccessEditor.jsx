@@ -78,7 +78,7 @@ export default function UserAccessEditor({ record, catalog, onSaved }) {
       });
       toast.success("Acessos salvos com sucesso.", {
         description: "Usuário: " + record.user.username,
-        duration: 6000,
+        duration: 2000,
         className: "access-saved-toast",
       });
       onSaved();

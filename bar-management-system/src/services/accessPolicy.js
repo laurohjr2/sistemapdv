@@ -240,11 +240,13 @@ function required(req) {
       "loyalty." +
         (tail === "quote"
           ? "apply"
-          : tail === "history.pdf"
-            ? "export"
-            : read
-              ? "view"
-              : "edit"),
+          : tail.startsWith("comandas/") && tail.endsWith("/quote")
+            ? "tables"
+            : tail === "history.pdf"
+              ? "export"
+              : read
+                ? "view"
+                : "edit"),
     );
   else if (root === "settings") one("settings.edit");
   else if (root === "print") {
@@ -274,7 +276,12 @@ function required(req) {
       ].some((k) => Number(b[k]) > 0)
     )
       one("discounts.apply");
-    if (b.loyalty) one("loyalty.apply");
+    if (b.loyalty)
+      one(
+        root === "comandas" || root === "tables"
+          ? "loyalty.tables"
+          : "loyalty.apply",
+      );
     if (b.restoreIngredients === true) one("recipes.restore");
   }
   return result;

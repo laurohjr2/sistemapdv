@@ -48,7 +48,7 @@ export default function Loyalty() {
     ),
     total =
       visible
-        .filter((b) => b.sale?.status === "completed")
+        .filter((b) => (b.status || b.sale?.status) === "completed")
         .reduce((sum, b) => sum + Math.round(Number(b.discount) * 100), 0) /
       100;
   return (
@@ -71,8 +71,9 @@ export default function Loyalty() {
         Cadastro de clientes
       </Link>
       <p className="text-muted-foreground">
-        Percentual por cliente nas vendas diretas. Gerente ou administrador
-        confere e aplica no carrinho. Não acumula com outro desconto.
+        Percentual por cliente em vendas, mesas e comandas. Gerente ou
+        administrador confere e aplica no carrinho. Não acumula com outro
+        desconto.
       </p>
       <Feedback state={profiles} />
       <Feedback state={customers} />
@@ -196,18 +197,18 @@ export default function Loyalty() {
           </Button>
         </div>
         <p>
-          Descontos em vendas concluídas nesta seleção:{" "}
+          Descontos em vendas e comandas recebidas nesta seleção:{" "}
           <strong>{money(total)}</strong>
         </p>
         <p className="text-xs text-muted-foreground">
-          Até 500 registros recentes. Vendas canceladas são preservadas e
-          excluídas do total efetivo.
+          Até 500 registros recentes. Operações pendentes ou canceladas são
+          preservadas e excluídas do total efetivo.
         </p>
         <div className="overflow-auto">
           <table className="commerce-table">
             <thead>
               <tr>
-                <th>Venda</th>
+                <th>Venda / comanda</th>
                 <th>Cliente</th>
                 <th>Benefício no ato</th>
                 <th>Desconto</th>
@@ -217,7 +218,11 @@ export default function Loyalty() {
             <tbody>
               {visible.map((b) => (
                 <tr key={b.id}>
-                  <td>#{b.saleId}</td>
+                  <td>
+                    {b.source === "comanda"
+                      ? "Comanda #" + b.comandaId.slice(0, 8)
+                      : "Venda #" + b.saleId}
+                  </td>
                   <td>
                     {customers.data?.find((c) => c.id === b.customerId)?.name ||
                       "Cliente"}
@@ -227,7 +232,11 @@ export default function Loyalty() {
                   </td>
                   <td>{money(b.discount)}</td>
                   <td>
-                    {b.sale?.status === "completed" ? "Concluída" : "Cancelada"}
+                    {b.status === "pending"
+                      ? "Pendente"
+                      : (b.status || b.sale?.status) === "completed"
+                        ? "Concluída"
+                        : "Cancelada"}
                   </td>
                 </tr>
               ))}

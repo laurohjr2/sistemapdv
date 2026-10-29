@@ -1,6 +1,8 @@
-import BundlePicker from './BundlePicker';
-import PizzaBuilder from './pizza/PizzaBuilder';
-import usePizzaCatalog from './pizza/usePizzaCatalog';
+import ComandaLoyaltyDiscount from "./ComandaLoyaltyDiscount";
+import { canAccess } from "../lib/access";
+import BundlePicker from "./BundlePicker";
+import PizzaBuilder from "./pizza/PizzaBuilder";
+import usePizzaCatalog from "./pizza/usePizzaCatalog";
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useBusiness } from "../hooks/useBusiness";
@@ -32,10 +34,12 @@ const money = (v) =>
 export default function TableAccount({ table, onClose, onUpdate }) {
   const { user } = useAuth(),
     { business } = useBusiness();
-  const [pizzaOpen,setPizzaOpen]=useState(false);
-  const [bundleOpen,setBundleOpen]=useState(false);
-  const {menu:pizzaMenu}=usePizzaCatalog(Boolean(business.modules?.pizza));
-  const pizzaBases=new Set((pizzaMenu?.sizes||[]).filter(s=>s.active).map(s=>s.productId));
+  const [pizzaOpen, setPizzaOpen] = useState(false);
+  const [bundleOpen, setBundleOpen] = useState(false);
+  const { menu: pizzaMenu } = usePizzaCatalog(Boolean(business.modules?.pizza));
+  const pizzaBases = new Set(
+    (pizzaMenu?.sizes || []).filter((s) => s.active).map((s) => s.productId),
+  );
   const [comanda, setComanda] = useState(null),
     [products, setProducts] = useState([]),
     [customerId, setCustomerId] = useState(""),
@@ -44,6 +48,7 @@ export default function TableAccount({ table, onClose, onUpdate }) {
     [quantity, setQuantity] = useState("1"),
     [notes, setNotes] = useState(""),
     [discount, setDiscount] = useState(""),
+    [loyalty, setLoyalty] = useState(null),
     [payments, setPayments] = useState([{ method: "dinheiro", amount: "" }]),
     [people, setPeople] = useState(2),
     [error, setError] = useState(""),
@@ -60,7 +65,7 @@ export default function TableAccount({ table, onClose, onUpdate }) {
       0,
     );
   const load = useCallback(async () => {
-    const id = table.comandas?.[0]?.id;
+    const id = comanda?.id || table.comandas?.[0]?.id;
     if (id) {
       const r = await api.get("/comandas/" + id);
       setComanda(r.data);
@@ -70,7 +75,7 @@ export default function TableAccount({ table, onClose, onUpdate }) {
     const r = await api.get("/products");
     setProducts(r.data.filter((p) => p.active));
     setLoaded(true);
-  }, [table]);
+  }, [table, comanda?.id]);
   useEffect(() => {
     load().catch(() => setError("Não foi possível carregar a comanda"));
   }, [load]);
@@ -92,6 +97,17 @@ export default function TableAccount({ table, onClose, onUpdate }) {
       clearInterval(timer);
     };
   }, [comanda?.id]);
+  useEffect(() => {
+    if (
+      loyalty &&
+      (loyalty.customerId !== customerId ||
+        loyalty.customerId !== comanda?.customerId ||
+        loyalty.comandaUpdatedAt !== comanda?.updated_at)
+    ) {
+      setLoyalty(null);
+      setDiscount("");
+    }
+  }, [loyalty, customerId, comanda?.customerId, comanda?.updated_at]);
   async function action(fn) {
     setError("");
     setBusy(true);
@@ -160,7 +176,7 @@ export default function TableAccount({ table, onClose, onUpdate }) {
       return;
     }
     popup.document.write(
-      `<html><head><title>Comanda — Mesa ${table.tableNumber}</title><style>body{font-family:Arial;margin:24px}table{width:100%;border-collapse:collapse}td,th{padding:8px;text-align:left;border-bottom:1px solid #ddd}</style></head><body>${receiptHeader(business)}<h2>Mesa ${table.tableNumber}</h2><p>Cliente: ${escapeHtml(account.customerName || name || "Não informado")}</p><p>${account.status === "fechada" ? "Conta paga" : "CONFERÊNCIA — conta aberta"}</p><table><tr><th>Produto</th><th>Qtd</th><th>Total</th></tr>${(comanda?.items || []).map((i) => `<tr><td>${escapeHtml(i.bundle?.component?.name || i.pizza?.description || i.product?.name || "Produto")}${i.notes?`<br>${escapeHtml(i.notes)}`:""}</td><td>${Number(i.quantity)}</td><td>${money(i.totalItemValue)}</td></tr>`).join("")}</table><p>Subtotal: ${money(account.totalValue)}</p><p>Desconto: ${money(account.discountValue)}</p><strong>Total: ${money(account.finalValue ?? account.totalValue)}</strong>${(account.payments || []).map((p) => `<p>${escapeHtml(methods[p.method])}: ${money(p.amount)}</p>`).join("")}<p>${escapeHtml(business.receiptMessage)}</p></body></html>`,
+      `<html><head><title>Comanda — Mesa ${table.tableNumber}</title><style>body{font-family:Arial;margin:24px}table{width:100%;border-collapse:collapse}td,th{padding:8px;text-align:left;border-bottom:1px solid #ddd}</style></head><body>${receiptHeader(business)}<h2>Mesa ${table.tableNumber}</h2><p>Cliente: ${escapeHtml(account.customerName || name || "Não informado")}</p><p>${account.status === "fechada" ? "Conta paga" : "CONFERÊNCIA — conta aberta"}</p><table><tr><th>Produto</th><th>Qtd</th><th>Total</th></tr>${(comanda?.items || []).map((i) => `<tr><td>${escapeHtml(i.bundle?.component?.name || i.pizza?.description || i.product?.name || "Produto")}${i.notes ? `<br>${escapeHtml(i.notes)}` : ""}</td><td>${Number(i.quantity)}</td><td>${money(i.totalItemValue)}</td></tr>`).join("")}</table><p>Subtotal: ${money(account.totalValue)}</p><p>Desconto: ${money(account.discountValue)}</p>${account.loyaltyBenefit ? `<p>Fidelidade: ${escapeHtml(account.loyaltyBenefit.profile.label)} · ${Number(account.loyaltyBenefit.profile.basisPoints / 100).toLocaleString("pt-BR")}%</p>` : ""}<strong>Total: ${money(account.finalValue ?? account.totalValue)}</strong>${(account.payments || []).map((p) => `<p>${escapeHtml(methods[p.method])}: ${money(p.amount)}</p>`).join("")}<p>${escapeHtml(business.receiptMessage)}</p></body></html>`,
     );
     popup.document.close();
     popup.onload = () => popup.print();
@@ -171,6 +187,14 @@ export default function TableAccount({ table, onClose, onUpdate }) {
         paymentMethod: payments[0].method,
         payments: payments.map((p) => ({ ...p, amount: Number(p.amount) })),
         discountValue: Number(discount || 0),
+        loyalty: loyalty
+          ? {
+              customerId: loyalty.customerId,
+              comandaId: loyalty.comandaId,
+              revision: loyalty.revision,
+              scopeDigest: loyalty.scopeDigest,
+            }
+          : undefined,
         paymentStatus: "pago",
       });
       print(r.data.comanda);
@@ -233,7 +257,12 @@ export default function TableAccount({ table, onClose, onUpdate }) {
                     className="py-2 flex flex-wrap justify-between gap-2"
                   >
                     <div>
-                      <strong>{i.bundle?.component?.name||i.pizza?.description||i.product?.name}</strong> × {Number(i.quantity)}
+                      <strong>
+                        {i.bundle?.component?.name ||
+                          i.pizza?.description ||
+                          i.product?.name}
+                      </strong>{" "}
+                      × {Number(i.quantity)}
                       <p>{i.notes}</p>
                       <span
                         className={
@@ -269,25 +298,69 @@ export default function TableAccount({ table, onClose, onUpdate }) {
                   </div>
                 ))}
               </div>
-              {business.modules?.pizza&&<Button onClick={()=>setPizzaOpen(true)} disabled={busy}>Montar pizza</Button>}
-              {business.modules?.bundles&&<Button variant="outline" onClick={()=>setBundleOpen(true)} disabled={busy}>Selecionar combo</Button>}
-              {bundleOpen&&<BundlePicker onClose={()=>setBundleOpen(false)} onAdd={async data=>{await api.post('/bundles/comandas/'+comanda.id,{selection:data.selection,quantity:data.quantity,notes:data.notes,expectedUnitPrice:data.preview.unitPrice});setComanda((await api.get('/comandas/'+comanda.id)).data);await onUpdate();}}/>}
-              {pizzaOpen&&<PizzaBuilder onClose={()=>setPizzaOpen(false)} onAdd={async data=>{await api.post('/comandas/'+comanda.id+'/items',{productId:data.productId,pizza:data.pizza.selection,quantity:data.quantity,notes:data.notes,expectedUnitPrice:data.unitPrice});setComanda((await api.get('/comandas/'+comanda.id)).data);await onUpdate();}}/>}
+              {business.modules?.pizza && (
+                <Button onClick={() => setPizzaOpen(true)} disabled={busy}>
+                  Montar pizza
+                </Button>
+              )}
+              {business.modules?.bundles && (
+                <Button
+                  variant="outline"
+                  onClick={() => setBundleOpen(true)}
+                  disabled={busy}
+                >
+                  Selecionar combo
+                </Button>
+              )}
+              {bundleOpen && (
+                <BundlePicker
+                  onClose={() => setBundleOpen(false)}
+                  onAdd={async (data) => {
+                    await api.post("/bundles/comandas/" + comanda.id, {
+                      selection: data.selection,
+                      quantity: data.quantity,
+                      notes: data.notes,
+                      expectedUnitPrice: data.preview.unitPrice,
+                    });
+                    setComanda((await api.get("/comandas/" + comanda.id)).data);
+                    await onUpdate();
+                  }}
+                />
+              )}
+              {pizzaOpen && (
+                <PizzaBuilder
+                  onClose={() => setPizzaOpen(false)}
+                  onAdd={async (data) => {
+                    await api.post("/comandas/" + comanda.id + "/items", {
+                      productId: data.productId,
+                      pizza: data.pizza.selection,
+                      quantity: data.quantity,
+                      notes: data.notes,
+                      expectedUnitPrice: data.unitPrice,
+                    });
+                    setComanda((await api.get("/comandas/" + comanda.id)).data);
+                    await onUpdate();
+                  }}
+                />
+              )}
               <form onSubmit={add} className="space-y-3 border rounded p-3">
                 <label>
                   Adicionar produto
                   <select
                     required
+                    aria-label="Adicionar produto"
                     className="border p-2 rounded w-full"
                     value={productId}
                     onChange={(e) => setProductId(e.target.value)}
                   >
                     <option value="">Selecione</option>
-                    {products.filter(p=>!pizzaBases.has(p.id)).map((p) => (
-                      <option value={p.id} key={p.id}>
-                        {p.name} — {money(p.salePrice)}
-                      </option>
-                    ))}
+                    {products
+                      .filter((p) => !pizzaBases.has(p.id))
+                      .map((p) => (
+                        <option value={p.id} key={p.id}>
+                          {p.name} — {money(p.salePrice)}
+                        </option>
+                      ))}
                   </select>
                 </label>
                 <label>
@@ -314,19 +387,46 @@ export default function TableAccount({ table, onClose, onUpdate }) {
               <Button variant="outline" onClick={() => print(comanda)}>
                 Imprimir conferência
               </Button>
-              {["admin", "gerente"].includes(user?.role) && (
-                <label className="block">
-                  Desconto (R$)
-                  <Input
-                    currency
-                    value={discount}
-                    onChange={(e) => setDiscount(e.target.value)}
-                  />
-                </label>
-              )}
+              {["admin", "gerente"].includes(user?.role) &&
+                canAccess(user, "discounts.apply") && (
+                  <label className="block">
+                    Desconto (R$)
+                    <Input
+                      currency
+                      value={discount}
+                      onChange={(e) => {
+                        setLoyalty(null);
+                        setDiscount(e.target.value);
+                      }}
+                    />
+                  </label>
+                )}
               <p className="text-xl font-bold">
                 Total: {money(totalCents / 100)}
               </p>
+              <ComandaLoyaltyDiscount
+                comanda={comanda}
+                customerId={customerId}
+                disabled={busy}
+                onRefresh={() =>
+                  action(async () => {
+                    await load();
+                  })
+                }
+                onApply={(quote) => {
+                  setLoyalty(quote);
+                  setDiscount(String(quote.discount));
+                  setPayments((prev) =>
+                    prev.map((p) => ({ ...p, amount: "" })),
+                  );
+                }}
+              />
+              {loyalty && (
+                <p className="font-semibold text-sm">
+                  {loyalty.description} aplicado. Confira os valores dos
+                  pagamentos.
+                </p>
+              )}
               <div className="flex flex-wrap gap-2 items-end">
                 <label>
                   Dividir entre pessoas

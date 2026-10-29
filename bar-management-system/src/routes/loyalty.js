@@ -4,6 +4,8 @@ function factory() {
       sequelize,
       LoyaltyProfile: P,
       LoyaltyBenefit: B,
+      LoyaltyComandaBenefit: CB,
+      Comanda,
       Customer,
       Sale,
       AuditLog,
@@ -104,21 +106,79 @@ function factory() {
       ),
     ),
   );
+  router.post(
+    "/comandas/:id/quote",
+    handler(async (req, res) =>
+      res.json(
+        await require("../services/comandaLoyalty").quote(
+          req.params.id,
+          req.body?.revision,
+        ),
+      ),
+    ),
+  );
   async function history(id) {
     const where = id ? { customerId: uuid(id) } : {};
-    const benefits = await B.findAll({
-      where,
-      order: [["createdAt", "DESC"]],
-      limit: 500,
+    const [salesBenefits, tableBenefits] = await Promise.all([
+      B.findAll({ where, order: [["createdAt", "DESC"]], limit: 500 }),
+      CB.findAll({ where, order: [["createdAt", "DESC"]], limit: 500 }),
+    ]);
+    const { Op } = require("sequelize");
+    const sales = salesBenefits.length
+      ? await Sale.findAll({
+          where: { id: { [Op.in]: salesBenefits.map((b) => b.saleId) } },
+          attributes: ["id", "status", "created_at", "total_amount"],
+        })
+      : [];
+    const accounts = tableBenefits.length
+      ? await Comanda.findAll({
+          where: { id: { [Op.in]: tableBenefits.map((b) => b.comandaId) } },
+          attributes: [
+            "id",
+            "status",
+            "paymentStatus",
+            "finalValue",
+            "closedAt",
+            "type",
+          ],
+        })
+      : [];
+    const saleMap = new Map(sales.map((s) => [s.id, s])),
+      accountMap = new Map(accounts.map((c) => [c.id, c]));
+    const records = salesBenefits.map((b) => {
+      const sale = saleMap.get(b.saleId);
+      return {
+        ...b.toJSON(),
+        source: "sale",
+        sourceId: b.saleId,
+        status: sale?.status || "cancelled",
+        sale: sale || null,
+      };
     });
-    const records = [];
-    for (const b of benefits) {
-      const s = await Sale.findByPk(b.saleId, {
-        attributes: ["id", "status", "created_at", "total_amount"],
+    for (const b of tableBenefits) {
+      const c = accountMap.get(b.comandaId);
+      const status =
+        c?.status === "fechada" && c.paymentStatus === "pago"
+          ? "completed"
+          : !c || c.status === "cancelada"
+            ? "cancelled"
+            : "pending";
+      records.push({
+        ...b.toJSON(),
+        source: "comanda",
+        sourceId: b.comandaId,
+        status,
+        comanda: c || null,
+        sale: null,
       });
-      records.push({ ...b.toJSON(), sale: s });
     }
-    return records;
+    return records
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt) - new Date(a.createdAt) ||
+          a.id.localeCompare(b.id),
+      )
+      .slice(0, 500);
   }
   router.get(
     "/history",
@@ -136,18 +196,23 @@ function factory() {
       doc
         .fontSize(10)
         .text(
-          "Até 500 registros recentes. Vendas canceladas são identificadas e não compõem a economia efetiva.",
+          "Até 500 registros recentes. Vendas e comandas pendentes ou canceladas são identificadas e não compõem a economia efetiva.",
         )
         .moveDown();
       let centsTotal = 0;
       for (const b of records) {
-        const cancelled = b.sale?.status !== "completed";
+        const cancelled = b.status !== "completed";
         if (!cancelled) centsTotal += cents(b.discount, "Desconto", true);
         doc.text(
-          "Venda #" +
-            b.saleId +
+          (b.source === "comanda"
+            ? "Comanda #" + b.comandaId.slice(0, 8)
+            : "Venda #" + b.saleId) +
             " · " +
-            (cancelled ? "Cancelada" : "Concluída") +
+            (b.status === "pending"
+              ? "Pendente"
+              : cancelled
+                ? "Cancelada"
+                : "Concluída") +
             " · " +
             b.profile.label +
             " · " +
@@ -159,15 +224,13 @@ function factory() {
             }),
         );
       }
-      doc
-        .moveDown()
-        .text(
-          "Descontos em vendas concluídas: R$ " +
-            (centsTotal / 100).toLocaleString("pt-BR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }),
-        );
+      doc.moveDown().text(
+        "Descontos em vendas e comandas recebidas: R$ " +
+          (centsTotal / 100).toLocaleString("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }),
+      );
       doc.end();
     }),
   );

@@ -13,3 +13,5 @@ O cupom da última venda inclui desconto e nome/percentual do benefício. O hist
 Esta etapa aplica fidelidade nas **vendas diretas**. OS e orçamentos mantêm os valores aprovados; mesas/comandas continuam com o desconto autorizado já existente, sem aplicação automática desta condição. Não há cashback, pontos, comunicação externa ou autorização automática para operadores concederem desconto. A revisão geral de permissões permanece após as melhorias funcionais.
 
 Validação sintética: 28 verificações aprovadas. `node scripts/loyalty-smoke.cjs`. Build e lint sem erros; avisos anteriores preservados.
+
+A [Mark 0.20.0](../fidelidade/mesas-comandas.md) amplia o benefício para mesas e comandas; as limitações acima descrevem a entrega original da Mark 0.16.0.

@@ -158,6 +158,7 @@ const groups = {
     ["view", "Consultar benefícios e histórico", management],
     ["edit", "Definir condição do cliente", management],
     ["apply", "Aplicar benefício na venda", management],
+    ["tables", "Aplicar fidelidade em mesas e comandas", management],
     ["export", "Imprimir histórico de fidelidade", management],
   ],
   settings: [
@@ -323,6 +324,13 @@ const navigation = {
   "/print": "printer.view",
 };
 const dependencies = {
+  "loyalty.tables": [
+    "products.read",
+    "loyalty.view",
+    "discounts.apply",
+    "tables.receive",
+    "customers.view",
+  ],
   "cash.open": ["cash.view"],
   "cash.close": ["cash.view", "cash.report"],
   "sales.create": ["sales.view", "products.read", "cash.view"],
@@ -389,7 +397,11 @@ function expand(ids) {
   } while (size !== result.size);
   return [...result].sort();
 }
-for (const t of templates) t.permissions = expand(t.permissions);
+for (const t of templates) {
+  if (t.id === "manager" && !t.permissions.includes("loyalty.tables"))
+    t.permissions.push("loyalty.tables");
+  t.permissions = expand(t.permissions);
+}
 navigation["/user-access"] = "users.manage";
 module.exports = {
   permissions,
