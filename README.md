@@ -96,3 +96,5 @@ Novidades e roteiro de validação: [lote Mark 0.13.0 a 0.17.0](docs/atualizacoe
 Perfis e permissões: [Marks 0.18.0–0.19.0 e roteiro de validação](docs/atualizacoes/mark-0.18-a-0.19.md).
 
 Fidelidade em mesas/comandas e aviso de dois segundos: [Mark 0.20.0](docs/atualizacoes/mark-0.20.md).
+
+Quantidades e desconto percentual nas mesas: [Mark 0.20.1](docs/atualizacoes/mark-0.20.1.md).

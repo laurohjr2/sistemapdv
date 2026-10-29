@@ -127,7 +127,7 @@ const { chromium } = require("../work/browser/node_modules/playwright"),
     await d
       .getByLabel("Adicionar produto", { exact: true })
       .selectOption(s.product.id);
-    await d.getByLabel("Quantidade", { exact: true }).fill("2");
+    await d.getByLabel("Quantidade a adicionar", { exact: true }).fill("2");
     await d
       .getByRole("button", { name: "Adicionar à comanda", exact: true })
       .click();

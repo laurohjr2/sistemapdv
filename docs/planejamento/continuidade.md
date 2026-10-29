@@ -33,3 +33,7 @@ Preparado para a próxima Mark: ao confirmar o salvamento dos acessos no servido
 ## Mark 0.20.0
 
 Implementadas fidelidade em mesas/comandas, desconto único conferido no servidor, snapshot do benefício no fechamento, histórico por origem/situação e cupom, preservando recebimento e estoque. Inclui redução do aviso de salvamento para dois segundos. [Roteiro de validação](../atualizacoes/mark-0.20.md). Próxima evolução funcional prevista: pizzas personalizadas em combos.
+
+## Mark 0.20.1 — ajuste após validação
+
+Prioridade solicitada: prévia de quantidade × preço, correção de quantidade lançada e escolha entre desconto em reais ou porcentagem no fechamento de mesas. Quantidades antigas são preservadas até conferência pelo operador. [Atualização e validação](../atualizacoes/mark-0.20.1.md). Pizzas personalizadas em combos continuam como próxima evolução funcional.

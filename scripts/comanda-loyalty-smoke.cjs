@@ -298,7 +298,8 @@ execFileSync(
   );
   fresh = await preview(tableAccount);
   const parallel = await Promise.all([
-    req("/tables/" + tid + "/close-comanda", "POST", body(fresh), [200, 400]),
+    // A outra requisição pode já ter liberado a mesa; nesse caso não há comanda aberta (404).
+    req("/tables/" + tid + "/close-comanda", "POST", body(fresh), [200, 400, 404]),
     close(tableAccount, fresh, {}, [200, 400]),
   ]);
   assert.equal(parallel.filter((v) => v.responseStatus === 200).length, 1);

@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import ComandaLoyaltyDiscount from "./ComandaLoyaltyDiscount";
 import { canAccess } from "../lib/access";
 import BundlePicker from "./BundlePicker";
@@ -31,6 +32,41 @@ const money = (v) =>
     style: "currency",
     currency: "BRL",
   });
+const wholeUnits = new Set(["unidade", "caixa", "par"]);
+const quantityStep = (product) =>
+  wholeUnits.has(product?.unitOfMeasure) ? "1" : "0.001";
+function ItemQuantity({ item, onSave }) {
+  const [value, setValue] = useState(String(Number(item.quantity)));
+  useEffect(() => setValue(String(Number(item.quantity))), [item.quantity]);
+  const step = item.pizza ? "1" : quantityStep(item.product);
+  return (
+    <div className="flex flex-wrap gap-2 items-end">
+      <label>
+        Quantidade lançada
+        <Input
+          aria-label={"Quantidade lançada de " + item.product?.name}
+          type="number"
+          min={step}
+          step={step}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
+      </label>
+      <Button
+        variant="outline"
+        disabled={
+          !Number.isFinite(Number(value)) ||
+          Number(value) <= 0 ||
+          (step === "1" && !Number.isInteger(Number(value))) ||
+          Number(value) === Number(item.quantity)
+        }
+        onClick={() => onSave(Number(value))}
+      >
+        Atualizar quantidade
+      </Button>
+    </div>
+  );
+}
 export default function TableAccount({ table, onClose, onUpdate }) {
   const { user } = useAuth(),
     { business } = useBusiness();
@@ -48,22 +84,48 @@ export default function TableAccount({ table, onClose, onUpdate }) {
     [quantity, setQuantity] = useState("1"),
     [notes, setNotes] = useState(""),
     [discount, setDiscount] = useState(""),
+    [discountMode, setDiscountMode] = useState("value"),
     [loyalty, setLoyalty] = useState(null),
     [payments, setPayments] = useState([{ method: "dinheiro", amount: "" }]),
     [people, setPeople] = useState(2),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [loaded, setLoaded] = useState(false);
-  const totalCents = Math.max(
+  const subtotal = Number(comanda?.totalValue || 0),
+    discountNumber = Number(discount || 0),
+    invalidDiscount =
+      !Number.isFinite(discountNumber) ||
+      discountNumber < 0 ||
+      (discountMode === "percentage"
+        ? discountNumber > 100
+        : discountNumber > subtotal),
+    totalCents = Math.max(
       0,
       Math.round(
-        (Number(comanda?.totalValue || 0) - Number(discount || 0)) * 100,
+        (subtotal -
+          (discountMode === "percentage"
+            ? (subtotal * discountNumber) / 100
+            : discountNumber)) *
+          100,
       ),
     ),
     paidCents = payments.reduce(
       (s, p) => s + Math.round(Number(p.amount || 0) * 100),
       0,
     );
+  const selectedProduct = products.find((p) => p.id === productId);
+  const step = quantityStep(selectedProduct);
+  const validQuantity =
+    Number.isFinite(Number(quantity)) &&
+    Number(quantity) > 0 &&
+    (step === "1"
+      ? Number.isInteger(Number(quantity))
+      : Math.abs(
+          Number(quantity) * 1000 - Math.round(Number(quantity) * 1000),
+        ) < 1e-6);
+  const previewCents = Math.round(
+    Number(selectedProduct?.salePrice || 0) * Number(quantity) * 100,
+  );
   const load = useCallback(async () => {
     const id = comanda?.id || table.comandas?.[0]?.id;
     if (id) {
@@ -154,6 +216,18 @@ export default function TableAccount({ table, onClose, onUpdate }) {
       const fresh = await api.get("/comandas/" + comanda.id);
       setComanda(fresh.data);
       setNotes("");
+      setQuantity("1");
+      toast.success("Produto adicionado à comanda.", { duration: 2000 });
+    });
+  }
+  async function updateQuantity(item, amount) {
+    await action(async () => {
+      await api.put("/comandas/" + comanda.id + "/items/" + item.id, {
+        quantity: amount,
+      });
+      setComanda((await api.get("/comandas/" + comanda.id)).data);
+      setPayments((prev) => prev.map((p) => ({ ...p, amount: "" })));
+      toast.success("Quantidade e total atualizados.", { duration: 2000 });
     });
   }
   function split() {
@@ -176,7 +250,7 @@ export default function TableAccount({ table, onClose, onUpdate }) {
       return;
     }
     popup.document.write(
-      `<html><head><title>Comanda — Mesa ${table.tableNumber}</title><style>body{font-family:Arial;margin:24px}table{width:100%;border-collapse:collapse}td,th{padding:8px;text-align:left;border-bottom:1px solid #ddd}</style></head><body>${receiptHeader(business)}<h2>Mesa ${table.tableNumber}</h2><p>Cliente: ${escapeHtml(account.customerName || name || "Não informado")}</p><p>${account.status === "fechada" ? "Conta paga" : "CONFERÊNCIA — conta aberta"}</p><table><tr><th>Produto</th><th>Qtd</th><th>Total</th></tr>${(comanda?.items || []).map((i) => `<tr><td>${escapeHtml(i.bundle?.component?.name || i.pizza?.description || i.product?.name || "Produto")}${i.notes ? `<br>${escapeHtml(i.notes)}` : ""}</td><td>${Number(i.quantity)}</td><td>${money(i.totalItemValue)}</td></tr>`).join("")}</table><p>Subtotal: ${money(account.totalValue)}</p><p>Desconto: ${money(account.discountValue)}</p>${account.loyaltyBenefit ? `<p>Fidelidade: ${escapeHtml(account.loyaltyBenefit.profile.label)} · ${Number(account.loyaltyBenefit.profile.basisPoints / 100).toLocaleString("pt-BR")}%</p>` : ""}<strong>Total: ${money(account.finalValue ?? account.totalValue)}</strong>${(account.payments || []).map((p) => `<p>${escapeHtml(methods[p.method])}: ${money(p.amount)}</p>`).join("")}<p>${escapeHtml(business.receiptMessage)}</p></body></html>`,
+      `<html><head><title>Comanda — Mesa ${table.tableNumber}</title><style>body{font-family:Arial;margin:24px}table{width:100%;border-collapse:collapse}td,th{padding:8px;text-align:left;border-bottom:1px solid #ddd}</style></head><body>${receiptHeader(business)}<h2>Mesa ${table.tableNumber}</h2><p>Cliente: ${escapeHtml(account.customerName || name || "Não informado")}</p><p>${account.status === "fechada" ? "Conta paga" : "CONFERÊNCIA — conta aberta"}</p><table><tr><th>Produto</th><th>Qtd</th><th>Total</th></tr>${(comanda?.items || []).map((i) => `<tr><td>${escapeHtml(i.bundle?.component?.name || i.pizza?.description || i.product?.name || "Produto")}${i.notes ? `<br>${escapeHtml(i.notes)}` : ""}</td><td>${Number(i.quantity)}</td><td>${money(i.totalItemValue)}</td></tr>`).join("")}</table><p>Subtotal: ${money(account.totalValue)}</p><p>Desconto${Number(account.discountPercentage) > 0 ? ` (${Number(account.discountPercentage).toLocaleString("pt-BR")}%)` : ""}: ${money(Number(account.totalValue) - Number(account.finalValue ?? account.totalValue))}</p>${account.loyaltyBenefit ? `<p>Fidelidade: ${escapeHtml(account.loyaltyBenefit.profile.label)} · ${Number(account.loyaltyBenefit.profile.basisPoints / 100).toLocaleString("pt-BR")}%</p>` : ""}<strong>Total: ${money(account.finalValue ?? account.totalValue)}</strong>${(account.payments || []).map((p) => `<p>${escapeHtml(methods[p.method])}: ${money(p.amount)}</p>`).join("")}<p>${escapeHtml(business.receiptMessage)}</p></body></html>`,
     );
     popup.document.close();
     popup.onload = () => popup.print();
@@ -186,7 +260,8 @@ export default function TableAccount({ table, onClose, onUpdate }) {
       const r = await api.post("/tables/" + table.id + "/close-comanda", {
         paymentMethod: payments[0].method,
         payments: payments.map((p) => ({ ...p, amount: Number(p.amount) })),
-        discountValue: Number(discount || 0),
+        discountValue: discountMode === "value" ? discountNumber : 0,
+        discountPercentage: discountMode === "percentage" ? discountNumber : 0,
         loyalty: loyalty
           ? {
               customerId: loyalty.customerId,
@@ -262,7 +337,10 @@ export default function TableAccount({ table, onClose, onUpdate }) {
                           i.pizza?.description ||
                           i.product?.name}
                       </strong>{" "}
-                      × {Number(i.quantity)}
+                      ×{" "}
+                      {Number(i.quantity).toLocaleString("pt-BR", {
+                        maximumFractionDigits: 3,
+                      })}
                       <p>{i.notes}</p>
                       <span
                         className={
@@ -276,7 +354,17 @@ export default function TableAccount({ table, onClose, onUpdate }) {
                           : i.preparationStatus}
                       </span>
                     </div>
-                    <span>{money(i.totalItemValue)}</span>
+                    <span>
+                      {money(i.priceAtSale)} por{" "}
+                      {i.product?.unitOfMeasure || "unidade"} · Total:{" "}
+                      {money(i.totalItemValue)}
+                    </span>
+                    {!i.bundle && canAccess(user, "tables.edit") && (
+                      <ItemQuantity
+                        item={i}
+                        onSave={(amount) => updateQuantity(i, amount)}
+                      />
+                    )}
                     {i.preparationStatus === "pronto" && (
                       <Button
                         onClick={() =>
@@ -351,7 +439,10 @@ export default function TableAccount({ table, onClose, onUpdate }) {
                     aria-label="Adicionar produto"
                     className="border p-2 rounded w-full"
                     value={productId}
-                    onChange={(e) => setProductId(e.target.value)}
+                    onChange={(e) => {
+                      setProductId(e.target.value);
+                      setQuantity("1");
+                    }}
                   >
                     <option value="">Selecione</option>
                     {products
@@ -367,8 +458,9 @@ export default function TableAccount({ table, onClose, onUpdate }) {
                   Quantidade
                   <Input
                     type="number"
-                    min="0.001"
-                    step="0.001"
+                    aria-label="Quantidade a adicionar"
+                    min={step}
+                    step={step}
                     required
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
@@ -382,27 +474,98 @@ export default function TableAccount({ table, onClose, onUpdate }) {
                     onChange={(e) => setNotes(e.target.value)}
                   />
                 </label>
-                <Button>Adicionar à comanda</Button>
+                {selectedProduct && validQuantity && (
+                  <p aria-live="polite" className="font-semibold">
+                    Próximo lançamento:{" "}
+                    {Number(quantity).toLocaleString("pt-BR")} ×{" "}
+                    {money(selectedProduct.salePrice)} ={" "}
+                    {money(previewCents / 100)}
+                  </p>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  A quantidade acima será incluída no total ao clicar em
+                  Adicionar à comanda. Para corrigir um item já lançado, use
+                  Atualizar quantidade.
+                </p>
+                <Button disabled={!productId || !validQuantity}>
+                  Adicionar à comanda
+                </Button>
               </form>
               <Button variant="outline" onClick={() => print(comanda)}>
                 Imprimir conferência
               </Button>
               {["admin", "gerente"].includes(user?.role) &&
                 canAccess(user, "discounts.apply") && (
-                  <label className="block">
-                    Desconto (R$)
-                    <Input
-                      currency
-                      value={discount}
-                      onChange={(e) => {
-                        setLoyalty(null);
-                        setDiscount(e.target.value);
-                      }}
-                    />
-                  </label>
+                  <div className="space-y-2">
+                    <label className="block">
+                      Tipo de desconto
+                      <select
+                        aria-label="Tipo de desconto"
+                        className="border p-2 rounded w-full"
+                        value={discountMode}
+                        onChange={(e) => {
+                          setDiscountMode(e.target.value);
+                          setDiscount("");
+                          setLoyalty(null);
+                          setPayments((prev) =>
+                            prev.map((p) => ({ ...p, amount: "" })),
+                          );
+                        }}
+                      >
+                        <option value="value">Valor (R$)</option>
+                        <option value="percentage">Porcentagem (%)</option>
+                      </select>
+                    </label>
+                    <label className="block">
+                      {discountMode === "percentage"
+                        ? "Desconto (%)"
+                        : "Desconto (R$)"}
+                      <Input
+                        aria-label={
+                          discountMode === "percentage"
+                            ? "Desconto (%)"
+                            : "Desconto (R$)"
+                        }
+                        currency={discountMode === "value"}
+                        type={discountMode === "percentage" ? "number" : "text"}
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        value={discount}
+                        onChange={(e) => {
+                          setLoyalty(null);
+                          setDiscount(e.target.value);
+                          setPayments((prev) =>
+                            prev.map((p) => ({ ...p, amount: "" })),
+                          );
+                        }}
+                      />
+                    </label>
+                    {invalidDiscount && (
+                      <p role="alert" className="text-destructive">
+                        Informe um desconto entre zero e{" "}
+                        {discountMode === "percentage"
+                          ? "100%."
+                          : "o subtotal da conta."}
+                      </p>
+                    )}
+                  </div>
                 )}
-              <p className="text-xl font-bold">
-                Total: {money(totalCents / 100)}
+              <p>Subtotal lançado: {money(subtotal)}</p>
+              {!invalidDiscount && (
+                <p>
+                  Desconto
+                  {discountMode === "percentage"
+                    ? ` (${discountNumber.toLocaleString("pt-BR")}%)`
+                    : ""}
+                  : {money((Math.round(subtotal * 100) - totalCents) / 100)}
+                </p>
+              )}
+              <p className="text-xl font-bold" aria-live="polite">
+                Total:{" "}
+                {invalidDiscount
+                  ? "Confira o desconto"
+                  : money(totalCents / 100)}
               </p>
               <ComandaLoyaltyDiscount
                 comanda={comanda}
@@ -415,6 +578,7 @@ export default function TableAccount({ table, onClose, onUpdate }) {
                 }
                 onApply={(quote) => {
                   setLoyalty(quote);
+                  setDiscountMode("value");
                   setDiscount(String(quote.discount));
                   setPayments((prev) =>
                     prev.map((p) => ({ ...p, amount: "" })),
@@ -520,7 +684,12 @@ export default function TableAccount({ table, onClose, onUpdate }) {
                   : `Falta distribuir: ${money((totalCents - paidCents) / 100)}`}
               </p>
               <Button
-                disabled={busy || paidCents !== totalCents || totalCents <= 0}
+                disabled={
+                  busy ||
+                  invalidDiscount ||
+                  paidCents !== totalCents ||
+                  totalCents <= 0
+                }
                 onClick={close}
               >
                 Receber, fechar e imprimir

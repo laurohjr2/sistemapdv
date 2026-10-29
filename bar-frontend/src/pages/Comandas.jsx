@@ -460,7 +460,7 @@ const Comandas = () => {
           </table>
 
           ${receiptData.loyaltyBenefit ? `<p>Fidelidade: ${escapeHtml(receiptData.loyaltyBenefit.profile.label)} · ${Number(receiptData.loyaltyBenefit.profile.basisPoints / 100).toLocaleString("pt-BR")}%</p>` : ""}
-          ${receiptData.discountValue > 0 ? `<p>Desconto: R$ ${Number(receiptData.discountValue).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>` : ""}
+          ${Number(receiptData.discountValue) > 0 || Number(receiptData.discountPercentage) > 0 ? `<p>Desconto${Number(receiptData.discountPercentage) > 0 ? ` (${Number(receiptData.discountPercentage).toLocaleString("pt-BR")}%)` : ""}: R$ ${(Number(receiptData.totalValue) - Number(receiptData.finalValue)).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>` : ""}
 
           <div class="total">
             Total: R$ ${parseFloat(receiptData.finalValue ?? receiptData.totalValue).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
