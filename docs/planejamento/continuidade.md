@@ -25,3 +25,7 @@ Lote 0.13.0–0.17.0 concluído: [roteiro de validação e atualização](../atu
 ## Continuidade autorizada em 29/10/2026
 
 Implementadas Marks 0.18.0 (matriz/consulta) e 0.19.0 (perfis e exceções, enforcement, auditoria e proteção administrativa), com validação em empresas sintéticas. Usuários atuais permanecem no modelo anterior até aplicação de perfil pelo administrador. [Roteiro para 30/10 às 09:00](../atualizacoes/mark-0.18-a-0.19.md). Integrações dependentes de SMTP/provedor fiscal/Pix/destino externo de backup permanecem aguardando definição; não foram simuladas como prontas.
+
+## Ajuste aprovado após validação da Mark 0.19.0
+
+Preparado para a próxima Mark: ao confirmar o salvamento dos acessos no servidor, exibir notificação **Acessos salvos com sucesso**, identificando o usuário, por seis segundos. A notificação permanece visível após recarregar o editor e usa cores próprias para temas claro/escuro. Falhas continuam exibindo o erro, sem notificação de sucesso.

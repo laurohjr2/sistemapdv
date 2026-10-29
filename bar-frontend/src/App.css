@@ -129,3 +129,15 @@
 .commerce-table tbody tr:hover { background:color-mix(in oklab,var(--muted) 45%,transparent); }
 .commerce-empty { padding:2.5rem 1rem; text-align:center; color:var(--muted-foreground); font-size:.875rem; }
 @media (max-width:640px) { .commerce-header h1 { font-size:1.7rem; } .commerce-table th,.commerce-table td { padding:.75rem; } }
+
+/* Save confirmation remains readable in both application themes. */
+.access-saved-toast {
+  --success-bg: #ecfdf5;
+  --success-text: #064e3b;
+  --success-border: #6ee7b7;
+}
+.dark .access-saved-toast {
+  --success-bg: #022c22;
+  --success-text: #d1fae5;
+  --success-border: #059669;
+}

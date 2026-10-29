@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import api from "../lib/api";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -74,6 +75,11 @@ export default function UserAccessEditor({ record, catalog, onSaved }) {
         permissions: mode === "restricted" ? permissions : [],
         revision: record.access.revision,
         reason,
+      });
+      toast.success("Acessos salvos com sucesso.", {
+        description: "Usuário: " + record.user.username,
+        duration: 6000,
+        className: "access-saved-toast",
       });
       onSaved();
     } catch (e) {
