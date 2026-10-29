@@ -1269,9 +1269,7 @@ const Comandas = () => {
                       },
                     );
                     setSelectedComanda({ ...selectedComanda, ...data });
-                    toast.success("Cliente salvo na comanda.", {
-                      duration: 2000,
-                    });
+
                   } catch (e) {
                     toast.error(
                       e.response?.data?.error ||

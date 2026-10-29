@@ -26,6 +26,18 @@ export default function Settings() {
     finally{setLoading(false);}
   }
   useEffect(()=>{load();},[]);
+  function moduleReason(key) {
+    if (key === 'finance' && form.modules?.purchasing) return 'Ativado automaticamente por Fornecedores e compras. Para desativar o financeiro, desmarque primeiro Fornecedores e compras.';
+    if (key === 'tables' && form.modules?.kitchen) return 'Ativado automaticamente pela Cozinha. Para desativar mesas e comandas, desmarque primeiro Cozinha.';
+    return '';
+  }
+  function changeModule(key, checked) {
+    setForm(previous => ({...previous, modules: {...previous.modules, [key]: checked,
+      ...(key === 'purchasing' && checked ? {finance: true} : {}),
+      ...(key === 'kitchen' && checked ? {tables: true} : {}),
+    }}));
+    setSuccess('');
+  }
   async function logoChange(event,field='logo'){
     setError('');setSuccess('');
     const file=event.target.files?.[0];
@@ -59,7 +71,7 @@ export default function Settings() {
     {user?.support && clientInfo && <Card><CardHeader><CardTitle>Identificação do cliente — Suporte/Master</CardTitle></CardHeader><CardContent><Label>ID do cliente</Label><p className="mt-2 break-all font-mono" data-testid="support-client-id">{clientInfo.clientId}</p><p className="mt-2 text-sm text-muted-foreground">Visualização exclusiva ao suporte e à conta Master/Admin.</p></CardContent></Card>}
     <form onSubmit={save} className="space-y-6">
       <fieldset disabled={!editable||saving} className="space-y-6">
-        <Card><CardHeader><CardTitle>Perfil do negócio e módulos</CardTitle><CardDescription>Escolha o segmento e ajuste os recursos usados pela empresa. A alteração preserva os cadastros e o histórico.</CardDescription></CardHeader><CardContent className="space-y-4"><label className="block">Perfil do negócio<select className="commerce-select" value={form.businessProfile} onChange={e=>{const profile=profiles.find(p=>p.id===e.target.value);setForm({...form,businessProfile:profile.id,modules:profile.modules});setSuccess('');}}>{profiles.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><p className="text-sm text-muted-foreground">{profiles.find(p=>p.id===form.businessProfile)?.description}</p><div className="grid sm:grid-cols-2 gap-3">{Object.entries(moduleNames).map(([key,label])=><label key={key} className="flex gap-2 items-center border rounded-lg p-3"><input type="checkbox" checked={Boolean(form.modules?.[key])} disabled={key==='finance'&&form.modules?.purchasing||key==='tables'&&form.modules?.kitchen} onChange={e=>setForm({...form,modules:{...form.modules,[key]:e.target.checked}})}/>{label}</label>)}</div><p className="text-xs text-muted-foreground">Compras utiliza contas a pagar; cozinha utiliza comandas. Finalize os atendimentos e compromissos pendentes antes de desativar módulos.</p></CardContent></Card>
+        <Card><CardHeader><CardTitle>Perfil do negócio e módulos</CardTitle><CardDescription>Escolha o segmento e ajuste os recursos usados pela empresa. A alteração preserva os cadastros e o histórico.</CardDescription></CardHeader><CardContent className="space-y-4"><label className="block">Perfil do negócio<select className="commerce-select" value={form.businessProfile} onChange={e=>{const profile=profiles.find(p=>p.id===e.target.value);setForm({...form,businessProfile:profile.id,modules:profile.modules});setSuccess('');}}>{profiles.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><p className="text-sm text-muted-foreground">{profiles.find(p=>p.id===form.businessProfile)?.description}</p><div className="grid sm:grid-cols-2 gap-3">{Object.entries(moduleNames).map(([key,label])=><label key={key} className="flex gap-2 items-start border rounded-lg p-3"><input type="checkbox" className="mt-1" aria-label={label} aria-describedby={moduleReason(key) ? 'module-help-'+key : undefined} checked={Boolean(form.modules?.[key])} disabled={Boolean(moduleReason(key))} onChange={e=>changeModule(key,e.target.checked)}/><span>{label}{moduleReason(key)&&<span id={'module-help-'+key} className="block text-sm text-muted-foreground mt-2">{moduleReason(key)}</span>}</span></label>)}</div><p className="text-xs text-muted-foreground">Compras utiliza contas a pagar; cozinha utiliza comandas. Finalize os atendimentos e compromissos pendentes antes de desativar módulos.</p></CardContent></Card>
         <Card><CardHeader><CardTitle>Identidade da empresa</CardTitle><CardDescription>O nome e a logo aparecem no sistema e nos comprovantes.</CardDescription></CardHeader><CardContent className="space-y-5">
           <div className="flex flex-wrap items-center gap-5">
             <div className="flex h-24 w-24 items-center justify-center rounded-lg border bg-muted">{form.logo?<img src={form.logo} alt="Prévia da logo" className="max-h-24 max-w-24 object-contain"/>:<span className="text-3xl font-bold">{form.companyName.slice(0,1).toUpperCase()||'P'}</span>}</div>

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { showSaveFeedback } from './saveFeedback';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -21,7 +22,7 @@ api.interceptors.request.use((config) => {
 
 // Handle auth errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => { showSaveFeedback(response); return response; },
   (error) => {
     if(error.response?.data?.code==='ACCESS_DENIED')window.dispatchEvent(new Event('pdv-access-change'));
     if ((error.response?.status === 401 || error.response?.data?.code === 'COMPANY_SUSPENDED') && !error.config?.url?.startsWith('/support') && !error.config?.url?.startsWith('/auth/') && !error.config?.url?.startsWith('/settings/branding')) {

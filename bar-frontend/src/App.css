@@ -131,12 +131,12 @@
 @media (max-width:640px) { .commerce-header h1 { font-size:1.7rem; } .commerce-table th,.commerce-table td { padding:.75rem; } }
 
 /* Save confirmation remains readable in both application themes. */
-.access-saved-toast {
+.save-success-toast {
   --success-bg: #ecfdf5;
   --success-text: #064e3b;
   --success-border: #6ee7b7;
 }
-.dark .access-saved-toast {
+.dark .save-success-toast {
   --success-bg: #022c22;
   --success-text: #d1fae5;
   --success-border: #059669;

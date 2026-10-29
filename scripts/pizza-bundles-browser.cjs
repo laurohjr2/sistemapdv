@@ -148,6 +148,7 @@ const { client, rootUrl } = require("./testing/commercial-context.cjs");
       return d;
     }
     await page.goto(rootUrl + "/sales");
+    await page.getByText("Caixa Aberto", { exact: true }).waitFor();
     await page
       .getByRole("button", { name: "Selecionar combo", exact: true })
       .click();

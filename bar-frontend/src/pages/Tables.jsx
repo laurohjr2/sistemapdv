@@ -53,7 +53,6 @@ const Tables = () => {
         capacity: parseInt(formData.capacity)
       });
       
-      toast.success('Mesa criada com sucesso!');
       setIsCreateDialogOpen(false);
       setFormData({ tableNumber: '', capacity: '', status: 'disponivel' });
       fetchTables();
@@ -72,7 +71,6 @@ const Tables = () => {
         status: formData.status
       });
       
-      toast.success('Mesa atualizada com sucesso!');
       setIsEditDialogOpen(false);
       setSelectedTable(null);
       setFormData({ tableNumber: '', capacity: '', status: 'disponivel' });

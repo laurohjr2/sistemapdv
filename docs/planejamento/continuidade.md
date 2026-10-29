@@ -41,3 +41,7 @@ Prioridade solicitada: prévia de quantidade × preço, correção de quantidade
 ## Continuidade aprovada — estabilização
 
 O proprietário aprovou concluir pizzas nos combos e concentrar a sequência na estabilização da Mark 1.0.0. Mark 0.21.0 implementa a montagem por pizza, complementos, validação de versões e snapshots nos fluxos de venda e mesa/comanda. [Guia e validação](../atualizacoes/mark-0.21.md). [Escopo e critérios para a Mark 1.0.0](mark-1.0.md). Novas expansões ficam para versões posteriores; integrações externas aguardam definição e homologação. A Mark 1.0.0 depende da revisão técnica e da validação final do proprietário.
+
+## Mark 0.22.0 — revisão solicitada durante estabilização
+
+Ampliação da confirmação de salvamento para os formulários do sistema, com duração de dois segundos e sem anunciar sucesso em falhas/cálculos/consultas. Dependência de Financeiro por Compras explicada no próprio controle; ativação de Compras liga Financeiro no formulário, e Cozinha liga Mesas. Conferidos financeiro independente, contas a pagar/receber, quitação e bloqueio de desativação com saldo pendente. [Atualização e detalhes](../atualizacoes/mark-0.22.md). O escopo da Mark 1.0.0 continua a estabilização e validação final, sem novas expansões de módulos.

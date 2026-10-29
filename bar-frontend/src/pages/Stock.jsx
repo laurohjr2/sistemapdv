@@ -137,7 +137,6 @@ const Stock = () => {
         description: newProductForm.description
       });
       
-      toast.success('Produto cadastrado com sucesso!');
       setIsAddProductOpen(false);
       resetNewProductForm();
       fetchData();

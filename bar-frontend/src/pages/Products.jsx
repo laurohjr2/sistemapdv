@@ -110,9 +110,8 @@ const Products = () => {
       let response;
       if (editingProduct) {
         response = await api.put(`/products/${editingProduct.id}`, productData);
-        toast.success('Produto atualizado com sucesso!');
       } else {
-        response = await api.post('/products', productData);
+        response = await api.post('/products', productData, { saveSuccess: formData.itemType !== 'service' && Number(formData.initialStock) > 0 ? false : undefined });
         
         // Se há estoque inicial, adicionar ao estoque
         if (formData.itemType!=='service' && formData.initialStock && parseFloat(formData.initialStock) > 0) {
@@ -124,14 +123,11 @@ const Products = () => {
               notes: formData.stockNotes || 'Estoque inicial do produto',
               batchNumber: formData.batchNumber,
               expirationDate: formData.expirationDate || undefined
-            });
-            toast.success('Produto criado e estoque inicial adicionado com sucesso!');
+            }, { saveSuccess: 'Produto e estoque inicial salvos com sucesso.' });
           } catch (stockError) {
             console.error('Erro ao adicionar estoque inicial:', stockError);
-            toast.success('Produto criado com sucesso, mas houve erro ao adicionar estoque inicial');
+            toast.warning('Produto criado, mas o estoque inicial não foi adicionado. Confira o estoque.', { id: 'save-success' });
           }
-        } else {
-          toast.success('Produto criado com sucesso!');
         }
       }
 

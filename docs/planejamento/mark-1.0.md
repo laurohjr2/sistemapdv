@@ -44,3 +44,10 @@ A primeira entrega local deve descrever essas limitações. Não apresentar cupo
 5. Fechar a lista de pendências impeditivas e publicar Mark 1.0.0 após validação final.
 
 Não estabelecer prazo ou percentual de conclusão sem fechar as pendências dessa revisão. SMTP, destino externo e provedores continuam aguardando escolha; não é necessário inventar integrações para concluir a etapa atual.
+
+## Evidência técnica reunida
+
+- [Mark 0.21.0](../atualizacoes/mark-0.21.md): 1.220 verificações de pizzas/combos, regressão dos perfis e preservação de registros após recriação/migração.
+- [Mark 0.22.0](../atualizacoes/mark-0.22.md): 306 verificações de salvamento, financeiro, falhas e regressão comercial/navegador. Dependências de módulos explicadas na interface.
+
+A revisão final do proprietário e a conferência dos equipamentos/destinos/provedores efetivamente utilizados continuam pendentes. Essas evidências permitem iniciar a validação final; não publicam por si só a Mark 1.0.0.
